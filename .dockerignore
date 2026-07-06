@@ -1,0 +1,6 @@
+.gradle
+build
+.idea
+.git
+.gitignore
+README.md
