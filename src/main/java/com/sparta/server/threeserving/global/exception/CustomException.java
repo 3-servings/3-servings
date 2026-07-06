@@ -1,5 +1,6 @@
 package com.sparta.server.threeserving.global.exception;
 
+import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import lombok.Getter;
 
 @Getter
