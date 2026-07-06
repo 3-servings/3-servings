@@ -35,3 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+
+### 추가 ###
+application-local.yml
+*.env
+.idea/
+.gradle/
