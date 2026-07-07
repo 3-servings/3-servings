@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "p_user")
@@ -61,6 +62,7 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    //소프트 딜리트 : 실제 삭제 X
     //레디스 사용이라 리프레시토큰 DB에 저장안함 그런고로 필드 구현 X
 
     @PrePersist
@@ -82,8 +84,18 @@ public class User {
         this.phone = phone;
     }
 
+    //회원탈퇴시에
+    //유니크 속성 컬럼 중복 방지 메서드
     public void withdraw(){
+        String suffix = "__deleted__" + UUID.randomUUID();
+
         this.status = UserStatus.DELETED;
+        //삭제 시간 Auditing BaseEntity 상속 시에 주석 풀기
+        //this.deletedAt = LocalDateTime.now();
+
+        this.email += suffix;
+        this.username += suffix;
+        this.nickname += suffix;
     }
 
     public void block(){
