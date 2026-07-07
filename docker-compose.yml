@@ -1,7 +1,6 @@
 services:
   spring:
-    build:
-      image: leunbin/threeservings-api:latest
+    image: leunbin/threeservings-api:latest
 
     container_name: threeservings-server
 
