@@ -1,8 +1,7 @@
 services:
   spring:
     build:
-      context: .
-      dockerfile: Dockerfile
+      image: leunbin/threeservings-api:latest
 
     container_name: threeservings-server
 
