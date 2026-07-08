@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,7 +20,7 @@ public abstract class BaseEntity {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @CreatedBy
     @Column(name = "created_by", nullable = false, updatable = false)
@@ -27,14 +28,14 @@ public abstract class BaseEntity {
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @LastModifiedBy
     @Column(name = "updated_by", nullable = false)
     private Long updatedBy;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @Column(name = "deleted_by")
     private Long deletedBy;
@@ -45,7 +46,7 @@ public abstract class BaseEntity {
     //soft-delete
     //@param deletedBy 삭제를 수행한 사용자 ID
     public void softDelete(Long deletedBy) {
-        this.deletedAt = LocalDateTime.now();
+        this.deletedAt = Instant.now();
         this.deletedBy = deletedBy;
     }
 
