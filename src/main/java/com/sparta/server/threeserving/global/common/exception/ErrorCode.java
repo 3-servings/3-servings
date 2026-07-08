@@ -23,7 +23,17 @@ public enum ErrorCode {
     DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M002", "삭제된 메뉴의 상태는 변경할 수 없습니다."),
 
     // System
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "서버 내부 오류가 발생했습니다.");
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "서버 내부 오류가 발생했습니다."),
+
+    // OrderManagement
+    ORDER_MANAGEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "OM001", "주문 상태 정보를 찾을 수 없습니다."),
+    ORDER_STATUS_INVALID(HttpStatus.BAD_REQUEST, "OM002", "변경할 수 없는 주문 상태입니다."),
+    ORDER_STATUS_ALREADY_CHANGED(HttpStatus.CONFLICT, "OM003", "이미 처리된 주문입니다."),
+    ORDER_STATUS_TRANSITION_INVALID(HttpStatus.BAD_REQUEST, "OM004", "허용되지 않는 주문 상태 변경입니다."),
+    ORDER_MANAGEMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "OM005", "해당 주문에 접근할 권한이 없습니다."),
+    ORDER_MANAGEMENT_STORE_MISMATCH(HttpStatus.FORBIDDEN, "OM006", "본인 매장의 주문만 조회 및 처리할 수 있습니다."),
+    ESTIMATED_COOK_TIME_INVALID(HttpStatus.BAD_REQUEST, "OM007", "예상 조리 시간은 0분보다 커야 합니다."),
+    REJECT_MEMO_REQUIRED(HttpStatus.BAD_REQUEST, "OM008", "주문 거절 사유를 입력해주세요.");
 
     private final HttpStatus status;
     private final String code;
