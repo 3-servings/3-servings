@@ -1,4 +1,4 @@
-package com.sparta.server.threeserving.order.repository;
+package com.sparta.server.threeserving.store.dto;
 
 import com.sparta.server.threeserving.store.Store;
 import org.springframework.data.jpa.repository.JpaRepository;

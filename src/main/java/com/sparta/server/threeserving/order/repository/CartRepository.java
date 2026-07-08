@@ -11,7 +11,6 @@ import java.util.UUID;
 @Repository
 public interface CartRepository extends JpaRepository<Cart, UUID> {
     Optional<Cart> findByUserIdAndStoreIdAndDeletedAtIsNull(Long userId, UUID storeId);
-    List<Cart> findAllByUserId(Long userId);
 
     List<Cart> findAllByUserIdAndDeletedAtIsNull(Long userId);
 

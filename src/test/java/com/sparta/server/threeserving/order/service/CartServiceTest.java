@@ -5,7 +5,7 @@ import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.order.dto.response.CartResponseDto;
 import com.sparta.server.threeserving.order.entity.Cart;
 import com.sparta.server.threeserving.order.repository.CartRepository;
-import com.sparta.server.threeserving.order.repository.StoreRepository;
+import com.sparta.server.threeserving.store.dto.StoreRepository;
 import com.sparta.server.threeserving.store.Store;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

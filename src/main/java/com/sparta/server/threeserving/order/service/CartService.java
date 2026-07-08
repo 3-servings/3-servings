@@ -14,7 +14,7 @@ import com.sparta.server.threeserving.order.entity.CartItemOption;
 import com.sparta.server.threeserving.order.repository.CartItemOptionRepository;
 import com.sparta.server.threeserving.order.repository.CartItemRepository;
 import com.sparta.server.threeserving.order.repository.CartRepository;
-import com.sparta.server.threeserving.order.repository.StoreRepository;
+import com.sparta.server.threeserving.store.dto.StoreRepository;
 import com.sparta.server.threeserving.store.Store;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

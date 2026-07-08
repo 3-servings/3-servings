@@ -19,10 +19,10 @@ public class Cart extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name="user_id")
+    @Column(name="user_id", nullable = false)
     private Long userId;
 
-    @Column(name="store_id")
+    @Column(name="store_id", nullable = false)
     private UUID storeId;
 
     public Cart(Long userId, UUID storeId){

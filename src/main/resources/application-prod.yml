@@ -20,6 +20,13 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
+cloud:
+  aws:
+    region: ${AWS_REGION}
+    auth: iam
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+
 logging:
   level:
     root: warn
