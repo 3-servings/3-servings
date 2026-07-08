@@ -28,3 +28,9 @@ cloud:
     profile: default
     s3:
       bucket: ${S3_BUCKET_NAME}
+
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: 1800000     # 30분
+  refresh-expiration: 1209600000 # 14일
