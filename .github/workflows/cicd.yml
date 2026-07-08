@@ -51,7 +51,7 @@ jobs:
 
       - name: Build with Gradle
         env:
-          DB_URL: jdbc:postgresql://postgres:5432/threeservings
+          DB_URL: jdbc:postgresql://127.0.0.1:5432/threeservings
           DB_USERNAME: threeservings
           DB_PASSWORD: threeservingspwd
 
@@ -59,7 +59,7 @@ jobs:
 
           AWS_REGION: ap-northeast-2
           S3_BUCKET_NAME: test-bucket
-        run: ./gradlew build
+        run: ./gradlew build -Dspring.profiles.active=ci
   cd:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest

@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: ci
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop #테스트용이므로 켤 때 테이블 만들고 끌 때 지우도록 설정
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: ${JWT_SECRET}
+
+cloud:
+  aws:
+    region: ${AWS_REGION}
