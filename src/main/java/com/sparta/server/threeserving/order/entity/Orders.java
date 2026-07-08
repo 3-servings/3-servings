@@ -3,7 +3,9 @@ package com.sparta.server.threeserving.order.entity;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
@@ -12,13 +14,14 @@ import java.util.UUID;
 @Getter
 @Entity
 @Table(name = "p_order")
+@NoArgsConstructor
 public class Orders extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name="user_id", nullable = false)
-    private UUID userId;
+    private Long userId;
 
     @Column(name="store_id", nullable = false)
     private UUID storeId;

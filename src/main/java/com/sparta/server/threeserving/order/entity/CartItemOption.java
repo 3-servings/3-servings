@@ -19,8 +19,9 @@ public class CartItemOption {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name="cart_item_id")
-    private UUID cartId;
+    @JoinColumn(name = "cart_item_id", nullable = false)
+    @ManyToOne
+    private CartItem cartItem;
 
     @Column(name="option_item_id")
     private UUID optionItemId;
@@ -32,4 +33,6 @@ public class CartItemOption {
     @CreatedBy
     @Column(name = "created_by", nullable = false, updatable = false)
     private Long createdBy;
+
+
 }

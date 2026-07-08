@@ -17,8 +17,9 @@ public class CartItem extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name="cart_id", nullable = false)
-    private UUID cartId;
+    @JoinColumn(name = "cart_id", nullable = false)
+    @ManyToOne
+    private Cart cart;
 
     @Column(name="menu_id", nullable = false)
     private UUID menuId;
@@ -26,4 +27,10 @@ public class CartItem extends BaseEntity {
     @Column(name="quantity", nullable = false)
     @Min(value = 1)
     private Integer quantity;
+
+    public CartItem(Cart cart, UUID menuId, Integer quantity) {
+        this.cart = cart;
+        this.menuId = menuId;
+        this.quantity = quantity;
+    }
 }
