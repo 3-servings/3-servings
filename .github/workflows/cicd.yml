@@ -55,7 +55,7 @@ jobs:
           DB_USERNAME: threeservings
           DB_PASSWORD: threeservingspwd
 
-          JWT_SECRET: test-secret
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
 
           AWS_REGION: ap-northeast-2
           S3_BUCKET_NAME: test-bucket
