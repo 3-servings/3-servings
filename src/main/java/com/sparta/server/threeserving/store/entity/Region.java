@@ -25,16 +25,12 @@ public class Region extends BaseEntity {
     @Column(name = "is_service_arrea", nullable = false)
     private Boolean isServiceArea = false;
 
-    public Region(String name, Long createdBy){
+    public Region(String name){
         this.name = name;
-        this.createdBy = createdBy;
-        this.createdAt = LocalDateTime.now();
     }
 
-    public void update(String name, Boolean isServiceArea, Long updatedBy){
+    public void update(String name, Boolean isServiceArea){
         this.name = name;
         this.isServiceArea = isServiceArea;
-        this.updateBy = updatedBy;
-        this.updateAt = LocalDateTime.now();
     }
 }

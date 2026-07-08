@@ -27,11 +27,9 @@ public class StoreCategory extends BaseEntity {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    public StoreCategory(Store store, Category category, Long createdBy){
+    public StoreCategory(Store store, Category category){
         this.store = store;
         this.category = category;
-        this.createdBy = createdBy;
-        this.createdAt = LocalDateTime.now();
     }
 
 }

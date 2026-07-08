@@ -24,16 +24,13 @@ public class Category extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    public Category(String name, Long createdBy){
+    public Category(String name){
         this.name = name;
-        this.createdBy = createdBy;
     }
 
 
-    public void changeIsActive(Boolean isActive, Long updatedBy){
+    public void changeIsActive(Boolean isActive){
         this.isActive = isActive;
-        this.updatedBy = updatedBy;
-        this.updatedAt = java.time.LocalDateTime.now();
     }
 
 

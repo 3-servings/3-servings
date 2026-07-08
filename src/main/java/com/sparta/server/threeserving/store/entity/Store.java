@@ -80,8 +80,7 @@ public class Store extends BaseEntity {
             BigDecimal longitude,
             Integer minOrderPrice,
             Integer deliveryFee,
-            Integer deliveryRadiusM,
-            Long createdBy
+            Integer deliveryRadiusM
     ) {
         this.owner = owner;
         this.region = region;
@@ -94,20 +93,16 @@ public class Store extends BaseEntity {
         this.minOrderPrice = minOrderPrice;
         this.deliveryFee = deliveryFee;
         this.deliveryRadiusM = deliveryRadiusM;
-        this.createdBy = createdBy;
-        this.createdAt = java.time.LocalDateTime.now();
     }
 
 
     public void addCategory(Category category, Long createdBy) {
-        StoreCategory storeCategory = new StoreCategory(this, category, createdBy);
-        this.storeCategories.add(storeCategory);
+        StoreCategory storeCategory = new StoreCategory(this, category);
+        this.categoryList.add(storeCategory);
     }
 
-    public void changeOpenStatus(Boolean isOpen, Long updatedBy) {
+    public void changeOpenStatus(Boolean isOpen) {
         this.isOpen = isOpen;
-        this.updatedBy = updatedBy;
-        this.updatedAt = java.time.LocalDateTime.now();
     }
 
     public void updateRating(BigDecimal averageRating, Integer reviewCount) {
@@ -115,16 +110,12 @@ public class Store extends BaseEntity {
         this.reviewCount = reviewCount;
     }
 
-    public void changeDeliveryFee(Integer deliveryFee, Long updatedBy){
+    public void changeDeliveryFee(Integer deliveryFee){
         this.deliveryFee = deliveryFee;
-        this.updatedBy = updatedBy;
-        this.updatedAt = java.time.LocalDateTime.now();
     }
 
-    public void changeMinOrderPrice(Integer minOrderPrice, Long updatedBy){
+    public void changeMinOrderPrice(Integer minOrderPrice){
         this.minOrderPrice = minOrderPrice;
-        this.updatedBy = updatedBy;
-        this.updatedAt = java.time.LocalDateTime.now();
     }
 
 
