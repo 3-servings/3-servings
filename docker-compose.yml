@@ -1,11 +1,25 @@
 services:
+  nginx:
+    build:
+      context : ./nginx
+
+    container_name: threeservings-nginx
+
+    ports:
+      - "80:80"
+
+    depends_on:
+      - spring
+
+    restart: always
+
   spring:
     image: leunbin/threeservings-api:latest
 
     container_name: threeservings-server
 
-    ports:
-      - "19096:19096"
+    expose:
+      - "19096"
 
     depends_on:
       - postgres
