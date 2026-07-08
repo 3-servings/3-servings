@@ -1,9 +1,8 @@
 package com.sparta.server.threeserving.order.entity;
 
+import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

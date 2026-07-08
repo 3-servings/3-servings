@@ -8,6 +8,6 @@ import java.util.UUID;
 
 public record CartAddItemRequestDto (
     @NotNull UUID menuId,
-    @NotNull @Min(0L) Integer quantity,
+    @NotNull @Min(1) Integer quantity,
     @NotNull List<UUID> optionItemIds
 ) {}

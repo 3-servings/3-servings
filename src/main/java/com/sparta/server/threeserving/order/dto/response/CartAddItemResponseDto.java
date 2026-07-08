@@ -1,12 +1,10 @@
-package com.sparta.server.threeserving.order.dto;
-
-import com.sparta.server.threeserving.order.entity.Cart;
+package com.sparta.server.threeserving.order.dto.response;
 
 import java.util.UUID;
 
 public record CartAddItemResponseDto (
         UUID id,
-        Cart cart,
+        UUID cartId,
         UUID menuId,
         Integer quantity
 ) {}

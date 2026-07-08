@@ -4,13 +4,10 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.order.dto.CartAddItemResponseDto;
+import com.sparta.server.threeserving.order.dto.response.*;
+import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartAddItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartItemOptionDto;
-import com.sparta.server.threeserving.order.dto.response.CartDetailResponseDto;
-import com.sparta.server.threeserving.order.dto.response.CartItemDetailDto;
-import com.sparta.server.threeserving.order.dto.response.CartListResponseDto;
-import com.sparta.server.threeserving.order.dto.response.CartResponseDto;
 import com.sparta.server.threeserving.order.entity.Cart;
 import com.sparta.server.threeserving.order.entity.CartItem;
 import com.sparta.server.threeserving.order.entity.CartItemOption;
@@ -23,7 +20,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -82,12 +78,7 @@ public class CartService {
     }
 
     public ApiResponse<CartDetailResponseDto> getCartDetail(Long userId, UUID cartId) {
-        Cart cart = cartRepository.findByIdAndDeletedAtIsNull(cartId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
-
-        if (!cart.getUserId().equals(userId)) {
-            throw new CustomException(ErrorCode.NOT_CART_OWNER);
-        }
+        Cart cart = validateCartOwner(userId, cartId);
 
         // 카트에 담긴 항목 전체 (1쿼리)
         List<CartItem> cartItems = cartItemRepository.findAllByCart_IdAndDeletedAtIsNull(cartId);
@@ -119,33 +110,58 @@ public class CartService {
 
     @Transactional
     public ApiResponse<CartAddItemResponseDto> addMenuToCart(Long userId, UUID cartId, CartAddItemRequestDto cartAddItemRequestDto) {
+        Cart cart = validateCartOwner(userId, cartId);
+
+        // TODO: Menu id로 Menu 존재/soldout/store 일치 확인
+        // Menu menu = menuRepository.findById(menuId).orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+        UUID menuId = cartAddItemRequestDto.menuId();
+
+        // 옵션 조합이 다를 수 있으므로 기존 항목과 병합하지 않고 매번 새 cart_item으로 생성
+        CartItem cartItem = new CartItem(cart, menuId, cartAddItemRequestDto.quantity());
+        cartItemRepository.save(cartItem);
+
+        // TODO: 각 optionItemIds가 실제로 해당 메뉴의 옵션 그룹에 속하는지, 단일선택 그룹 규칙 위반 여부 확인
+        List<CartItemOption> cartItemOptions = cartAddItemRequestDto.optionItemIds().stream()
+                .map(optionItemId -> new CartItemOption(cartItem, optionItemId))
+                .toList();
+        cartItemOptionRepository.saveAll(cartItemOptions);
+
+        CartAddItemResponseDto responseDto = new CartAddItemResponseDto(
+                cartItem.getId(), cart.getId(), menuId, cartItem.getQuantity());
+        return ApiResponse.success(SuccessCode.CREATED, responseDto);
+    }
+
+    @Transactional
+    public ApiResponse<CartUpdateItemAmountResponseDto> updateCartItemAmount(Long userId, UUID cartId, UUID cartItemId, CartUpdateItemAmountRequestDto cartUpdateItemAmountRequestDto) {
+        validateCartOwner(userId, cartId);
+        CartItem cartItem = cartItemRepository.findByIdAndCart_IdAndDeletedAtIsNull(cartItemId, cartId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
+        cartItem.setQuantity(cartUpdateItemAmountRequestDto.quantity());
+        CartUpdateItemAmountResponseDto responseDto = new CartUpdateItemAmountResponseDto(cartItem.getId(), cartItem.getQuantity());
+        return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
+    }
+
+    @Transactional
+    public ApiResponse<Void> deleteCartItem(Long userId, UUID cartId, UUID cartItemId) {
+        validateCartOwner(userId, cartId);
+        CartItem cartItem = cartItemRepository.findByIdAndCart_IdAndDeletedAtIsNull(cartItemId, cartId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
+
+        // p_cart_item_option 테이블엔 deleted_at 컬럼이 없어 soft delete 불가 -> 딸린 옵션은 하드 삭제
+        List<CartItemOption> options = cartItemOptionRepository.findAllByCartItemIn(List.of(cartItem));
+        cartItemOptionRepository.deleteAll(options);
+
+        cartItem.softDelete(userId);
+        return ApiResponse.success(SuccessCode.DELETED);
+    }
+
+    private Cart validateCartOwner(Long userId, UUID cartId) {
         Cart cart = cartRepository.findByIdAndDeletedAtIsNull(cartId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
 
         if (!cart.getUserId().equals(userId)) {
             throw new CustomException(ErrorCode.NOT_CART_OWNER);
         }
-
-        // TODO: Menu id로 Menu 존재 확인 및 soldout 확인
-        // Menu menu = MenuRepository.findById().orElseThrow();
-        UUID menuId = cartAddItemRequestDto.menuId();
-
-        List<CartItem> cartItemList = cartItemRepository.findByCartAndMenu_IdAndDeletedAtIsNull(cart, menuId);
-        Integer quantity = cartItemList.isEmpty() ? 1 : cartAddItemRequestDto.quantity();
-        CartItem cartItem = null;
-        if(cartItemList.isEmpty()){
-            cartItem = new CartItem(cart, menuId, 1);
-        }else{
-            cartItem = cartItemList.getFirst();
-            cartItem.setQuantity(cartAddItemRequestDto.quantity());
-        }
-
-        // TODO: 각 optionItemIds들이 실제로 각 옵션에 속하는지 확인
-
-        List<CartItemOption> cartItemOptionList = cartAddItemRequestDto.optionItemIds().stream()
-                .map(() -> new CartItemOption(
-
-                ))
-
+        return cart;
     }
 }

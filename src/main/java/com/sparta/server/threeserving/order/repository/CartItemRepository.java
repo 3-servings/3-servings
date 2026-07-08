@@ -1,6 +1,5 @@
 package com.sparta.server.threeserving.order.repository;
 
-import com.sparta.server.threeserving.order.entity.Cart;
 import com.sparta.server.threeserving.order.entity.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -15,9 +15,9 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
 
     List<CartItem> findAllByCart_IdAndDeletedAtIsNull(UUID cartId);
 
-    List<CartItem> findByCartAndMenu_IdAndDeletedAtIsNull(Cart cart, UUID menuId);
+    Optional<CartItem> findByIdAndCart_IdAndDeletedAtIsNull(UUID id, UUID cartId);
 
-    public interface CartItemCountProjection {
+    interface CartItemCountProjection {
         UUID getCartId();
         Long getCount();
     }

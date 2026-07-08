@@ -2,15 +2,17 @@ package com.sparta.server.threeserving.order.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
 @Table(name="p_cart_item_option")
 public class CartItemOption {
@@ -28,11 +30,14 @@ public class CartItemOption {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @CreatedBy
     @Column(name = "created_by", nullable = false, updatable = false)
     private Long createdBy;
 
-
+    public CartItemOption(CartItem cartItem, UUID optionItemId) {
+        this.cartItem = cartItem;
+        this.optionItemId = optionItemId;
+    }
 }
