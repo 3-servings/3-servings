@@ -53,5 +53,14 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS));
     }
 
-    
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ){
+        tokenService.logout(request, response);
+
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS));
+    }
+
 }

@@ -11,6 +11,7 @@ import com.sparta.server.threeserving.user.service.UserService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -51,5 +52,21 @@ public class TokenService {
         String saveRefreshToken = redisService.getValue(userId);
 
         return saveRefreshToken.equals(token);
+    }
+
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie cookie = CookieUtil.getCookie(request, "refreshToken").orElseThrow(
+                () -> new CustomException(ErrorCode.REFRESH_TOKEN_NOT_FOUND)
+        );
+
+        String token = jwtUtil.substringToken(cookie.getValue());
+
+        Claims claims = jwtUtil.getUserInfoFromToken(token);
+
+        Long userId = Long.valueOf(claims.getSubject());
+
+        redisService.delValue(userId);
+
+        CookieUtil.deleteCookie(request, response, "refreshToken");
     }
 }
