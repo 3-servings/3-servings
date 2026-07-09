@@ -14,7 +14,7 @@ public class CookieUtil {
         Cookie cookie = new Cookie(name, value);
         cookie.setMaxAge(maxAge);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(false); // 로컬 실행을 위해 임시 false 클라우드 올릴때는 -> true로
         cookie.setPath("/");
         response.addCookie(cookie);
     }
