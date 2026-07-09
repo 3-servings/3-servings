@@ -1,7 +1,9 @@
-package com.sparta.server.threeserving.menu.domain.repository;
+package com.sparta.server.threeserving.menu.repository;
 
-import com.sparta.server.threeserving.menu.domain.entity.MenuCategory;
+import com.sparta.server.threeserving.menu.entity.MenuCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,4 +18,7 @@ public interface MenuCategoryRepository extends JpaRepository<MenuCategory, UUID
 
     // 수정 시 중복 확인용
     boolean existsByStoreIdAndNameAndIdNot(UUID storeId, String name, UUID id);
+
+    @Query("SELECT COALESCE(MAX(m.displayOrder), 0) FROM MenuCategory m WHERE m.store.id = :storeId")
+    Integer findMaxDisplayOrder(@Param("storeId") UUID storeId);
 }

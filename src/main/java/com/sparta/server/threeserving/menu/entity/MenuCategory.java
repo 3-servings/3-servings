@@ -1,4 +1,4 @@
-package com.sparta.server.threeserving.menu.domain.entity;
+package com.sparta.server.threeserving.menu.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.store.entity.Store;
@@ -42,8 +42,11 @@ public class MenuCategory extends BaseEntity {
         this.displayOrder = displayOrder;
     }
 
-    public void update(String name, int displayOrder) {
+    public void update(String name) {
         this.name = name;
+    }
+
+    public void updateDisplayOrder(int displayOrder) {
         this.displayOrder = displayOrder;
     }
 }

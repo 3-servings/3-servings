@@ -1,4 +1,4 @@
-package com.sparta.server.threeserving.menu.domain.entity;
+package com.sparta.server.threeserving.menu.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
