@@ -29,8 +29,6 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderItemOptionRepository orderItemOptionRepository;
 
-    private final MenuRepository menuRepository;
-
     @Transactional
     public ApiResponse<OrderCreateResponseDto> createOrder(OrderCreateRequestDto requestDto) {
         Orders order = new Orders(
