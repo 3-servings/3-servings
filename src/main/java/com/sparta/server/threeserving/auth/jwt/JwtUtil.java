@@ -56,12 +56,11 @@ public class JwtUtil {
     }
 
     // 토큰 생성
-    public String createRefreshToken(String username, UserRoleEnum role) {
+    public String createRefreshToken(Long userId, UserRoleEnum role) {
         Date date = new Date();
 
-        return BEARER_PREFIX +
-                Jwts.builder()
-                        .setSubject(username) // 사용자 식별자값(ID)
+        return Jwts.builder()
+                        .setSubject(String.valueOf(userId)) // 사용자 식별자값(ID)
                         .claim(AUTHORIZATION_KEY, role) // 사용자 권한
                         .setExpiration(new Date(date.getTime() + REFRESH_TOKEN_TIME)) // 만료 시간
                         .setIssuedAt(date) // 발급일
