@@ -51,6 +51,10 @@ public class TokenService {
     public boolean validateRefreshToken(Long userId, String token){
         String saveRefreshToken = redisService.getValue(userId);
 
+        if(saveRefreshToken == null){
+            throw  new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+
         return saveRefreshToken.equals(token);
     }
 
@@ -59,7 +63,11 @@ public class TokenService {
                 () -> new CustomException(ErrorCode.REFRESH_TOKEN_NOT_FOUND)
         );
 
-        String token = jwtUtil.substringToken(cookie.getValue());
+        String token = cookie.getValue();
+
+        if(!jwtUtil.validateToken(token)){
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
 
         Claims claims = jwtUtil.getUserInfoFromToken(token);
 
