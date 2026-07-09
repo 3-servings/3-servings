@@ -2,7 +2,6 @@ package com.sparta.server.threeserving.order.service;
 
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
-import com.sparta.server.threeserving.menu.repository.MenuRepository;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderItemRequestDto;
 import com.sparta.server.threeserving.order.dto.response.OrderCreateResponseDto;
