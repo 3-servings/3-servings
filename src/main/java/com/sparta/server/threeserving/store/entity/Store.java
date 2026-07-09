@@ -30,6 +30,7 @@ public class Store extends BaseEntity {
     @JoinColumn(name = "region_id", nullable = false)
     private Region region;
 
+    @Builder.Default
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StoreCategory> categoryList = new ArrayList<>();
 
@@ -60,12 +61,15 @@ public class Store extends BaseEntity {
     @Column(name = "delivery_radius_m")
     private Integer deliveryRadiusM;
 
+    @Builder.Default
     @Column(name = "average_rating", nullable = false, precision = 2, scale = 1)
     private BigDecimal averageRating = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(name = "review_count", nullable = false)
     private Integer reviewCount = 0;
 
+    @Builder.Default
     @Column(name = "is_opne", nullable = false)
     private Boolean isOpen = false;
 
