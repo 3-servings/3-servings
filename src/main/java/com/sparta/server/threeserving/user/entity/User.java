@@ -1,9 +1,9 @@
 package com.sparta.server.threeserving.user.entity;
 
+import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class User {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -56,20 +56,28 @@ public class User {
     @Column
     private String phone;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    public static User create(
+            String username,
+            String nickname,
+            String email,
+            String encodedPassword,
+            String phone,
+            UserRoleEnum role
+    ) {
+        return User.builder()
+                .username(username)
+                .nickname(nickname)
+                .email(email)
+                .password(encodedPassword)
+                .phone(phone)
+                .role(role)
+                .build();
+    }
+
 
     //소프트 딜리트 : 실제 삭제 X
     //레디스 사용이라 리프레시토큰 DB에 저장안함 그런고로 필드 구현 X
-
-    @PrePersist
-    protected void onCreate(){
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
 
 
     // 비즈니스 로직
