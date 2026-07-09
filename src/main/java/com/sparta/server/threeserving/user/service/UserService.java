@@ -45,7 +45,7 @@ public class UserService {
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
+            throw new CustomException(ErrorCode.DUPLICATED_RESOURCE);
         }
 
         log.info("회원가입 완료 : id={}, username={}, role={}",
@@ -58,17 +58,17 @@ public class UserService {
 
 
 
-    private void validateDuplicate(SignupRequest request){
+    private void validateDuplicate(SignupRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+            throw new CustomException(ErrorCode.USERNAME_DUPLICATED);
         }
 
         if (userRepository.existsByNickname(request.getNickname())) {
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+            throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
         }
     }
 
