@@ -27,7 +27,7 @@ public class TokenService {
         Cookie cookie = CookieUtil.getCookie(request, "refreshToken")
                 .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
-        String token = jwtUtil.substringToken(cookie.getValue());
+        String token = cookie.getValue();
 
         if(!jwtUtil.validateToken(token)){
             throw new CustomException(ErrorCode.INVALID_TOKEN);
