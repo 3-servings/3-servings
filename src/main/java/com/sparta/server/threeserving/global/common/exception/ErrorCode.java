@@ -36,6 +36,7 @@ public enum ErrorCode {
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),
     NOT_CART_OWNER(HttpStatus.FORBIDDEN, "O002", "본인의 장바구니가 아닙니다."),
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O003", "주문정보를 찾을 수 없습니다."),
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O009", "장바구니에 존재하지 않는 항목이거나 다른 카트 소속입니다."),
 
     // System

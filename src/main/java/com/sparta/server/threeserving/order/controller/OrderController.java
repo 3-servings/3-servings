@@ -6,14 +6,15 @@ import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.response.OrderCreateResponseDto;
+import com.sparta.server.threeserving.order.dto.response.OrderDetailResponseDto;
+import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.service.OrderService;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -31,6 +32,33 @@ public class OrderController {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
         return orderService.createOrder(orderCreateRequestDto);
+    }
+
+    @GetMapping("/{orderId}")
+    public ApiResponse<OrderDetailResponseDto> getOrderDetail(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID orderId
+    ) {
+        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
+        Long userId = userDetails.getUser().getId();
+        if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MANAGER && userRoleEnum != UserRoleEnum.MASTER){
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+        return orderService.getOrderDetail(userId, orderId);
+    }
+
+    @GetMapping("/")
+    public ApiResponse<OrderDetailResponseDto> getOrderList(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam("storeId") UUID storeId,
+            @RequestParam("userId") Long userId,
+            @RequestParam("status") OrderStatusEnum orderStatusEnum,
+            @RequestParam("size") int size,
+            @RequestParam("page") int page,
+            @RequestParam("sort") String sortBy,
+            @RequestParam("isAsc") boolean isAsc
+    ){
+        return getOrderList
     }
 
 }

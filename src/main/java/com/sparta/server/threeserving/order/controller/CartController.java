@@ -42,7 +42,6 @@ public class CartController {
     public ApiResponse<List<CartListResponseDto>> getCartList(
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
-        // TODO: User - Customer인지 로그인 확인 로직
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
         Long userId = userDetails.getUser().getId();
         if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
