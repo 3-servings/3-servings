@@ -1,10 +1,9 @@
 package com.sparta.server.threeserving.global.config;
 
-import com.sparta.server.threeserving.auth.cookie.CookieUtil;
+import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthenticationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthorizationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtUtil;
-import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.auth.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -63,6 +62,7 @@ public class SecurityConfig {
             // 공개 API
             .requestMatchers("/signup").permitAll()
             .requestMatchers("/api/user/**").permitAll()
+            .requestMatchers("/api/carts/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
             .anyRequest().permitAll()     // 모든 요청 허용
         );
 
