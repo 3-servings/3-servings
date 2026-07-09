@@ -22,6 +22,7 @@ public class Region extends BaseEntity {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    @Builder.Default
     @Column(name = "is_service_arrea", nullable = false)
     private Boolean isServiceArea = false;
 
