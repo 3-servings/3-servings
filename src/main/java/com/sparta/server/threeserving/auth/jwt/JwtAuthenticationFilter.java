@@ -2,6 +2,8 @@ package com.sparta.server.threeserving.auth.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
+import com.sparta.server.threeserving.auth.cookie.CookieUtil;
+import com.sparta.server.threeserving.auth.redis.RedisService;
 import com.sparta.server.threeserving.user.dto.LoginRequestDto;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.servlet.FilterChain;
@@ -14,13 +16,20 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.time.Duration;
 
 @Slf4j(topic = "로그인 및 JWT 생성")
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+    private static final int REFRESH_TOKEN_EXPIRE_DAYS = 14;
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(REFRESH_TOKEN_EXPIRE_DAYS);
     private final JwtUtil jwtUtil;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+    private final RedisService redisService;
+
+
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, RedisService redisService) {
         this.jwtUtil = jwtUtil;
+        this.redisService = redisService;
         setFilterProcessesUrl("/api/user/login");
     }
 
@@ -44,11 +53,19 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) {
-        String username = ((UserDetailsImpl) authResult.getPrincipal()).getUsername();
-        UserRoleEnum role = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getRole();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authResult.getPrincipal();
 
-        String token = jwtUtil.createToken(username, role);
-        response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
+        Long userId = userDetails.getUser().getId();
+        String username = userDetails.getUsername();
+        UserRoleEnum role = userDetails.getUser().getRole();
+        String accessToken = jwtUtil.createAccessToken(username, role);
+        String refreshToken = jwtUtil.createRefreshToken(username, role);
+
+        //redis에 저장
+        redisService.setValueTtl(userId, refreshToken, REFRESH_TOKEN_EXPIRE_DAYS);
+
+        response.addHeader(JwtUtil.AUTHORIZATION_HEADER, accessToken);
+        CookieUtil.addCookie(response,"refreshToken", refreshToken, REFRESH_TOKEN_EXPIRE_DAYS);
     }
 
     @Override
