@@ -58,7 +58,7 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
             // 공개 API
-            //.requestMatchers("/signup").permitAll()
+            .requestMatchers("/signup").permitAll()
             .requestMatchers("/api/user/**").permitAll()
             .anyRequest().permitAll()     // 모든 요청 허용
         );
