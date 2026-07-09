@@ -21,6 +21,7 @@ public class Category extends BaseEntity {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
