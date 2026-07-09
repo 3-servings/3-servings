@@ -62,7 +62,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
             // 공개 API
             .requestMatchers("/signup").permitAll()
-            .requestMatchers("/api/user/**").permitAll()
+            .requestMatchers("/api/auth/**").permitAll()
             .anyRequest().permitAll()     // 모든 요청 허용
         );
 
