@@ -19,8 +19,11 @@ public enum ErrorCode {
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "가게를 찾을 수 없습니다."),
 
     // Menu
-    MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴를 찾을 수 없습니다."),
-    DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M002", "삭제된 메뉴의 상태는 변경할 수 없습니다."),
+    MENU_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴 카테고리를 찾을 수 없습니다."),
+    MENU_CATEGORY_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 카테고리 이름입니다."),
+    MENU_CATEGORY_ALREADY_DELETED(HttpStatus.CONFLICT, "M003", "이미 삭제된 메뉴 카테고리입니다."),
+    MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M000", "메뉴를 찾을 수 없습니다."),
+    DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M000", "삭제된 메뉴의 상태는 변경할 수 없습니다."),
 
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),

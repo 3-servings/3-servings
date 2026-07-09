@@ -1,6 +1,7 @@
 package com.sparta.server.threeserving.menu.domain.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
+import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,7 +24,7 @@ public class Menu extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, columnDefinition = "uuid")
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
     private UUID id;
 
     // 단방향: Menu(N) -> MenuCategory(1)
@@ -32,12 +33,9 @@ public class Menu extends BaseEntity {
     private MenuCategory menuCategory;
 
     // 단방향: Menu(N) -> Store(1)
-    // store 반영 후 다시 수정
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "store_id", nullable = false)
-//    private Store store;
-    @Column(name = "store_id", nullable = false)
-    private UUID storeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -64,10 +62,10 @@ public class Menu extends BaseEntity {
 
     // store 반영 후 다시 수정
     @Builder
-    public Menu(MenuCategory menuCategory, UUID storeId, String name, int price,
+    public Menu(MenuCategory menuCategory, Store store, String name, int price,
                 String description, boolean isDescriptionAiGenerated, int displayOrder) {
         this.menuCategory = menuCategory;
-        this.storeId = storeId;
+        this.store = store;
         this.name = name;
         this.price = price;
         this.description = description;
