@@ -8,7 +8,9 @@ import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.response.OrderCreateResponseDto;
 import com.sparta.server.threeserving.order.dto.response.OrderDetailResponseDto;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
+import com.sparta.server.threeserving.order.service.OrderSearchCondition;
 import com.sparta.server.threeserving.order.service.OrderService;
+import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,7 +42,7 @@ public class OrderController {
             @PathVariable UUID orderId
     ) {
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
+        Long userId = requireCartAccessibleUserId(userDetails);
         if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MANAGER && userRoleEnum != UserRoleEnum.MASTER){
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
@@ -50,15 +52,24 @@ public class OrderController {
     @GetMapping("/")
     public ApiResponse<OrderDetailResponseDto> getOrderList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestParam("storeId") UUID storeId,
-            @RequestParam("userId") Long userId,
-            @RequestParam("status") OrderStatusEnum orderStatusEnum,
+            @RequestParam(value = "storeId", required = false) UUID storeId,
+            @RequestParam(value = "userId", required = false) Long userId,
+            @RequestParam(value = "status") OrderStatusEnum orderStatusEnum,
             @RequestParam("size") int size,
             @RequestParam("page") int page,
             @RequestParam("sort") String sortBy,
             @RequestParam("isAsc") boolean isAsc
     ){
-        return getOrderList
+        requireCartAccessibleUserId(userDetails);
+        User user = userDetails.getUser();
+        return orderService.getOrderList(
+                user, new OrderSearchCondition(storeId, userId, orderStatusEnum, size, page - 1, sortBy, isAsc));
     }
 
+    private Long requireCartAccessibleUserId(UserDetailsImpl userDetails) {
+        if(userDetails == null){
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+        return userDetails.getUser().getId();
+    }
 }

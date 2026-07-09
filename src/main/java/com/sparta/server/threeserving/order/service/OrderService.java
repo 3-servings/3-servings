@@ -12,8 +12,12 @@ import com.sparta.server.threeserving.order.dto.response.OrderItemOptionResponse
 import com.sparta.server.threeserving.order.dto.response.OrderItemResponseDto;
 import com.sparta.server.threeserving.order.entity.OrderItem;
 import com.sparta.server.threeserving.order.entity.OrderItemOption;
+import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.*;
+import com.sparta.server.threeserving.store.repository.StoreRepository;
+import com.sparta.server.threeserving.user.entity.User;
+import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,6 +40,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderItemOptionRepository orderItemOptionRepository;
+    private final StoreRepository storeRepository;
 
     @Transactional
     public ApiResponse<OrderCreateResponseDto> createOrder(OrderCreateRequestDto requestDto) {
@@ -89,5 +94,10 @@ public class OrderService {
                 )).toList();
 
         return ApiResponse.success(SuccessCode.CREATED, new OrderDetailResponseDto(order, items));
+    }
+
+    public ApiResponse<OrderDetailResponseDto> getOrderList(User user, OrderSearchCondition condition) {
+
+        return null;
     }
 }

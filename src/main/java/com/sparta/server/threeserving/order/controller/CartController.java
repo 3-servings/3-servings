@@ -30,7 +30,7 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
             ){
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
+        Long userId = requireCartAccessibleUserId(userDetails);
         if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
         ){
             throw new CustomException(ErrorCode.ACCESS_DENIED);
@@ -43,7 +43,7 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
+        Long userId = requireCartAccessibleUserId(userDetails);
         if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
         ){
             throw new CustomException(ErrorCode.ACCESS_DENIED);
@@ -57,7 +57,7 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
+        Long userId = requireCartAccessibleUserId(userDetails);
         if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
         ){
             throw new CustomException(ErrorCode.ACCESS_DENIED);
@@ -73,7 +73,7 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
             ){
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
+        Long userId = requireCartAccessibleUserId(userDetails);
         if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
         ){
             throw new CustomException(ErrorCode.ACCESS_DENIED);
@@ -90,7 +90,7 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
             ) {
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
+        Long userId = requireCartAccessibleUserId(userDetails);
         if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
         ){
             throw new CustomException(ErrorCode.ACCESS_DENIED);
@@ -105,11 +105,18 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
+        Long userId = requireCartAccessibleUserId(userDetails);
         if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
         ){
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
         return cartService.deleteCartItem(userId, cartId, cartItemId);
+    }
+
+    private Long requireCartAccessibleUserId(UserDetailsImpl userDetails) {
+        if(userDetails == null){
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+        return userDetails.getUser().getId();
     }
 }
