@@ -1,9 +1,11 @@
 package com.sparta.server.threeserving.global.config;
 
+import com.sparta.server.threeserving.auth.cookie.CookieUtil;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthenticationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthorizationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtUtil;
 import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
+import com.sparta.server.threeserving.auth.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
+    private final RedisService redisService;
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthenticationConfiguration authenticationConfiguration;
 
@@ -39,7 +42,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil, redisService);
         filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
         return filter;
     }
@@ -58,13 +61,38 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable()) // Basic 인증 비활성화
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-            // 공개 API
-            .requestMatchers("/signup").permitAll()
-            .requestMatchers("/api/user/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/reviews/*").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/stores/*/reviews").permitAll()
-            .requestMatchers("/api/reviews/**").authenticated()
-            .anyRequest().permitAll()     // 모든 요청 허용
+                    // ===== 인가 규칙 템플릿 =====
+                    // 규칙은 위에서부터 순서대로 평가되어 먼저 매칭되는 규칙이 적용됩니다.
+
+                    // 공개 API (인증 불필요)
+                    .requestMatchers("/signup").permitAll()
+                    .requestMatchers("/api/auth/**").permitAll()
+
+                    // Order 예시. 실제 권한 확정 후 채워넣기
+                    // .requestMatchers("/api/carts/**").hasRole("CUSTOMER")
+                    // .requestMatchers("/api/carts/**", "/api/carts").hasRole("CUSTOMER")
+                    // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
+                    // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
+
+                    // Store
+
+
+                    // Menu
+
+
+                    // OrderManagement
+
+                    // Payment
+                    .requestMatchers("/api/orders/**").permitAll()
+
+                    // review
+                    .requestMatchers(HttpMethod.GET, "/api/reviews/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/stores/*/reviews").permitAll()
+                    .requestMatchers("/api/reviews/**").authenticated()     
+
+                    // ⚠️ 임시: 위 도메인 규칙이 채워지기 전까지 나머지는 모두 허용.
+                    // 팀 합의 후 permitAll() -> authenticated()로 변경
+                    .anyRequest().permitAll()
         );
 
         // 필터 관리
