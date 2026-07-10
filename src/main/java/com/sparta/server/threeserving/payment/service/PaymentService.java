@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
 import com.sparta.server.threeserving.payment.dto.response.PaymentLogResponse;
 import com.sparta.server.threeserving.payment.dto.response.PaymentResponse;
@@ -31,6 +32,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentLogRepository paymentLogRepository;
     private final OrderRepository orderRepository;
+    private final OrderManagementService orderManagementService;
 
     private Orders validateOrder(Long userId, UUID orderId){
         Orders order = orderRepository.findById(orderId)
@@ -67,6 +69,9 @@ public class PaymentService {
                         "결제 완료"
                 )
         );
+
+        //Todo: Payment 성공 후 OrderManagement 생성 - 주문 ID 넘겨주기
+//        orderManagementService.create(savedPayment.getOrder().getId());
 
         return PaymentResponse.from(savedPayment);
     }
