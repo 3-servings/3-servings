@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     public JwtAuthenticationFilter(JwtUtil jwtUtil, RedisService redisService) {
         this.jwtUtil = jwtUtil;
         this.redisService = redisService;
-        setFilterProcessesUrl("/api/user/login");
+        setFilterProcessesUrl("/api/auth/login");
     }
 
     @Override
@@ -59,13 +59,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String username = userDetails.getUsername();
         UserRoleEnum role = userDetails.getUser().getRole();
         String accessToken = jwtUtil.createAccessToken(username, role);
-        String refreshToken = jwtUtil.createRefreshToken(username, role);
+        String refreshToken = jwtUtil.createRefreshToken(userId, role);
 
         //redis에 저장
         redisService.setValueTtl(userId, refreshToken, REFRESH_TOKEN_EXPIRE_DAYS);
 
         response.addHeader(JwtUtil.AUTHORIZATION_HEADER, accessToken);
-        CookieUtil.addCookie(response,"refreshToken", refreshToken, REFRESH_TOKEN_EXPIRE_DAYS);
+        CookieUtil.addCookie(response,"refreshToken", refreshToken, (int) REFRESH_TOKEN_DURATION.getSeconds());
     }
 
     @Override

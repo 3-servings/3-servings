@@ -60,10 +60,36 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable()) // Basic 인증 비활성화
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-            // 공개 API
-            .requestMatchers("/signup").permitAll()
-            .requestMatchers("/api/user/**").permitAll()
-            .anyRequest().permitAll()     // 모든 요청 허용
+                    // ===== 인가 규칙 템플릿 =====
+                    // 규칙은 위에서부터 순서대로 평가되어 먼저 매칭되는 규칙이 적용됩니다.
+
+                    // 공개 API (인증 불필요)
+                    .requestMatchers("/signup").permitAll()
+                    .requestMatchers("/api/auth/**").permitAll()
+
+                    // Order 예시. 실제 권한 확정 후 채워넣기
+                    // .requestMatchers("/api/carts/**").hasRole("CUSTOMER")
+                    // .requestMatchers("/api/carts/**", "/api/carts").hasRole("CUSTOMER")
+                    // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
+                    // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
+
+                    // Store
+
+
+                    // Menu
+
+
+                    // OrderManagement
+
+                    // Payment
+
+                    // review
+
+
+
+                    // ⚠️ 임시: 위 도메인 규칙이 채워지기 전까지 나머지는 모두 허용.
+                    // 팀 합의 후 permitAll() -> authenticated()로 변경
+                    .anyRequest().permitAll()
         );
 
         // 필터 관리
