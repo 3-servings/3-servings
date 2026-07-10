@@ -81,20 +81,22 @@ public class User extends BaseEntity {
 
 
     // 비즈니스 로직
-    public void changePassword(String password){
-        this.password = password;
+    public void updateProfile(String nickname, String phone) {
+        this.nickname = nickname;
+        this.phone = phone;
     }
 
-    public void changeNickname(String nickname){
-        this.nickname = nickname;
-    }
-    public void changePhone(String phone){
-        this.phone = phone;
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 
     //회원탈퇴시에
     //유니크 속성 컬럼 중복 방지 메서드
     public void withdraw(){
+        if (this.status == UserStatus.DELETED) {
+            return;
+        }
+
         String suffix = "__deleted__" + UUID.randomUUID();
 
         this.status = UserStatus.DELETED;
