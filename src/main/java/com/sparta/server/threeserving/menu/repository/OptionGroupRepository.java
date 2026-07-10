@@ -11,4 +11,6 @@ public interface OptionGroupRepository extends JpaRepository<OptionGroup, UUID> 
     // 특정 가게의 옵션 그룹 전체 조회
     List<OptionGroup> findAllByStoreId(UUID storeId);
 
+    boolean existsByStoreIdAndName(UUID storeId, String name);
+
 }

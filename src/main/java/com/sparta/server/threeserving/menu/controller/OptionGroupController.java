@@ -1,0 +1,33 @@
+package com.sparta.server.threeserving.menu.controller;
+
+import com.sparta.server.threeserving.global.common.response.ApiResponse;
+import com.sparta.server.threeserving.global.common.response.SuccessCode;
+import com.sparta.server.threeserving.menu.dto.request.OptionGroupCreateRequest;
+import com.sparta.server.threeserving.menu.dto.response.OptionGroupResponse;
+import com.sparta.server.threeserving.menu.service.OptionGroupService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1")
+@RequiredArgsConstructor
+public class OptionGroupController {
+
+    private final OptionGroupService optionGroupService;
+
+    @PostMapping("/stores/{storeId}/option-groups")
+    public ResponseEntity<ApiResponse<OptionGroupResponse>> createOptionGroup(
+            @PathVariable UUID storeId,
+            @Valid @RequestBody OptionGroupCreateRequest request
+    ) {
+        OptionGroupResponse response = OptionGroupResponse.from(
+                optionGroupService.createOptionGroup(storeId, request)
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.CREATED, response));
+    }
+}

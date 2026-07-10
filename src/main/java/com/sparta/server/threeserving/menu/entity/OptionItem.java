@@ -39,11 +39,15 @@ public class OptionItem extends BaseEntity {
     @Column(nullable = false, length = 20)
     private MenuStatus status = MenuStatus.AVAILABLE;
 
+    @Column(name = "display_order", nullable = false)
+    private int displayOrder = 0;
+
     @Builder
-    public OptionItem(OptionGroup optionGroup, String name, int price) {
+    public OptionItem(OptionGroup optionGroup, String name, int price, int displayOrder) {
         this.optionGroup = optionGroup;
         this.name = name;
         this.price = price;
+        this.displayOrder = displayOrder;
     }
 
     public void assignOptionGroup(OptionGroup optionGroup) {
