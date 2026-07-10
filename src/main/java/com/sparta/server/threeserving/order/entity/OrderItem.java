@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @Getter
 @Entity
 @Table(name = "p_order_item")
+@NoArgsConstructor
 public class OrderItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,4 +35,12 @@ public class OrderItem extends BaseEntity {
 
     @Column(name="quantity", nullable = false)
     private Integer quantity;
+
+    public OrderItem(Orders order, UUID menuId, String menuName, Integer price, Integer quantity) {
+        this.order = order;
+        this.menuId = menuId;
+        this.menuName = menuName;
+        this.price = price;
+        this.quantity = quantity;
+    }
 }
