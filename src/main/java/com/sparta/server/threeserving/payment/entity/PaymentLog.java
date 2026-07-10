@@ -1,12 +1,10 @@
 package com.sparta.server.threeserving.payment.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
-import com.sparta.server.threeserving.payment.enums.PaymentLogStatus;
+import com.sparta.server.threeserving.payment.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -28,8 +26,20 @@ public class PaymentLog extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private PaymentLogStatus status = PaymentLogStatus.PENDING;
+    private PaymentStatus status = PaymentStatus.PENDING;
 
     @Column(length = 100)
     private String message;
+
+    public static PaymentLog create(
+            Payment payment,
+            PaymentStatus status,
+            String message
+    ){
+        return PaymentLog.builder()
+                .payment(payment)
+                .status(status)
+                .message(message)
+                .build();
+    }
 }

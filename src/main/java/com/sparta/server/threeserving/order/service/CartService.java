@@ -51,7 +51,6 @@ public class CartService {
     }
 
     public ApiResponse<List<CartListResponseDto>> getCartList(Long userId) {
-        // N+1 문제 발생 및 해결
         List<Cart> cartList = cartRepository.findAllByUserIdAndDeletedAtIsNull(userId);
         if (cartList.isEmpty()) {
             return ApiResponse.success(SuccessCode.SUCCESS, List.of());

@@ -6,10 +6,8 @@ import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderItemRequestDto;
-import com.sparta.server.threeserving.order.dto.response.OrderCreateResponseDto;
-import com.sparta.server.threeserving.order.dto.response.OrderDetailResponseDto;
-import com.sparta.server.threeserving.order.dto.response.OrderItemOptionResponseDto;
-import com.sparta.server.threeserving.order.dto.response.OrderItemResponseDto;
+import com.sparta.server.threeserving.order.dto.request.OrderModifyRequestDto;
+import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.entity.OrderItem;
 import com.sparta.server.threeserving.order.entity.OrderItemOption;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
@@ -17,17 +15,16 @@ import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.*;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
-import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +37,12 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderItemOptionRepository orderItemOptionRepository;
+
     private final StoreRepository storeRepository;
+
+    private static final List<Integer> ALLOWED_SIZE = List.of(10, 30, 50);
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("createdAt", "totalPrice");
+
 
     @Transactional
     public ApiResponse<OrderCreateResponseDto> createOrder(OrderCreateRequestDto requestDto) {
@@ -96,8 +98,77 @@ public class OrderService {
         return ApiResponse.success(SuccessCode.CREATED, new OrderDetailResponseDto(order, items));
     }
 
-    public ApiResponse<OrderDetailResponseDto> getOrderList(User user, OrderSearchCondition condition) {
+    // TODO: 언젠가 QueryDSL로 변경해도 될듯.
+    public ApiResponse<Page<OrderListResponseDto>> getOrderList(User user, UUID storeId, Long userId, OrderStatusEnum orderStatusEnum, int size, int page, String sortBy, boolean isAsc) {
+        Pageable pageable = toPageable(size, page, sortBy, isAsc);
+        Page<Orders> orderPage = switch (user.getRole()) {
+            case CUSTOMER -> getForCustomer(user.getId(), storeId, orderStatusEnum, pageable);
+            case OWNER -> getForOwner(user.getId(), storeId, orderStatusEnum, pageable);
+            case MANAGER, MASTER -> getForAdmin(storeId, orderStatusEnum, pageable);
+        };
 
-        return null;
+        Page<OrderListResponseDto> responsePage = orderPage.map(OrderListResponseDto::new);
+        return ApiResponse.success(SuccessCode.SUCCESS, responsePage);
+    }
+
+    private Page<Orders> getForAdmin(UUID storeId, OrderStatusEnum status, Pageable pageable) {
+        if (storeId != null) {
+            return (status != null)
+                    ? orderRepository.findByStoreIdAndOrderStatusAndDeletedAtIsNull(storeId, status, pageable)
+                    : orderRepository.findByStoreIdAndDeletedAtIsNull(storeId, pageable);
+        }
+        return (status != null)
+                ? orderRepository.findByOrderStatusAndDeletedAtIsNull(status, pageable)
+                : orderRepository.findByDeletedAtIsNull(pageable);
+    }
+
+    private Page<Orders> getForOwner(Long ownerId, UUID storeId, OrderStatusEnum status, Pageable pageable) {
+        List<UUID> ownedStoreIdList = storeRepository.findStoreIdsByOwnerId(ownerId);
+
+        if(storeId != null) {
+            if(!ownedStoreIdList.contains(storeId)) {
+                // TODO: 에러코드 더 생기면 바꾸기
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+            return (status != null)
+                    ? orderRepository.findByStoreIdAndOrderStatusAndDeletedAtIsNull(storeId, status, pageable)
+                    : orderRepository.findByStoreIdAndDeletedAtIsNull(storeId, pageable);
+        }
+        return (status != null)
+                ? orderRepository.findByStoreIdInAndOrderStatusAndDeletedAtIsNull(ownedStoreIdList, status, pageable)
+                : orderRepository.findByStoreIdInAndDeletedAtIsNull(ownedStoreIdList, pageable);
+    }
+
+    private Page<Orders> getForCustomer(Long userId, UUID storeId, OrderStatusEnum status, Pageable pageable) {
+        if(storeId != null)
+            return (status != null)
+                    ? orderRepository.findAllByUserIdAndStoreIdAndOrderStatusAndDeletedAtIsNull(userId, storeId, status, pageable)
+                    : orderRepository.findAllByUserIdAndStoreIdAndDeletedAtIsNull(userId, storeId, pageable);
+        return (status != null)
+            ? orderRepository.findAllByUserIdAndOrderStatusAndDeletedAtIsNull(userId, status, pageable)
+            : orderRepository.findAllByUserIdAndDeletedAtIsNull(userId, pageable);
+    }
+
+    private Pageable toPageable(int size, int page, String sortBy, boolean isAsc) {
+        sortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdBy";
+        Sort.Direction dir = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(dir, sortBy);
+        size = ALLOWED_SIZE.contains(size) ? size : 10;
+        return PageRequest.of(page, size, sort);
+    }
+
+    @Transactional
+    public ApiResponse<OrderModifyResponseDto> modifyOrderInfo(Long userId, UUID orderId, OrderModifyRequestDto orderModifyRequestDto) {
+        Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+        if(!order.getUserId().equals(userId))
+            throw new CustomException(ErrorCode.NOT_ORDER_OWNER);
+
+        order.modifyInfo(
+                orderModifyRequestDto.requestMessage(),
+                orderModifyRequestDto.deliveryAddress()
+        );
+
+        OrderModifyResponseDto responseDto = new OrderModifyResponseDto(order);
+        return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
     }
 }

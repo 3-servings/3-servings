@@ -4,15 +4,20 @@ import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.order.dto.OrderCancelResponseDto;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
+import com.sparta.server.threeserving.order.dto.request.OrderModifyRequestDto;
 import com.sparta.server.threeserving.order.dto.response.OrderCreateResponseDto;
 import com.sparta.server.threeserving.order.dto.response.OrderDetailResponseDto;
+import com.sparta.server.threeserving.order.dto.response.OrderListResponseDto;
+import com.sparta.server.threeserving.order.dto.response.OrderModifyResponseDto;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
-import com.sparta.server.threeserving.order.service.OrderSearchCondition;
 import com.sparta.server.threeserving.order.service.OrderService;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +32,7 @@ public class OrderController {
     @PostMapping("/")
     public ApiResponse<OrderCreateResponseDto> createOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody OrderCreateRequestDto orderCreateRequestDto
+            @RequestBody @Valid OrderCreateRequestDto orderCreateRequestDto
     ){
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
         if(userRoleEnum != UserRoleEnum.MANAGER && userRoleEnum != UserRoleEnum.MASTER){
@@ -50,7 +55,7 @@ public class OrderController {
     }
 
     @GetMapping("/")
-    public ApiResponse<OrderDetailResponseDto> getOrderList(
+    public ApiResponse<Page<OrderListResponseDto>> getOrderList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(value = "storeId", required = false) UUID storeId,
             @RequestParam(value = "userId", required = false) Long userId,
@@ -63,8 +68,28 @@ public class OrderController {
         requireCartAccessibleUserId(userDetails);
         User user = userDetails.getUser();
         return orderService.getOrderList(
-                user, new OrderSearchCondition(storeId, userId, orderStatusEnum, size, page - 1, sortBy, isAsc));
+                user, storeId, userId, orderStatusEnum, size, page - 1, sortBy, isAsc);
     }
+
+    @PatchMapping("{orderId}")
+    public ApiResponse<OrderModifyResponseDto> modifyOrder(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID orderId,
+            @RequestBody OrderModifyRequestDto orderModifyRequestDto
+    ){
+        Long userId = requireCartAccessibleUserId(userDetails);
+        return orderService.modifyOrderInfo(userId, orderId, orderModifyRequestDto);
+    }
+
+    @PatchMapping("{orderId}/cancel")
+    public ApiResponse<OrderCancelResponseDto> CancelOrder(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID orderId,
+
+    ){
+
+    }
+
 
     private Long requireCartAccessibleUserId(UserDetailsImpl userDetails) {
         if(userDetails == null){
