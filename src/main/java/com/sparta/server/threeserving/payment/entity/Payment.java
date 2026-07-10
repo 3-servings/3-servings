@@ -48,4 +48,9 @@ public class Payment extends BaseEntity {
     private Instant approvedAt;
 
     private Instant refundAt;
+
+    public void refund(){
+        this.status = PaymentStatus.REFUNDED;
+        this.refundAt = Instant.now();
+    }
 }
