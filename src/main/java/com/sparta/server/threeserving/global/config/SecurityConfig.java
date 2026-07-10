@@ -9,6 +9,7 @@ import com.sparta.server.threeserving.auth.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -85,7 +86,9 @@ public class SecurityConfig {
                     .requestMatchers("/api/orders/**").permitAll()
 
                     // review
-
+                    .requestMatchers(HttpMethod.GET, "/api/reviews/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/stores/*/reviews").permitAll()
+                    .requestMatchers("/api/reviews/**").authenticated()
 
 
                     // ⚠️ 임시: 위 도메인 규칙이 채워지기 전까지 나머지는 모두 허용.
