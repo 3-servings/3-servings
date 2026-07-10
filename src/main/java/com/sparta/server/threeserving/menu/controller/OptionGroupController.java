@@ -7,6 +7,10 @@ import com.sparta.server.threeserving.menu.dto.response.OptionGroupResponse;
 import com.sparta.server.threeserving.menu.service.OptionGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,4 +34,16 @@ public class OptionGroupController {
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.CREATED, response));
     }
+
+    @GetMapping("/stores/{storeId}/option-groups")
+    public ResponseEntity<ApiResponse<Page<OptionGroupResponse>>> getOptionGroups(
+            @PathVariable UUID storeId,
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<OptionGroupResponse> responses = optionGroupService.getOptionGroups(storeId, keyword, pageable);
+
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS, responses));
+    }
+
 }

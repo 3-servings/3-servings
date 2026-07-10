@@ -3,12 +3,15 @@ package com.sparta.server.threeserving.menu.service;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.dto.request.OptionGroupCreateRequest;
+import com.sparta.server.threeserving.menu.dto.response.OptionGroupResponse;
 import com.sparta.server.threeserving.menu.entity.OptionGroup;
 import com.sparta.server.threeserving.menu.entity.OptionItem;
 import com.sparta.server.threeserving.menu.repository.OptionGroupRepository;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +64,25 @@ public class OptionGroupService {
 
         // DB 저장, Cascade 설정으로 item도 함께 저장
         return optionGroupRepository.save(optionGroup);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OptionGroupResponse> getOptionGroups(UUID storeId, String keyword, Pageable pageable) {
+        // 가게 존재 여부 검증
+        if (!storeRepository.existsById(storeId)) {
+            throw new CustomException(ErrorCode.STORE_NOT_FOUND);
+        }
+
+        Page<OptionGroup> optionGroups;
+        // 키워드 분기 처리
+        if (keyword != null && !keyword.isBlank()) {
+            optionGroups = optionGroupRepository.findByStoreIdAndNameContainingIgnoreCase(storeId, keyword, pageable);
+        } else {
+            optionGroups = optionGroupRepository.findAllByStoreId(storeId, pageable);
+        }
+
+        // LazyInitializationException 방지를 위해 service 에서 dto 변환
+        return optionGroups.map(OptionGroupResponse::from);
     }
 
 }

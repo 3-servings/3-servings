@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -42,6 +43,7 @@ public class OptionGroup extends BaseEntity {
     private int maxSelect = 1;
 
     // 양방향: OptionGroup(1) <-> OptionItem(N)
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OptionItem> optionItemList = new ArrayList<>();
 
