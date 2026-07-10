@@ -82,6 +82,7 @@ public class SecurityConfig {
                     // OrderManagement
 
                     // Payment
+                    .requestMatchers("/api/orders/**").permitAll()
 
                     // review
 
