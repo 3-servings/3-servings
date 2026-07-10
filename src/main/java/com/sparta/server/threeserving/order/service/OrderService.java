@@ -9,10 +9,7 @@ import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderModifyRequestDto;
 import com.sparta.server.threeserving.order.dto.response.*;
-import com.sparta.server.threeserving.order.entity.OrderItem;
-import com.sparta.server.threeserving.order.entity.OrderItemOption;
-import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
-import com.sparta.server.threeserving.order.entity.Orders;
+import com.sparta.server.threeserving.order.entity.*;
 import com.sparta.server.threeserving.order.repository.*;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
@@ -22,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -83,7 +81,7 @@ public class OrderService {
     }
 
     public ApiResponse<OrderDetailResponseDto> getOrderDetail(Long userId, UUID orderId) {
-        Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+        Orders order = validateOrderOwner(userId, orderId);
         List<OrderItem> orderItemList = orderItemRepository.findAllByOrder_IdAndDeletedAtIsNull(order);
 
         Map<UUID, List<OrderItemOption>> optionByOrderItem = orderItemOptionRepository.findAllByOrderItemIn(orderItemList).stream()
@@ -162,9 +160,7 @@ public class OrderService {
 
     @Transactional
     public ApiResponse<OrderModifyResponseDto> modifyOrderInfo(Long userId, UUID orderId, OrderModifyRequestDto orderModifyRequestDto) {
-        Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-        if(!order.getUserId().equals(userId))
-            throw new CustomException(ErrorCode.NOT_ORDER_OWNER);
+        Orders order = validateOrderOwner(userId, orderId);
 
         order.modifyInfo(
                 orderModifyRequestDto.requestMessage(),
@@ -176,15 +172,13 @@ public class OrderService {
     }
 
     @Transactional
-    public ApiResponse<OrderCancelResponseDto> CancelOrder(Long userId, UUID orderId) {
-        Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-        if(!order.getUserId().equals(userId))
-            throw new CustomException(ErrorCode.NOT_ORDER_OWNER);
+    public ApiResponse<OrderCancelResponseDto> cancelOrder(Long userId, UUID orderId) {
+        Orders order = validateOrderOwner(userId, orderId);
 
-        if(order.getOrderStatus() == OrderStatusEnum.PENDING)
+        if(order.getOrderStatus() != OrderStatusEnum.PENDING)
             throw new CustomException(ErrorCode.ORDER_ALREADY_PROCESSED);
 
-        Duration elapsed = Duration.between(Instant.now(), order.getCreatedAt());
+        Duration elapsed = Duration.between(order.getCreatedAt(), Instant.now());
 
         if(elapsed.compareTo(Duration.ofMinutes(AVAILABLE_ORDER_CANCEL_TiME_IN_MINUTES)) > 0){
             throw new CustomException(ErrorCode.CANCEL_TIME_EXPIRED);
@@ -193,4 +187,34 @@ public class OrderService {
         order.cancel();
         return ApiResponse.success(SuccessCode.SUCCESS, new OrderCancelResponseDto(order));
     }
+
+    @Transactional
+    public ApiResponse<Void> deleteOrder(Long userId, UUID orderId) {
+        // MANAGER 전용 api이므로 owner로직 적용x
+        Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
+        List<OrderItem> orderItemList = orderItemRepository.findByOrder_IdAndDeletedAtIsNull(order.getId());
+        if(orderItemList.isEmpty())
+            throw new CustomException(ErrorCode.ORDER_NOT_FOUND);
+
+        // p_order_item_option 테이블엔 deleted_at 컬럼이 없어 soft delete 불가 -> 딸린 옵션은 하드 삭제
+        List<OrderItemOption> options = orderItemOptionRepository.findAllByOrderItemIn(orderItemList);
+        orderItemOptionRepository.deleteAll(options);
+
+        for (OrderItem orderItem : orderItemList) {
+            orderItem.softDelete(userId);
+        }
+        order.softDelete(userId);
+        return ApiResponse.success(SuccessCode.DELETED);
+    }
+
+    @NonNull
+    private Orders validateOrderOwner(Long userId, UUID orderId) {
+        Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+        if(!order.getUserId().equals(userId))
+            throw new CustomException(ErrorCode.NOT_ORDER_OWNER);
+        return order;
+    }
+
+
 }

@@ -16,6 +16,7 @@ import com.sparta.server.threeserving.order.service.OrderService;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -71,7 +72,7 @@ public class OrderController {
                 user, storeId, userId, orderStatusEnum, size, page - 1, sortBy, isAsc);
     }
 
-    @PatchMapping("{orderId}")
+    @PatchMapping("/{orderId}")
     public ApiResponse<OrderModifyResponseDto> modifyOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId,
@@ -81,13 +82,22 @@ public class OrderController {
         return orderService.modifyOrderInfo(userId, orderId, orderModifyRequestDto);
     }
 
-    @PatchMapping("{orderId}/cancel")
+    @PatchMapping("/{orderId}/cancel")
     public ApiResponse<OrderCancelResponseDto> CancelOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId
     ){
         Long userId = requireCartAccessibleUserId(userDetails);
-        return orderService.CancelOrder(userId, orderId);
+        return orderService.cancelOrder(userId, orderId);
+    }
+
+    @DeleteMapping("/{orderId}")
+    public ApiResponse<Void> DeleteOrder(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID orderId
+    ){
+        Long userId = requireCartAccessibleUserId(userDetails);
+        return orderService.deleteOrder(userId, orderId);
     }
 
 
