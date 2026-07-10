@@ -31,13 +31,13 @@ public class AiGenerationLog {
     private UUID imageId;
 
     // 점주가 입력한 가공되지 않은 순수 키워드/프롬프트
-    @Column(name = "raw_prompt", columnDefinition = "TEXT", nullable = false, updatable = false)
+    @Column(name = "raw_prompt", nullable = false, updatable = false, columnDefinition = "TEXT")
     private String rawPrompt;
 
-    @Column(name = "ai_request", columnDefinition = "TEXT", nullable = false, updatable = false)
+    @Column(name = "ai_request", nullable = false, updatable = false, columnDefinition = "TEXT")
     private String aiRequest;
 
-    @Column(name = "ai_response", columnDefinition = "TEXT", nullable = false, updatable = false)
+    @Column(name = "ai_response", nullable = true, updatable = false, columnDefinition = "TEXT")
     private String aiResponse;
 
     @CreatedDate
@@ -47,7 +47,7 @@ public class AiGenerationLog {
     @Builder
     public AiGenerationLog(UUID storeId, UUID imageId, String rawPrompt, String aiRequest, String aiResponse) {
         this.storeId = storeId;
-        this.imageId = imageId; // 선택값 처리
+        this.imageId = imageId;
         this.rawPrompt = rawPrompt;
         this.aiRequest = aiRequest;
         this.aiResponse = aiResponse;
