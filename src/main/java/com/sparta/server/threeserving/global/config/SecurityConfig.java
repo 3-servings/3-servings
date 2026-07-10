@@ -1,10 +1,9 @@
 package com.sparta.server.threeserving.global.config;
 
-import com.sparta.server.threeserving.auth.cookie.CookieUtil;
+import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthenticationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthorizationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtUtil;
-import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.auth.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -68,8 +67,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
 
                     // Order 예시. 실제 권한 확정 후 채워넣기
-                    // .requestMatchers("/api/carts/**").hasRole("CUSTOMER")
-                    // .requestMatchers("/api/carts/**", "/api/carts").hasRole("CUSTOMER")
+                    .requestMatchers("/api/carts/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
                     // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
                     // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
 

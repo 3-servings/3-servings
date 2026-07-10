@@ -4,12 +4,11 @@ import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.order.dto.response.*;
-import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartAddItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartCreateRequestDto;
+import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
+import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.service.CartService;
-import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,12 +28,7 @@ public class CartController {
             @RequestBody @Valid CartCreateRequestDto cartCreateRequestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails
             ){
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
-        if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
-        ){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        Long userId = requireCartAccessibleUserId(userDetails);
         return cartService.createOrFindCart(userId, cartCreateRequestDto.storeId());
     }
 
@@ -42,13 +36,7 @@ public class CartController {
     public ApiResponse<List<CartListResponseDto>> getCartList(
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
-        // TODO: User - Customer인지 로그인 확인 로직
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
-        if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
-        ){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        Long userId = requireCartAccessibleUserId(userDetails);
         return cartService.getCartList(userId);
     }
 
@@ -57,12 +45,7 @@ public class CartController {
             @PathVariable UUID cartId,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
-        if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
-        ){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        Long userId = requireCartAccessibleUserId(userDetails);
         return cartService.getCartDetail(userId, cartId);
     }
 
@@ -73,12 +56,7 @@ public class CartController {
             @RequestBody @Valid CartAddItemRequestDto cartAddItemRequestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails
             ){
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
-        if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
-        ){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        Long userId = requireCartAccessibleUserId(userDetails);
         return cartService.addMenuToCart(userId, cartId, cartAddItemRequestDto);
     }
 
@@ -90,12 +68,7 @@ public class CartController {
             @RequestBody @Valid CartUpdateItemAmountRequestDto cartUpdateItemAmountRequestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails
             ) {
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
-        if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
-        ){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        Long userId = requireCartAccessibleUserId(userDetails);
         return cartService.updateCartItemAmount(userId, cartId, cartItemId, cartUpdateItemAmountRequestDto);
     }
 
@@ -105,12 +78,14 @@ public class CartController {
             @PathVariable UUID cartItemId,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        Long userId = userDetails.getUser().getId();
-        if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MASTER && userRoleEnum != UserRoleEnum.MANAGER
-        ){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        Long userId = requireCartAccessibleUserId(userDetails);
         return cartService.deleteCartItem(userId, cartId, cartItemId);
+    }
+
+    private Long requireCartAccessibleUserId(UserDetailsImpl userDetails) {
+        if(userDetails == null){
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+        return userDetails.getUser().getId();
     }
 }
