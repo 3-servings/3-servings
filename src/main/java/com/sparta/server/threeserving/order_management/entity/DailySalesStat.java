@@ -1,5 +1,7 @@
 package com.sparta.server.threeserving.order_management.entity;
 
+import com.sparta.server.threeserving.global.common.BaseEntity;
+import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +15,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "p_daily_sales_stat")
-public class DailySalesStat {
+public class DailySalesStat extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -42,15 +44,9 @@ public class DailySalesStat {
     @Column(name = "accept_rate")
     private BigDecimal acceptRate;
 
-    @Column(name = "created_at")
-    private OffsetDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "store_id", nullable = false)
-//    private Store store;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 
 
 
