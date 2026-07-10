@@ -18,6 +18,7 @@ public enum ErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "만료된 토큰입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A003", "재발급이 불가능합니다. 다시 로그인해주세요."),
     KAKAO_AUTH_FAILED(HttpStatus.BAD_GATEWAY, "A004", "카카오 인증에 실패했습니다."),
+
     // Common
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "잘못된 입력값입니다."),
     UNSUPPORTED_METHOD(HttpStatus.BAD_REQUEST, "C002", "지원하지 않는 방식입니다."),
@@ -30,8 +31,11 @@ public enum ErrorCode {
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "가게를 찾을 수 없습니다."),
 
     // Menu
-    MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴를 찾을 수 없습니다."),
-    DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M002", "삭제된 메뉴의 상태는 변경할 수 없습니다."),
+    MENU_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴 카테고리를 찾을 수 없습니다."),
+    MENU_CATEGORY_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 카테고리 이름입니다."),
+    MENU_CATEGORY_ALREADY_DELETED(HttpStatus.CONFLICT, "M003", "이미 삭제된 메뉴 카테고리입니다."),
+    MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M000", "메뉴를 찾을 수 없습니다."),
+    DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M000", "삭제된 메뉴의 상태는 변경할 수 없습니다."),
 
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),

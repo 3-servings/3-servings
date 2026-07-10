@@ -1,4 +1,4 @@
-package com.sparta.server.threeserving.order_management.dto;
+package com.sparta.server.threeserving.order_management.dto.response;
 
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order_management.entity.OrderManagement;
@@ -10,8 +10,8 @@ import java.util.UUID;
 @Getter
 public class OrderManagementResponse {
 
-//        private UUID orderId;
-//        private UUID storeId;
+        private UUID orderId;
+        private UUID storeId;
         private UUID orderManagementId;
         private OrderStatusEnum orderStatus;
         private Integer estimatedCookTime;
@@ -24,10 +24,10 @@ public class OrderManagementResponse {
 
     public OrderManagementResponse(OrderManagement orderManagement) {
 
-//          this.orderId = orderManagement.getOrder().getId();
-//          this.storeId = orderManagement.getStore().getId();
+            this.orderId = orderManagement.getOrders().getId();
+            this.storeId = orderManagement.getStore().getId();
             this.orderManagementId = orderManagement.getId();
-            this.orderStatus = orderManagement.getOrderStatusEnum();
+            this.orderStatus = orderManagement.getOrderStatus();
             this.estimatedCookTime = orderManagement.getEstimatedCookTime();
             this.rejectMemo = orderManagement.getRejectMemo();
             this.acceptedAt = orderManagement.getAcceptedAt();
