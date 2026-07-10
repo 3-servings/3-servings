@@ -55,19 +55,14 @@ public class MenuCategoryService {
     }
 
     @Transactional
-    public MenuCategory updateMenuCategory(UUID storeId, UUID menuCategoryId, MenuCategoryUpdateRequest request) {
+    public MenuCategory updateMenuCategory(UUID menuCategoryId, MenuCategoryUpdateRequest request) {
         // menuCategory 존재 여부 검증
         MenuCategory menuCategory = menuCategoryRepository.findById(menuCategoryId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MENU_CATEGORY_NOT_FOUND));
 
         // menuCategory 이름을 변경할 때 -> menuCategory 이름 중복 검증
-        if (menuCategoryRepository.existsByStoreIdAndNameAndIdNot(storeId, request.getName(), menuCategoryId)) {
+        if (menuCategoryRepository.existsByStoreIdAndNameAndIdNot(menuCategory.getStore().getId(), request.getName(), menuCategoryId)) {
             throw new CustomException(ErrorCode.MENU_CATEGORY_NAME_DUPLICATED);
-        }
-
-        // 요청한 가게의 menuCategory 인지 확인
-        if (!menuCategory.getStore().getId().equals(storeId)) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         // menuCategory 갱신 (name 만 수정 가능, displayOrder는 순서 수정 API 사용)
@@ -91,15 +86,10 @@ public class MenuCategoryService {
     }
 
     @Transactional
-    public void deleteMenuCategory(UUID storeId, UUID menuCategoryId, Long userId, UserRoleEnum role) {
+    public void deleteMenuCategory(UUID menuCategoryId, Long userId, UserRoleEnum role) {
         // menuCategory 존재 여부 검증
         MenuCategory menuCategory = menuCategoryRepository.findById(menuCategoryId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MENU_CATEGORY_NOT_FOUND));
-
-        // 요청한 가게의 menuCategory 인지 확인
-        if (!menuCategory.getStore().getId().equals(storeId)) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
 
         // 요청한 사용자가 운영자이거나 그 가게의 주인인지 확인
         if (role != UserRoleEnum.MASTER && !menuCategory.getStore().getOwner().getId().equals(userId)) {
