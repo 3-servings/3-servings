@@ -19,13 +19,13 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/stores/{storeId}/menu-categories")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class MenuCategoryController {
 
     private final MenuCategoryService menuCategoryService;
 
-    @PostMapping
+    @PostMapping("/stores/{storeId}/menu-categories")
 //    @PreAuthorize("hasRole('OWNER')") // todo: security 활성화 이후 반영
     public ResponseEntity<ApiResponse<MenuCategoryResponse>> createMenuCategory(
             @PathVariable UUID storeId,
@@ -38,7 +38,7 @@ public class MenuCategoryController {
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.CREATED, response));
     }
 
-    @GetMapping
+    @GetMapping("/stores/{storeId}/menu-categories")
     public ResponseEntity<ApiResponse<List<MenuCategoryResponse>>> getMenuCategories(
             @PathVariable UUID storeId
     ) {
@@ -48,21 +48,20 @@ public class MenuCategoryController {
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS, responses));
     }
 
-    @PutMapping("/{menuCategoryId}")
+    @PutMapping("/menu-categories/{menuCategoryId}")
 //    @PreAuthorize("hasRole('OWNER')") // todo: security 활성화 이후 반영
     public ResponseEntity<ApiResponse<MenuCategoryResponse>> updateMenuCategory(
-            @PathVariable UUID storeId,
             @PathVariable UUID menuCategoryId,
             @Valid @RequestBody MenuCategoryUpdateRequest request
     ) {
         MenuCategoryResponse response = MenuCategoryResponse.from(
-                menuCategoryService.updateMenuCategory(storeId, menuCategoryId, request)
+                menuCategoryService.updateMenuCategory(menuCategoryId, request)
         );
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED, response));
     }
 
-    @PatchMapping("/display-order")
+    @PatchMapping("/stores/{storeId}/menu-categories/display-order")
     public ResponseEntity<ApiResponse<Void>> updateDisplayOrders(
             @PathVariable UUID storeId,
             @Valid @RequestBody MenuCategoryDisplayOrderUpdateRequest request
@@ -72,15 +71,13 @@ public class MenuCategoryController {
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED));
     }
 
-    @DeleteMapping("/{menuCategoryId}")
+    @DeleteMapping("/menu-categories/{menuCategoryId}")
 //    @PreAuthorize("hasRole('OWNER')") // todo: security 활성화 이후 반영
     public ResponseEntity<ApiResponse<Void>> deleteMenuCategory(
-            @PathVariable UUID storeId,
             @PathVariable UUID menuCategoryId,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         menuCategoryService.deleteMenuCategory(
-                storeId,
                 menuCategoryId,
                 userDetails.getUser().getId(),
                 userDetails.getUser().getRole()
