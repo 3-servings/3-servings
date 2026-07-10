@@ -66,7 +66,7 @@ class OrdermasterTest {
         given(orderManagement.getId())
                 .willReturn(orderManagementId);
 
-        given(orderManagement.getOrderStatusEnum())
+        given(orderManagement.getOrderStatus())
                 .willReturn(OrderStatusEnum.PENDING);
 
         given(orderManagement.getEstimatedCookTime())
@@ -109,7 +109,7 @@ class OrdermasterTest {
         when(rejectReasonCodeRepository.findById(rejectReasonCodeId))
                 .thenReturn(Optional.of(rejectReasonCode));
 
-        when(orderManagement.getOrderStatusEnum())
+        when(orderManagement.getOrderStatus())
                 .thenReturn(OrderStatusEnum.PENDING);
 
 

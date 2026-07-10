@@ -25,7 +25,7 @@ public class OrderManagement extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
-    private OrderStatusEnum orderStatusEnum;
+    private OrderStatusEnum orderStatus;
 
     @Column(name = "estimated_cook_time")
     private Integer estimatedCookTime;
@@ -65,7 +65,7 @@ public class OrderManagement extends BaseEntity {
     public OrderManagement(Orders order, Store store,OrderStatusEnum status) {
         this.orders = order;
         this.store = store;
-        this.orderStatusEnum = status;
+        this.orderStatus = status;
     }
 
     //승인
@@ -73,7 +73,7 @@ public class OrderManagement extends BaseEntity {
 
         validatePending();
 
-        this.orderStatusEnum = OrderStatusEnum.ACCEPTED;
+        this.orderStatus = OrderStatusEnum.ACCEPTED;
         this.estimatedCookTime = estimatedCookTime;
         this.acceptedAt = OffsetDateTime.now();
     }
@@ -83,7 +83,7 @@ public class OrderManagement extends BaseEntity {
 
         validatePending();
 
-        this.orderStatusEnum = OrderStatusEnum.REJECTED;
+        this.orderStatus = OrderStatusEnum.REJECTED;
         this.rejectReasonCode = rejectReasonCode;
         this.rejectMemo=memo;
         this.rejectedAt = OffsetDateTime.now();
@@ -94,7 +94,7 @@ public class OrderManagement extends BaseEntity {
 
         validateStatusTransition(status);
 
-        this.orderStatusEnum = status;
+        this.orderStatus = status;
         switch (status) {
             case ACCEPTED -> this.acceptedAt = OffsetDateTime.now();
             case COOKING -> this.cookingStartedAt = OffsetDateTime.now();
@@ -105,7 +105,7 @@ public class OrderManagement extends BaseEntity {
 
 
     private void validatePending() {
-        if (this.orderStatusEnum != OrderStatusEnum.PENDING) {
+        if (this.orderStatus != OrderStatusEnum.PENDING) {
             throw new CustomException(
                     ErrorCode.ORDER_STATUS_TRANSITION_INVALID
             );
@@ -114,7 +114,7 @@ public class OrderManagement extends BaseEntity {
 
 
     private void validateStatusTransition(OrderStatusEnum status) {
-        if (!this.orderStatusEnum.canTransitionTo(status)) {
+        if (!this.orderStatus.canTransitionTo(status)) {
             throw new CustomException(ErrorCode.ORDER_STATUS_TRANSITION_INVALID);
         }
     }
