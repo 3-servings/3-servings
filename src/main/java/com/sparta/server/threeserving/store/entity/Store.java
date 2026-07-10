@@ -70,7 +70,7 @@ public class Store extends BaseEntity {
     private Integer reviewCount = 0;
 
     @Builder.Default
-    @Column(name = "is_opne", nullable = false)
+    @Column(name = "is_open", nullable = false)
     private Boolean isOpen = false;
 
     public Store(

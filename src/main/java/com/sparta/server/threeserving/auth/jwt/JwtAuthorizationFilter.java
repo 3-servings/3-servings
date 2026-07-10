@@ -33,20 +33,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         String tokenValue = jwtUtil.getJwtFromHeader(req);
 
-        if (StringUtils.hasText(tokenValue)) {
-
-            if (!jwtUtil.validateToken(tokenValue)) {
-                log.error("Token Error");
-                return;
-            }
-
+        if (StringUtils.hasText(tokenValue) && jwtUtil.validateToken(tokenValue)) {
             Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
-
             try {
                 setAuthentication(info.getSubject());
             } catch (Exception e) {
                 log.error(e.getMessage());
-                return;
+                // 인증 실패 시에도 체인은 계속 진행 (permitAll 엔드포인트는 통과, 인증 필요 엔드포인트는 Security가 차단)
             }
         }
 
