@@ -63,6 +63,7 @@ public class SecurityConfig {
             // 공개 API
             .requestMatchers("/signup").permitAll()
             .requestMatchers("/api/user/**").permitAll()
+            .requestMatchers("/api/orders/**").authenticated()
             .anyRequest().permitAll()     // 모든 요청 허용
         );
 
