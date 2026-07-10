@@ -1,5 +1,6 @@
 package com.sparta.server.threeserving.order_management.entity;
 
+import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "p_order_status_history")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrderStatusHistory {
+public class OrderStatusHistory extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -29,9 +30,6 @@ public class OrderStatusHistory {
     @Column(name = "memo")
     private String memo;
 
-    @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "order_management_id", nullable = false)
     private OrderManagement orderManagement;
@@ -41,6 +39,7 @@ public class OrderStatusHistory {
         this.orderManagement = orderManagement;
         this.previousStatus = previousStatus;
         this.currentStatus = currentStatus;
+        this.memo = orderManagement.getRejectMemo();
     }
 
 }
