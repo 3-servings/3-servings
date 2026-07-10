@@ -46,4 +46,9 @@ public class Orders extends BaseEntity {
 
     @Column(name="request_message")
     private String requestMessage;
+
+    public void changeStatus(OrderStatusEnum currentStatus) {
+
+        this.orderStatus = currentStatus;
+    }
 }
