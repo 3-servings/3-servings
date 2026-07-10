@@ -72,7 +72,7 @@ public class OrderManagementService {
     public void acceptOrder(UUID orderManagementId,Integer estimatedCookTime) {
 
         OrderManagement orderManagement = getOrderManagement(orderManagementId);
-        OrderStatusEnum previousStatus = orderManagement.getOrderStatusEnum();
+        OrderStatusEnum previousStatus = orderManagement.getOrderStatus();
 
         // 1. 주문 관리 상태 변경
         orderManagement.accept(estimatedCookTime);
@@ -93,7 +93,7 @@ public class OrderManagementService {
                                 ErrorCode.REJECT_MEMO_REQUIRED
                         ));
 
-        OrderStatusEnum previousStatus = orderManagement.getOrderStatusEnum();
+        OrderStatusEnum previousStatus = orderManagement.getOrderStatus();
 
         // 1. 주문 관리 상태 변경
         orderManagement.reject(rejectReasonCode,memo);
@@ -107,7 +107,7 @@ public class OrderManagementService {
     public void updateStatus(UUID orderManagementId, @NotNull OrderStatusEnum status) {
 
         OrderManagement orderManagement = getOrderManagement(orderManagementId);
-        OrderStatusEnum previousStatus = orderManagement.getOrderStatusEnum();
+        OrderStatusEnum previousStatus = orderManagement.getOrderStatus();
 
         // 1. 주문 관리 상태 변경
         orderManagement.changeStatus(status);

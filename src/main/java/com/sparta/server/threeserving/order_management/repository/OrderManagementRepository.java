@@ -12,6 +12,6 @@ import java.util.UUID;
 public interface OrderManagementRepository extends JpaRepository<OrderManagement, UUID> {
     Page<OrderManagement>  findByStoreId(UUID storeId, Pageable pageable);
 
-    Page<OrderManagement>  findByStoreIdAndOrderStatus(UUID storeId, OrderStatusEnum status, Pageable pageable);
+    Page<OrderManagement>  findByStoreIdAndOrderStatus(UUID storeId, OrderStatusEnum orderStatus, Pageable pageable);
 
 }
