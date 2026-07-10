@@ -77,4 +77,8 @@ public class Orders extends BaseEntity {
         if(address != null)
             this.deliveryAddress = address;
     }
+
+    public void cancel() {
+        this.orderStatus = OrderStatusEnum.CANCELED;
+    }
 }

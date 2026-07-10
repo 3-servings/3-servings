@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.order.dto.OrderCancelResponseDto;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderModifyRequestDto;
@@ -23,6 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,7 +45,7 @@ public class OrderService {
 
     private static final List<Integer> ALLOWED_SIZE = List.of(10, 30, 50);
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("createdAt", "totalPrice");
-
+    private static final int AVAILABLE_ORDER_CANCEL_TiME_IN_MINUTES = 5;
 
     @Transactional
     public ApiResponse<OrderCreateResponseDto> createOrder(OrderCreateRequestDto requestDto) {
@@ -170,5 +173,24 @@ public class OrderService {
 
         OrderModifyResponseDto responseDto = new OrderModifyResponseDto(order);
         return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
+    }
+
+    @Transactional
+    public ApiResponse<OrderCancelResponseDto> CancelOrder(Long userId, UUID orderId) {
+        Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+        if(!order.getUserId().equals(userId))
+            throw new CustomException(ErrorCode.NOT_ORDER_OWNER);
+
+        if(order.getOrderStatus() == OrderStatusEnum.PENDING)
+            throw new CustomException(ErrorCode.ORDER_ALREADY_PROCESSED);
+
+        Duration elapsed = Duration.between(Instant.now(), order.getCreatedAt());
+
+        if(elapsed.compareTo(Duration.ofMinutes(AVAILABLE_ORDER_CANCEL_TiME_IN_MINUTES)) > 0){
+            throw new CustomException(ErrorCode.CANCEL_TIME_EXPIRED);
+        }
+
+        order.cancel();
+        return ApiResponse.success(SuccessCode.SUCCESS, new OrderCancelResponseDto(order));
     }
 }

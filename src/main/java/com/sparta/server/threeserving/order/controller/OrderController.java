@@ -84,10 +84,10 @@ public class OrderController {
     @PatchMapping("{orderId}/cancel")
     public ApiResponse<OrderCancelResponseDto> CancelOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable UUID orderId,
-
+            @PathVariable UUID orderId
     ){
-
+        Long userId = requireCartAccessibleUserId(userDetails);
+        return orderService.CancelOrder(userId, orderId);
     }
 
 
