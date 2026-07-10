@@ -22,7 +22,6 @@ logging:
     console: "%d{HH:mm:ss.SSS} [%X{traceId:-________}] %-5level %logger{15} - %msg%n"
 
 jwt:
-  secret:
-    key: ${JWT_SECRET}
+  secret: ${JWT_SECRET}
   access-expiration: 1800000     # 30분
   refresh-expiration: 1209600000 # 14일
