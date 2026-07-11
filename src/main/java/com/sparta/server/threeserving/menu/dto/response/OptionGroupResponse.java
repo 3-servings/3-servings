@@ -1,8 +1,8 @@
 package com.sparta.server.threeserving.menu.dto.response;
 
-import com.sparta.server.threeserving.menu.entity.MenuStatus;
 import com.sparta.server.threeserving.menu.entity.OptionGroup;
 import com.sparta.server.threeserving.menu.entity.OptionItem;
+import com.sparta.server.threeserving.menu.entity.OptionItemStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -37,7 +37,7 @@ public class OptionGroupResponse {
         private final String name;
         private final int price;
         private final int displayOrder;
-        private final MenuStatus status;
+        private final OptionItemStatus status;
 
         public static OptionItemResponse from(OptionItem optionItem) {
             return OptionItemResponse.builder()

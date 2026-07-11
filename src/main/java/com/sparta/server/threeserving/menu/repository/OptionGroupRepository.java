@@ -1,6 +1,7 @@
 package com.sparta.server.threeserving.menu.repository;
 
 import com.sparta.server.threeserving.menu.entity.OptionGroup;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,6 @@ public interface OptionGroupRepository extends JpaRepository<OptionGroup, UUID> 
 
     // 키워드 없이 전체 조회 시 페이징 적용
     Page<OptionGroup> findAllByStoreId(UUID storeId, Pageable pageable);
+
+    boolean existsByStoreIdAndNameAndIdNot(UUID storeId, String name, UUID optionGroupId);
 }

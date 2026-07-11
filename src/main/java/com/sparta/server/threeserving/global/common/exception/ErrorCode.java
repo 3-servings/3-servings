@@ -33,13 +33,13 @@ public enum ErrorCode {
     // Menu
     MENU_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴 카테고리를 찾을 수 없습니다."),
     MENU_CATEGORY_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 카테고리 이름입니다."),
-    MENU_CATEGORY_ALREADY_DELETED(HttpStatus.CONFLICT, "M003", "이미 삭제된 메뉴 카테고리입니다."),
 
     OPTION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "M004", "옵션 그룹을 찾을 수 없습니다."),
     OPTION_GROUP_NAME_DUPLICATED(HttpStatus.CONFLICT, "M005", "이미 존재하는 옵션 그룹 이름입니다."),
 
     OPTION_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "M006", "옵션 아이템을 찾을 수 없습니다."),
     INVALID_OPTION_SELECTION(HttpStatus.BAD_REQUEST, "O004", "최소/최대 선택 개수가 올바르지 않습니다."),
+    OPTION_MIN_SELECT_VIOLATION(HttpStatus.BAD_REQUEST, "M007", "필수 옵션의 판매 가능한 항목이 최소 선택 개수보다 적어질 수 없습니다."),
 
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M000", "메뉴를 찾을 수 없습니다."),
     DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M000", "삭제된 메뉴의 상태는 변경할 수 없습니다."),

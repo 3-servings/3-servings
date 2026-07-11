@@ -37,7 +37,7 @@ public class OptionItem extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private MenuStatus status = MenuStatus.AVAILABLE;
+    private OptionItemStatus status = OptionItemStatus.AVAILABLE;
 
     @Column(name = "display_order", nullable = false)
     private int displayOrder = 0;
@@ -54,7 +54,13 @@ public class OptionItem extends BaseEntity {
         this.optionGroup = optionGroup;
     }
 
-    public void updateStatus(MenuStatus newStatus) {
-        this.status = newStatus;
+    public void update(String name, int price, int displayOrder) {
+        this.name = name;
+        this.price = price;
+        this.displayOrder = displayOrder;
+    }
+
+    public void updateStatus(OptionItemStatus status) {
+        this.status = status;
     }
 }
