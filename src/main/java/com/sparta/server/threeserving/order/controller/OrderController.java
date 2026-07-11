@@ -57,11 +57,11 @@ public class OrderController {
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(value = "storeId", required = false) UUID storeId,
             @RequestParam(value = "userId", required = false) Long userId,
-            @RequestParam(value = "status") OrderStatusEnum orderStatusEnum,
-            @RequestParam("size") int size,
-            @RequestParam("page") int page,
-            @RequestParam("sort") String sortBy,
-            @RequestParam("isAsc") boolean isAsc
+            @RequestParam(value = "status", required = false) OrderStatusEnum orderStatusEnum,
+            @RequestParam(value = "size", required = false) int size,
+            @RequestParam(value = "page", required = false) int page,
+            @RequestParam(value = "sort", required = false) String sortBy,
+            @RequestParam(value = "isAsc", required = false) boolean isAsc
     ){
         requireCartAccessibleUserId(userDetails);
         User user = userDetails.getUser();

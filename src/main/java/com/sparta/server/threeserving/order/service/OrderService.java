@@ -124,14 +124,17 @@ public class OrderService {
         Page<Orders> orderPage = switch (user.getRole()) {
             case CUSTOMER -> getForCustomer(user.getId(), storeId, orderStatusEnum, pageable);
             case OWNER -> getForOwner(user.getId(), storeId, orderStatusEnum, pageable);
-            case MANAGER, MASTER -> getForAdmin(storeId, orderStatusEnum, pageable);
+            case MANAGER, MASTER -> getForAdmin(userId, storeId, orderStatusEnum, pageable);
         };
 
         Page<OrderListResponseDto> responsePage = orderPage.map(OrderListResponseDto::new);
         return ApiResponse.success(SuccessCode.SUCCESS, responsePage);
     }
 
-    private Page<Orders> getForAdmin(UUID storeId, OrderStatusEnum status, Pageable pageable) {
+    private Page<Orders> getForAdmin(Long userId, UUID storeId, OrderStatusEnum status, Pageable pageable) {
+        if(userId != null){
+            return getForCustomer(userId, storeId, status, pageable);
+        }
         if (storeId != null) {
             return (status != null)
                     ? orderRepository.findByStoreIdAndOrderStatusAndDeletedAtIsNull(storeId, status, pageable)
@@ -170,7 +173,7 @@ public class OrderService {
     }
 
     private Pageable toPageable(int size, int page, String sortBy, boolean isAsc) {
-        sortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdBy";
+        sortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
         Sort.Direction dir = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sort = Sort.by(dir, sortBy);
         size = ALLOWED_SIZE.contains(size) ? size : 10;
@@ -180,6 +183,10 @@ public class OrderService {
     @Transactional
     public ApiResponse<OrderModifyResponseDto> modifyOrderInfo(Long userId, UUID orderId, OrderModifyRequestDto orderModifyRequestDto) {
         Orders order = validateOrderOwner(userId, orderId);
+
+        if (order.getOrderStatus() != OrderStatusEnum.PENDING) {
+            throw new CustomException(ErrorCode.ORDER_ALREADY_PROCESSED);
+        }
 
         order.modifyInfo(
                 orderModifyRequestDto.requestMessage(),
@@ -214,7 +221,7 @@ public class OrderService {
 
         List<OrderItem> orderItemList = orderItemRepository.findByOrder_IdAndDeletedAtIsNull(order.getId());
         if(orderItemList.isEmpty())
-            throw new CustomException(ErrorCode.ORDER_NOT_FOUND);
+            throw new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND);
 
         // p_order_item_option 테이블엔 deleted_at 컬럼이 없어 soft delete 불가 -> 딸린 옵션은 하드 삭제
         List<OrderItemOption> options = orderItemOptionRepository.findAllByOrderItemIn(orderItemList);
