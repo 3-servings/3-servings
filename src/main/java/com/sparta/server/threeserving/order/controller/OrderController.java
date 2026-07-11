@@ -28,17 +28,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
-    // TODO: Security Config으로 user 접근제한 바꾸기
 
     @PostMapping("")
     public ApiResponse<OrderCreateResponseDto> createOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody @Valid OrderCreateRequestDto orderCreateRequestDto
     ){
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        if(userRoleEnum != UserRoleEnum.MANAGER && userRoleEnum != UserRoleEnum.MASTER){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        if(userDetails == null)
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         return orderService.createOrder(orderCreateRequestDto);
     }
 
@@ -47,8 +44,8 @@ public class OrderController {
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId
     ) {
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
         Long userId = requireCartAccessibleUserId(userDetails);
+        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
         return orderService.getOrderDetail(userId, userRoleEnum, orderId);
     }
 
@@ -80,7 +77,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}/cancel")
-    public ApiResponse<OrderCancelResponseDto> CancelOrder(
+    public ApiResponse<OrderCancelResponseDto> cancelOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId
     ){
@@ -89,15 +86,11 @@ public class OrderController {
     }
 
     @DeleteMapping("/{orderId}")
-    public ApiResponse<Void> DeleteOrder(
+    public ApiResponse<Void> deleteOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId
     ){
-        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        if(userRoleEnum != UserRoleEnum.MANAGER && userRoleEnum != UserRoleEnum.MASTER){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
-        Long userId = userDetails.getUser().getId();
+        Long userId = requireCartAccessibleUserId(userDetails);
         return orderService.deleteOrder(userId, orderId);
     }
 

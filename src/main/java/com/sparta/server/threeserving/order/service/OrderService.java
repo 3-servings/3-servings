@@ -14,6 +14,7 @@ import com.sparta.server.threeserving.order.repository.*;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
+import com.sparta.server.threeserving.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -45,9 +46,16 @@ public class OrderService {
     private static final List<Integer> ALLOWED_SIZE = List.of(10, 30, 50);
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("createdAt", "totalPrice");
     private static final int AVAILABLE_ORDER_CANCEL_TiME_IN_MINUTES = 5;
+    private final UserRepository userRepository;
 
     @Transactional
     public ApiResponse<OrderCreateResponseDto> createOrder(OrderCreateRequestDto requestDto) {
+        // validation
+        userRepository.findById(requestDto.userId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        storeRepository.findById(requestDto.storeId()).orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+        if(requestDto.orderItems().isEmpty()) throw new CustomException(ErrorCode.ORDER_ITEMS_IS_EMPTY);
+
+        // 로직 수행
         Orders order = new Orders(
                 requestDto.userId(), requestDto.storeId(), null,
                 requestDto.orderStatus(), requestDto.totalPrice(),
@@ -115,7 +123,7 @@ public class OrderService {
                                 )).toList()
                 )).toList();
 
-        return ApiResponse.success(SuccessCode.CREATED, new OrderDetailResponseDto(order, items));
+        return ApiResponse.success(SuccessCode.SUCCESS, new OrderDetailResponseDto(order, items));
     }
 
     // TODO: 언젠가 QueryDSL로 변경해도 될듯.
@@ -219,7 +227,7 @@ public class OrderService {
         // MANAGER 전용 api이므로 owner로직 적용x
         Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
-        List<OrderItem> orderItemList = orderItemRepository.findByOrder_IdAndDeletedAtIsNull(order.getId());
+        List<OrderItem> orderItemList = orderItemRepository.findAllByOrderAndDeletedAtIsNull(order);
         if(orderItemList.isEmpty())
             throw new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND);
 

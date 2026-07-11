@@ -10,5 +10,4 @@ import java.util.UUID;
 public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
     List<OrderItem> findAllByOrderAndDeletedAtIsNull(Orders order);
 
-    List<OrderItem> findByOrder_IdAndDeletedAtIsNull(UUID orderId);
 }
