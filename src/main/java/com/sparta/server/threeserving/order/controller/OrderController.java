@@ -16,7 +16,6 @@ import com.sparta.server.threeserving.order.service.OrderService;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,8 +28,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
+    // TODO: Security Config으로 user 접근제한 바꾸기
 
-    @PostMapping("/")
+    @PostMapping("")
     public ApiResponse<OrderCreateResponseDto> createOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody @Valid OrderCreateRequestDto orderCreateRequestDto
@@ -49,13 +49,10 @@ public class OrderController {
     ) {
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
         Long userId = requireCartAccessibleUserId(userDetails);
-        if(userRoleEnum != UserRoleEnum.CUSTOMER && userRoleEnum != UserRoleEnum.MANAGER && userRoleEnum != UserRoleEnum.MASTER){
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
-        return orderService.getOrderDetail(userId, orderId);
+        return orderService.getOrderDetail(userId, userRoleEnum, orderId);
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     public ApiResponse<Page<OrderListResponseDto>> getOrderList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(value = "storeId", required = false) UUID storeId,
@@ -96,7 +93,11 @@ public class OrderController {
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId
     ){
-        Long userId = requireCartAccessibleUserId(userDetails);
+        UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
+        if(userRoleEnum != UserRoleEnum.MANAGER && userRoleEnum != UserRoleEnum.MASTER){
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+        Long userId = userDetails.getUser().getId();
         return orderService.deleteOrder(userId, orderId);
     }
 

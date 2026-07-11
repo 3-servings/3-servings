@@ -13,6 +13,7 @@ import com.sparta.server.threeserving.order.entity.*;
 import com.sparta.server.threeserving.order.repository.*;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
+import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -80,9 +81,27 @@ public class OrderService {
         return ApiResponse.success(SuccessCode.CREATED, new OrderCreateResponseDto(savedOrder));
     }
 
-    public ApiResponse<OrderDetailResponseDto> getOrderDetail(Long userId, UUID orderId) {
-        Orders order = validateOrderOwner(userId, orderId);
-        List<OrderItem> orderItemList = orderItemRepository.findAllByOrder_IdAndDeletedAtIsNull(order);
+    public ApiResponse<OrderDetailResponseDto> getOrderDetail(Long userId, UserRoleEnum userRole, UUID orderId) {
+        // userId - orderId 접근 확인
+        Orders order = switch (userRole) {
+            case CUSTOMER -> validateOrderOwner(userId, orderId);
+            case OWNER -> {
+                List<UUID> storeIdList = storeRepository.findStoreIdsByOwnerId(userId);
+                Orders uncheckedOrder = orderRepository.findByIdAndDeletedAtIsNull(orderId).orElseThrow(
+                        () -> new CustomException(ErrorCode.ORDER_NOT_FOUND)
+                );
+                if (!storeIdList.contains(uncheckedOrder.getStoreId())) {
+                    throw new CustomException(ErrorCode.NOT_STORE_OWNER_OF_ORDER);
+                }
+                yield uncheckedOrder;
+            }
+            case MANAGER, MASTER -> orderRepository.findById(orderId).orElseThrow(
+                    () -> new CustomException(ErrorCode.ORDER_NOT_FOUND)
+            );
+        };
+
+        // Order 목록 작성
+        List<OrderItem> orderItemList = orderItemRepository.findAllByOrderAndDeletedAtIsNull(order);
 
         Map<UUID, List<OrderItemOption>> optionByOrderItem = orderItemOptionRepository.findAllByOrderItemIn(orderItemList).stream()
                 .collect(Collectors.groupingBy(option -> option.getOrderItem().getId()));
@@ -128,7 +147,7 @@ public class OrderService {
 
         if(storeId != null) {
             if(!ownedStoreIdList.contains(storeId)) {
-                // TODO: 에러코드 더 생기면 바꾸기
+                // TODO: Store에러코드 더 생기면 바꾸기
                 throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
             }
             return (status != null)
@@ -181,7 +200,7 @@ public class OrderService {
         Duration elapsed = Duration.between(order.getCreatedAt(), Instant.now());
 
         if(elapsed.compareTo(Duration.ofMinutes(AVAILABLE_ORDER_CANCEL_TiME_IN_MINUTES)) > 0){
-            throw new CustomException(ErrorCode.CANCEL_TIME_EXPIRED);
+            throw new CustomException(ErrorCode.EXPIRED_CANCEL_TIME);
         }
 
         order.cancel();
@@ -210,7 +229,7 @@ public class OrderService {
 
     @NonNull
     private Orders validateOrderOwner(Long userId, UUID orderId) {
-        Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+        Orders order = orderRepository.findByIdAndDeletedAtIsNull(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
         if(!order.getUserId().equals(userId))
             throw new CustomException(ErrorCode.NOT_ORDER_OWNER);
         return order;
