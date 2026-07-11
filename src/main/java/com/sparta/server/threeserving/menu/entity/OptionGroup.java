@@ -42,6 +42,7 @@ public class OptionGroup extends BaseEntity {
 
     // 양방향: OptionGroup(1) <-> OptionItem(N)
     @BatchSize(size = 100)
+    @OrderBy("displayOrder ASC")
     @OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OptionItem> optionItemList = new ArrayList<>();
 

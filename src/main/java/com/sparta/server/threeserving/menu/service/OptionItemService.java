@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,11 +29,14 @@ public class OptionItemService {
         Map<UUID, OptionItemStatus> statusUpdateMap = request.getItemStatusUpdates().stream()
                 .collect(Collectors.toMap(
                         OptionItemStatusUpdateRequest.ItemStatusUpdate::getOptionItemId,
-                        OptionItemStatusUpdateRequest.ItemStatusUpdate::getStatus
+                        OptionItemStatusUpdateRequest.ItemStatusUpdate::getStatus,
+                        (oldValue, newValue) -> newValue
                 ));
 
+        // Fetch Join 사용하여 N+1 방어
+        List<OptionItem> optionItems = optionItemRepository.findAllWithGroupAndStoreByIdIn(statusUpdateMap.keySet());
+
         // optionItem 존재 여부 검증
-        List<OptionItem> optionItems = optionItemRepository.findByIdIn(new ArrayList<>(statusUpdateMap.keySet()));
         if (optionItems.size() != statusUpdateMap.size()) {
             throw new CustomException(ErrorCode.OPTION_ITEM_NOT_FOUND);
         }

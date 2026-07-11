@@ -11,6 +11,7 @@ import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,12 +24,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.BDDMockito.given;
-
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
 @Tag("menu")
@@ -65,7 +62,7 @@ public class OptionItemServiceTest {
         group.addOptionItem(mustard);
 
         // Mocking
-        given(optionItemRepository.findByIdIn(anyList())).willReturn(List.of(ketchup, mustard));
+        given(optionItemRepository.findAllWithGroupAndStoreByIdIn(anyIterable())).willReturn(List.of(ketchup, mustard));
 
         // 클라이언트 요청 : 모두 SOLD_OUT 변경
         OptionItemStatusUpdateRequest.ItemStatusUpdate updateKetchup = new OptionItemStatusUpdateRequest.ItemStatusUpdate(ketchupId, OptionItemStatus.SOLD_OUT);
