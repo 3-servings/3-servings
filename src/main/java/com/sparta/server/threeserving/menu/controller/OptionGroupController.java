@@ -29,9 +29,9 @@ public class OptionGroupController {
     @PostMapping("/stores/{storeId}/option-groups")
     public ResponseEntity<ApiResponse<OptionGroupResponse>> createOptionGroup(
             @PathVariable UUID storeId,
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @Valid @RequestBody OptionGroupCreateRequest request
-    ) {
+            @Valid @RequestBody OptionGroupCreateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+            ) {
         OptionGroupResponse response = optionGroupService.createOptionGroup(
                 storeId,
                 request,
@@ -60,9 +60,9 @@ public class OptionGroupController {
     @PutMapping("/option-groups/{optionGroupId}")
     public ResponseEntity<ApiResponse<OptionGroupResponse>> updateOptionGroup(
             @PathVariable UUID optionGroupId,
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @Valid @RequestBody OptionGroupUpdateRequest request
-    ) {
+            @Valid @RequestBody OptionGroupUpdateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+            ) {
         OptionGroupResponse response = optionGroupService.updateOptionGroup(
                 optionGroupId,
                 request,

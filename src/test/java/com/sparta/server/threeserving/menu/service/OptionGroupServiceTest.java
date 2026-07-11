@@ -71,7 +71,7 @@ public class OptionGroupServiceTest {
         given(optionGroupRepository.existsByStoreIdAndNameAndIdNot(store.getId(), "소스 선택 (수정)", groupId))
                 .willReturn(false);
 
-        // 수정 요청: 케찹 가격 500원 인상, 머스타드 누락 (삭제), 핫소스 신규 추가
+        // 클라이언트 요청: 케찹 가격 500원 인상, 머스타드 누락 (삭제), 핫소스 신규 추가
         OptionGroupUpdateRequest.OptionItemRequest updateKetchup = new OptionGroupUpdateRequest.OptionItemRequest(ketchupId, "케찹", 500);
         OptionGroupUpdateRequest.OptionItemRequest addHotSauce = new OptionGroupUpdateRequest.OptionItemRequest(null, "핫소스", 0);
 

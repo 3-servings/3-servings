@@ -1,12 +1,10 @@
 package com.sparta.server.threeserving.menu.repository;
 
 import com.sparta.server.threeserving.menu.entity.OptionGroup;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface OptionGroupRepository extends JpaRepository<OptionGroup, UUID> {
