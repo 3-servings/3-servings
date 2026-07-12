@@ -39,7 +39,7 @@ public class OrderItemOption {
 
     @Column(name="quantity", nullable = false)
     @Min(value = 1)
-    private Integer quantity;
+    private Integer quantity = 1;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -4,7 +4,7 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.order.dto.OrderCancelResponseDto;
+import com.sparta.server.threeserving.order.dto.response.OrderCancelResponseDto;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderModifyRequestDto;
@@ -32,10 +32,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
-
-    private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
-    private final CartItemOptionRepository cartItemOptionRepository;
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;

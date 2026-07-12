@@ -4,6 +4,10 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.menu.entity.Menu;
+import com.sparta.server.threeserving.menu.entity.OptionItem;
+import com.sparta.server.threeserving.menu.repository.MenuRepository;
+import com.sparta.server.threeserving.menu.repository.OptionItemRepository;
 import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartAddItemRequestDto;
@@ -20,10 +24,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,6 +35,8 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final StoreRepository storeRepository;
     private final CartItemOptionRepository cartItemOptionRepository;
+    private final MenuRepository menuRepository;
+    private final OptionItemRepository optionItemRepository;
 
     @Transactional
     public ApiResponse<CartResponseDto> createOrFindCart(Long userId, UUID storeId) {
@@ -79,31 +82,62 @@ public class CartService {
     public ApiResponse<CartDetailResponseDto> getCartDetail(Long userId, UUID cartId) {
         Cart cart = validateCartOwner(userId, cartId);
 
-        // 카트에 담긴 항목 전체 (1쿼리)
+        // 카트에 담긴 항목(메뉴) 전체
         List<CartItem> cartItems = cartItemRepository.findAllByCart_IdAndDeletedAtIsNull(cartId);
+        if (cartItems.isEmpty()) {
+            return ApiResponse.success(SuccessCode.SUCCESS, new CartDetailResponseDto(cart, 0, List.of()));
+        }
 
-        // 항목별 옵션을 한 번에 배치 조회 후 cartItemId 기준으로 묶기 (1쿼리, N+1 방지)
-        Map<UUID, List<CartItemOption>> optionsByCartItemId = cartItemOptionRepository
-                .findAllByCartItemIn(cartItems).stream()
+        // 1. 카트Item에 따라서 메뉴명 조회 -> Map<menuId, Menu> 필요
+        // 2. 카트Item의 OptionList의 price*quantity 합산 -> Map<cartItem, List<OptionItem>>, Map<optionId, OptionItem>> 필요
+        // 3. total_price계산 / 각 카트별 메뉴 수, 메뉴별 option 수가 100개 미만이라고 치면 합리적인 latency 나옴
+        // 더 최적화 할 방안 찾기
+
+        // 메뉴 배치 조회 후 id로 매핑
+        List<UUID> menuIds = cartItems.stream().map(CartItem::getMenuId).distinct().toList();
+        Map<UUID, Menu> menuById = menuRepository.findAllById(menuIds).stream()
+                .collect(Collectors.toMap(Menu::getId, Function.identity()));
+
+        // 항목별 옵션을 한 번에 배치 조회 후 cartItemId 기준으로 묶기
+        List<CartItemOption> cartItemOptions = cartItemOptionRepository.findAllByCartItemIn(cartItems);
+        Map<UUID, List<CartItemOption>> optionsByCartItemId = cartItemOptions.stream()
                 .collect(Collectors.groupingBy(option -> option.getCartItem().getId()));
 
-        // TODO: Menu 도메인 완성되면 menuRepository/optionItemRepository로 menu_name, option_name, 실제 가격 조회
-        List<CartItemDetailResponseDto> items = cartItems.stream()
-                .map(cartItem -> new CartItemDetailResponseDto(
-                        cartItem.getId(),
-                        cartItem.getMenuId(),
-                        null,
-                        cartItem.getQuantity(),
-                        optionsByCartItemId.getOrDefault(cartItem.getId(), List.of()).stream()
-                                .map(option -> new CartItemOptionRequestDto(option.getOptionItemId(), null))
-                                .toList()
-                ))
-                .toList();
+        // 옵션 아이템 배치 조회 후 id로 매핑
+        List<UUID> optionItemIds = cartItemOptions.stream().map(CartItemOption::getOptionItemId).distinct().toList();
+        Map<UUID, OptionItem> optionItemById = optionItemRepository.findAllById(optionItemIds).stream()
+                .collect(Collectors.toMap(OptionItem::getId, Function.identity()));
 
-        // TODO: Menu/OptionItem 가격 연동되면 실제 예상 총액으로 교체
-        Integer estimatedTotalPrice = 0;
+        List<CartItemDetailResponseDto> totalItemList = new ArrayList<>();
+        int estimatedTotalPrice = 0;
 
-        CartDetailResponseDto responseDto = new CartDetailResponseDto(cart, estimatedTotalPrice, items);
+        for (CartItem cartItem : cartItems) {
+            Menu menu = menuById.get(cartItem.getMenuId());
+            if (menu == null) {
+                // 카트의 메뉴Id가 지워졌거나 잘못된 id저장.
+                throw new CustomException(ErrorCode.MENU_NOT_FOUND);
+            }
+
+            List<CartItemOptionRequestDto> optionDtos = new ArrayList<>();
+            int optionUnitPrice = 0;
+            for (CartItemOption option : optionsByCartItemId.getOrDefault(cartItem.getId(), List.of())) {
+                OptionItem optionItem = optionItemById.get(option.getOptionItemId());
+                if (optionItem == null) {
+                    // 담긴 뒤 삭제된 옵션 - 조회 화면에서는 조용히 제외
+                    continue;
+                }
+                optionDtos.add(new CartItemOptionRequestDto(
+                        optionItem.getId(), optionItem.getName(), option.getQuantity()));
+                optionUnitPrice += optionItem.getPrice() * option.getQuantity();
+            }
+
+            totalItemList.add(new CartItemDetailResponseDto(
+                    cartItem.getId(), cartItem.getMenuId(), menu.getName(), cartItem.getQuantity(), optionDtos));
+
+            estimatedTotalPrice += (menu.getPrice() + optionUnitPrice) * cartItem.getQuantity();
+        }
+
+        CartDetailResponseDto responseDto = new CartDetailResponseDto(cart, estimatedTotalPrice, totalItemList);
         return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
     }
 
@@ -121,7 +155,7 @@ public class CartService {
 
         // TODO: 각 optionItemIds가 실제로 해당 메뉴의 옵션 그룹에 속하는지, 단일선택 그룹 규칙 위반 여부 확인
         List<CartItemOption> cartItemOptions = cartAddItemRequestDto.optionItemIds().stream()
-                .map(optionItemId -> new CartItemOption(cartItem, optionItemId))
+                .map(optionItemId -> new CartItemOption(cartItem, optionItemId, 1))
                 .toList();
         cartItemOptionRepository.saveAll(cartItemOptions);
 

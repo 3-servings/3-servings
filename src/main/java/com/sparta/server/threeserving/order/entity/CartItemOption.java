@@ -1,6 +1,7 @@
 package com.sparta.server.threeserving.order.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,6 +31,10 @@ public class CartItemOption {
     @Column(name="option_item_id")
     private UUID optionItemId;
 
+    @Column(name="quantity", nullable = false)
+    @Min(value = 1)
+    private Integer quantity = 1;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -38,8 +43,9 @@ public class CartItemOption {
     @Column(name = "created_by", nullable = false, updatable = false)
     private Long createdBy;
 
-    public CartItemOption(CartItem cartItem, UUID optionItemId) {
+    public CartItemOption(CartItem cartItem, UUID optionItemId, Integer quantity) {
         this.cartItem = cartItem;
         this.optionItemId = optionItemId;
+        this.quantity = quantity;
     }
 }
