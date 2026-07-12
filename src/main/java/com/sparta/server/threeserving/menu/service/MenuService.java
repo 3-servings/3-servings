@@ -3,6 +3,8 @@ package com.sparta.server.threeserving.menu.service;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
+import com.sparta.server.threeserving.menu.dto.request.MenuDisplayOrderUpdateRequest;
+import com.sparta.server.threeserving.menu.dto.request.MenuStatusUpdateRequest;
 import com.sparta.server.threeserving.menu.dto.request.MenuUpdateRequest;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
@@ -182,5 +184,77 @@ public class MenuService {
         }
 
         menu.softDelete(userId);
+    }
+
+    @Transactional
+    public void updateMenusStatus(UUID storeId, MenuStatusUpdateRequest request, Long userId, UserRoleEnum role) {
+        // store 존재 여부 검증
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+
+        // 사용자 권한 검증
+        if (role != UserRoleEnum.MASTER && !store.getOwner().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        List<Menu> menus = menuRepository.findAllById(request.getMenuIds());
+
+        // menu 존재 여부 검증
+        if (menus.size() != request.getMenuIds().size()) {
+            throw new CustomException(ErrorCode.MENU_NOT_FOUND);
+        }
+
+        for (Menu menu : menus) {
+            // 다른 가게의 메뉴가 아닌지 검증
+            if (!menu.getStore().getId().equals(storeId)) {
+                throw new CustomException(ErrorCode.ACCESS_DENIED);
+            }
+
+            // Update
+            menu.updateStatus(request.getStatus());
+        }
+    }
+
+    @Transactional
+    public void updateMenusDisplayOrder(UUID storeId, MenuDisplayOrderUpdateRequest request, Long userId, UserRoleEnum role) {
+
+        List<UUID> menuIds = request.getMenuIds();
+        UUID categoryId = request.getMenuCategoryId();
+
+        // store 존재 여부 검증
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+
+        // 사용자 권한 검증
+        if (role != UserRoleEnum.MASTER && !store.getOwner().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        //  menu 존재 여부 검증
+        List<Menu> menus = menuRepository.findAllById(menuIds);
+        if (menus.size() != menuIds.size()) {
+            throw new CustomException(ErrorCode.MENU_NOT_FOUND);
+        }
+
+        Map<UUID, Menu> menuMap = menus.stream()
+                .collect(Collectors.toMap(Menu::getId, menu -> menu));
+
+        // Update
+        for (int i = 0; i < menuIds.size(); i++) {
+            UUID targetId = menuIds.get(i);
+            Menu targetMenu = menuMap.get(targetId);
+
+            // 다른 가게의 메뉴가 아닌지 검증
+            if (!targetMenu.getStore().getId().equals(storeId)) {
+                throw new CustomException(ErrorCode.MENU_STORE_MISMATCH);
+            }
+
+            // 해당 메뉴 카테고리에 속한 메뉴가 맞는지 검증
+            if (!targetMenu.getMenuCategory().getId().equals(categoryId)) {
+                throw new CustomException(ErrorCode.MENU_CATEGORY_MISMATCH);
+            }
+
+            targetMenu.updateDisplayOrder(i + 1);
+        }
     }
 }

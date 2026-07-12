@@ -43,6 +43,8 @@ public enum ErrorCode {
 
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M000", "메뉴를 찾을 수 없습니다."),
     MENU_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 이름입니다."),
+    MENU_STORE_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "이미 존재하는 메뉴 이름입니다."),
+    MENU_CATEGORY_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "이미 존재하는 메뉴 이름입니다."),
 
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),

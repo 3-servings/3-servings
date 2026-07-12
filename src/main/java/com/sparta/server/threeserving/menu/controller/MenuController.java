@@ -4,6 +4,8 @@ import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
+import com.sparta.server.threeserving.menu.dto.request.MenuDisplayOrderUpdateRequest;
+import com.sparta.server.threeserving.menu.dto.request.MenuStatusUpdateRequest;
 import com.sparta.server.threeserving.menu.dto.request.MenuUpdateRequest;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
@@ -96,6 +98,36 @@ public class MenuController {
         );
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED, response));
+    }
+
+    @PatchMapping("/stores/{storeId}/menus/status")
+    public ResponseEntity<ApiResponse<Void>> updateMenusStatus(
+            @PathVariable UUID storeId,
+            @Valid @RequestBody MenuStatusUpdateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        menuService.updateMenusStatus(
+                storeId,
+                request,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
+        );
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED));
+    }
+
+    @PatchMapping("/stores/{storeId}/menus/display-order")
+    public ResponseEntity<ApiResponse<Void>> updateMenusDisplayOrder(
+            @PathVariable UUID storeId,
+            @Valid @RequestBody MenuDisplayOrderUpdateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        menuService.updateMenusDisplayOrder(
+                storeId,
+                request,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
+        );
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED));
     }
 
     @DeleteMapping("/menus/{menuId}")

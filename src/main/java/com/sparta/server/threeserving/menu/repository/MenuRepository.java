@@ -47,4 +47,7 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
             "LEFT JOIN FETCH mog.optionGroup " +
             "WHERE m.id = :menuId AND m.store.id = :storeId")
     Optional<Menu> findMenuDetailByIdAndStoreId(@Param("menuId") UUID menuId, @Param("storeId") UUID storeId);
+
+    // 특정 카테고리에 속한 활성화된 메뉴의 총 개수 조회
+    long countByMenuCategoryId(UUID categoryId);
 }

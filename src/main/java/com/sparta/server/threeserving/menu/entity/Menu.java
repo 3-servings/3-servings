@@ -3,6 +3,7 @@ package com.sparta.server.threeserving.menu.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -78,5 +79,13 @@ public class Menu extends BaseEntity {
         this.description = description;
         this.isDescriptionAiGenerated = isDescriptionAiGenerated;
         this.status = status;
+    }
+
+    public void updateStatus(MenuStatus status) {
+        this.status = status;
+    }
+
+    public void updateDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
     }
 }
