@@ -2,6 +2,7 @@ package com.sparta.server.threeserving.menu.service;
 
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.menu.dto.request.MenuCategoryDisplayOrderUpdateRequest;
 import com.sparta.server.threeserving.menu.dto.response.MenuCategoryResponse;
 import com.sparta.server.threeserving.menu.entity.MenuCategory;
 import com.sparta.server.threeserving.menu.repository.MenuCategoryRepository;
@@ -88,7 +89,10 @@ public class MenuCategoryService {
     }
 
     @Transactional
-    public void updateDisplayOrders(UUID storeId, List<UUID> menuCategoryIds, Long userId, UserRoleEnum role) {
+    public void updateDisplayOrders(UUID storeId, MenuCategoryDisplayOrderUpdateRequest request, Long userId, UserRoleEnum role) {
+
+        List<UUID> menuCategoryIds = request.getMenuCategoryIds();
+
         // store 존재 여부 검증
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));

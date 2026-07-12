@@ -9,10 +9,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -21,12 +20,14 @@ public class OptionItemController {
 
     private final OptionItemService optionItemService;
 
-    @PatchMapping("/option-items/status")
+    @PatchMapping("/stores/{storeId}/option-items/status")
     public ResponseEntity<ApiResponse<Void>> updateOptionItemsStatus(
+            @PathVariable UUID storeId,
             @Valid @RequestBody OptionItemStatusUpdateRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         optionItemService.updateOptionItemsStatus(
+                storeId,
                 request,
                 userDetails.getUser().getId(),
                 userDetails.getUser().getRole()

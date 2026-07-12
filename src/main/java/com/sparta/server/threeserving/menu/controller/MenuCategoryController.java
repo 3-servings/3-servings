@@ -70,10 +70,10 @@ public class MenuCategoryController {
             @PathVariable UUID storeId,
             @Valid @RequestBody MenuCategoryDisplayOrderUpdateRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails
-            ) {
+    ) {
         menuCategoryService.updateDisplayOrders(
                 storeId,
-                request.getMenuCategoryIds(),
+                request,
                 userDetails.getUser().getId(),
                 userDetails.getUser().getRole()
         );
