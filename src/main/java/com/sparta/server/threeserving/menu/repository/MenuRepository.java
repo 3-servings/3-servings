@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface MenuRepository extends JpaRepository<Menu, UUID> {
@@ -34,4 +35,12 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
             @Param("storeId") UUID storeId,
             @Param("statuses") List<MenuStatus> statuses
     );
+
+    // 메뉴 상세 조회용 쿼리 Fetch Join
+    @Query("SELECT m FROM Menu m " +
+            "JOIN FETCH m.menuCategory " +
+            "LEFT JOIN FETCH m.menuOptionGroups mog " +
+            "LEFT JOIN FETCH mog.optionGroup " +
+            "WHERE m.id = :menuId AND m.store.id = :storeId")
+    Optional<Menu> findMenuDetailByIdAndStoreId(@Param("menuId") UUID menuId, @Param("storeId") UUID storeId);
 }

@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
+import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
 import com.sparta.server.threeserving.menu.entity.Menu;
 import com.sparta.server.threeserving.menu.entity.MenuCategory;
@@ -116,4 +117,17 @@ public class MenuService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public MenuDetailResponse getMenuDetail(UUID storeId, UUID menuId) {
+        // store 존재 여부 검증
+        if (!storeRepository.existsById(storeId)) {
+            throw new CustomException(ErrorCode.STORE_NOT_FOUND);
+        }
+
+        // 메뉴 상세 정보 조회 N+1 방어
+        Menu menu = menuRepository.findMenuDetailByIdAndStoreId(menuId, storeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
+        return MenuDetailResponse.from(menu);
+    }
 }

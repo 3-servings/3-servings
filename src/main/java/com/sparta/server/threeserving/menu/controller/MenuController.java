@@ -5,6 +5,7 @@ import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
+import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
 import com.sparta.server.threeserving.menu.entity.MenuStatus;
 import com.sparta.server.threeserving.menu.service.MenuService;
@@ -70,4 +71,13 @@ public class MenuController {
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS, responses));
     }
 
+    @GetMapping("/stores/{storeId}/menus/{menuId}")
+    public ResponseEntity<ApiResponse<MenuDetailResponse>> getMenuDetail(
+            @PathVariable UUID storeId,
+            @PathVariable UUID menuId
+    ) {
+        MenuDetailResponse response = menuService.getMenuDetail(storeId, menuId);
+
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS, response));
+    }
 }
