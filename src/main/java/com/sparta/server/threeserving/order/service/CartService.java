@@ -5,7 +5,11 @@ import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.entity.Menu;
+import com.sparta.server.threeserving.menu.entity.MenuOptionGroup;
+import com.sparta.server.threeserving.menu.entity.MenuStatus;
+import com.sparta.server.threeserving.menu.entity.OptionGroup;
 import com.sparta.server.threeserving.menu.entity.OptionItem;
+import com.sparta.server.threeserving.menu.repository.MenuOptionGroupRepository;
 import com.sparta.server.threeserving.menu.repository.MenuRepository;
 import com.sparta.server.threeserving.menu.repository.OptionItemRepository;
 import com.sparta.server.threeserving.order.dto.response.*;
@@ -37,6 +41,7 @@ public class CartService {
     private final CartItemOptionRepository cartItemOptionRepository;
     private final MenuRepository menuRepository;
     private final OptionItemRepository optionItemRepository;
+    private final MenuOptionGroupRepository menuOptionGroupRepository;
 
     @Transactional
     public ApiResponse<CartResponseDto> createOrFindCart(Long userId, UUID storeId) {
@@ -104,6 +109,7 @@ public class CartService {
                 .collect(Collectors.groupingBy(option -> option.getCartItem().getId()));
 
         // 옵션 아이템 배치 조회 후 id로 매핑
+        // 옵션은 p_cart_item_option에 quantity 컬럼이 없음 -> 수량이 아니라 "선택 여부"만 존재
         List<UUID> optionItemIds = cartItemOptions.stream().map(CartItemOption::getOptionItemId).distinct().toList();
         Map<UUID, OptionItem> optionItemById = optionItemRepository.findAllById(optionItemIds).stream()
                 .collect(Collectors.toMap(OptionItem::getId, Function.identity()));
@@ -119,22 +125,21 @@ public class CartService {
             }
 
             List<CartItemOptionRequestDto> optionDtos = new ArrayList<>();
-            int optionUnitPrice = 0;
+            int optionPriceSum = 0;
             for (CartItemOption option : optionsByCartItemId.getOrDefault(cartItem.getId(), List.of())) {
                 OptionItem optionItem = optionItemById.get(option.getOptionItemId());
                 if (optionItem == null) {
                     // 담긴 뒤 삭제된 옵션 - 조회 화면에서는 조용히 제외
                     continue;
                 }
-                optionDtos.add(new CartItemOptionRequestDto(
-                        optionItem.getId(), optionItem.getName(), option.getQuantity()));
-                optionUnitPrice += optionItem.getPrice() * option.getQuantity();
+                optionDtos.add(new CartItemOptionRequestDto(optionItem.getId(), optionItem.getName()));
+                optionPriceSum += optionItem.getPrice();
             }
 
             totalItemList.add(new CartItemDetailResponseDto(
                     cartItem.getId(), cartItem.getMenuId(), menu.getName(), cartItem.getQuantity(), optionDtos));
 
-            estimatedTotalPrice += (menu.getPrice() + optionUnitPrice) * cartItem.getQuantity();
+            estimatedTotalPrice += (menu.getPrice() + optionPriceSum) * cartItem.getQuantity();
         }
 
         CartDetailResponseDto responseDto = new CartDetailResponseDto(cart, estimatedTotalPrice, totalItemList);
@@ -145,23 +150,64 @@ public class CartService {
     public ApiResponse<CartAddItemResponseDto> addMenuToCart(Long userId, UUID cartId, CartAddItemRequestDto cartAddItemRequestDto) {
         Cart cart = validateCartOwner(userId, cartId);
 
-        // TODO: Menu id로 Menu 존재/soldout/store 일치 확인
-        // Menu menu = menuRepository.findById(menuId).orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+        // Menu id로 Menu 존재/soldout/store 일치 확인
         UUID menuId = cartAddItemRequestDto.menuId();
+        Menu menu = menuRepository.findById(menuId).orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+        if(menu.getStatus() != MenuStatus.AVAILABLE) {
+            throw new CustomException(ErrorCode.ADD_UNAVAILABLE_MENU_TO_CART);
+        }
+        if(!menu.getStore().getId().equals(cart.getStoreId())){
+            throw new CustomException(ErrorCode.ADD_MENU_OF_OTHER_STORE_TO_CART);
+        }
+
+        // 옵션은 수량 개념이 없는 "선택" 단위라 같은 옵션을 두 번 담는 요청은 의미가 없음 -> 중복 제거
+        List<UUID> optionItemIds = cartAddItemRequestDto.optionItemIds().stream().distinct().toList();
+        validateOptionSelection(menuId, optionItemIds);
 
         // 옵션 조합이 다를 수 있으므로 기존 항목과 병합하지 않고 매번 새 cart_item으로 생성
         CartItem cartItem = new CartItem(cart, menuId, cartAddItemRequestDto.quantity());
         cartItemRepository.save(cartItem);
 
-        // TODO: 각 optionItemIds가 실제로 해당 메뉴의 옵션 그룹에 속하는지, 단일선택 그룹 규칙 위반 여부 확인
-        List<CartItemOption> cartItemOptions = cartAddItemRequestDto.optionItemIds().stream()
-                .map(optionItemId -> new CartItemOption(cartItem, optionItemId, 1))
+        List<CartItemOption> cartItemOptions = optionItemIds.stream()
+                .map(optionItemId -> new CartItemOption(cartItem, optionItemId))
                 .toList();
         cartItemOptionRepository.saveAll(cartItemOptions);
 
         CartAddItemResponseDto responseDto = new CartAddItemResponseDto(
                 cartItem.getId(), cart.getId(), menuId, cartItem.getQuantity());
         return ApiResponse.success(SuccessCode.CREATED, responseDto);
+    }
+
+    // 메뉴에 연결된 옵션 그룹별로 선택 개수가 minSelect~maxSelect 범위인지 확인.
+    // 옵션엔 수량이 없으므로 "그룹에 속한 선택된 옵션 개수"가 곧 해당 그룹에 대한 선택 수임.
+    private void validateOptionSelection(UUID menuId, List<UUID> optionItemIds) {
+        Map<UUID, OptionGroup> allowedGroupById = menuOptionGroupRepository.findAllByMenuId(menuId).stream()
+                .collect(Collectors.toMap(
+                        mog -> mog.getOptionGroup().getId(),
+                        MenuOptionGroup::getOptionGroup));
+
+        List<OptionItem> selectedOptionItems = optionItemIds.isEmpty()
+                ? List.of()
+                : optionItemRepository.findAllById(optionItemIds);
+        if (selectedOptionItems.size() != optionItemIds.size()) {
+            throw new CustomException(ErrorCode.CART_OPTION_ITEM_NOT_FOUND);
+        }
+
+        Map<UUID, Long> selectedCountByGroupId = selectedOptionItems.stream()
+                .collect(Collectors.groupingBy(item -> item.getOptionGroup().getId(), Collectors.counting()));
+
+        for (UUID groupId : selectedCountByGroupId.keySet()) {
+            if (!allowedGroupById.containsKey(groupId)) {
+                throw new CustomException(ErrorCode.CART_OPTION_NOT_BELONG_TO_MENU);
+            }
+        }
+
+        for (OptionGroup group : allowedGroupById.values()) {
+            long selectedCount = selectedCountByGroupId.getOrDefault(group.getId(), 0L);
+            if (selectedCount < group.getMinSelect() || selectedCount > group.getMaxSelect()) {
+                throw new CustomException(ErrorCode.CART_OPTION_GROUP_SELECTION_INVALID);
+            }
+        }
     }
 
     @Transactional

@@ -43,11 +43,16 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O003", "주문정보를 찾을 수 없습니다."),
     NOT_ORDER_OWNER(HttpStatus.FORBIDDEN, "O004", "본인의 주문이 아닙니다."),
     NOT_STORE_OWNER_OF_ORDER(HttpStatus.FORBIDDEN, "O005", "본인 가게의 주문이 아닙니다."),
+    ADD_UNAVAILABLE_MENU_TO_CART(HttpStatus.FORBIDDEN, "O006", "본인 가게의 주문이 아닙니다."),
+    ADD_MENU_OF_OTHER_STORE_TO_CART(HttpStatus.FORBIDDEN, "O007", "본인 가게의 주문이 아닙니다."),
+    CART_OPTION_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O008", "옵션을 찾을 수 없습니다."),
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O009", "장바구니에 존재하지 않는 항목이거나 다른 카트에 속합니다."),
     ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O010", "주문 정보에 존재하지 않는 항목이거나 다른 주문 정보에 속합니다."),
     EXPIRED_CANCEL_TIME(HttpStatus.BAD_REQUEST, "O011", "주문 취소 가능 시간이 지났습니다."),
     ORDER_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "O014", "이미 주문이 처리되었습니다."),
     ORDER_ITEMS_IS_EMPTY(HttpStatus.BAD_REQUEST, "O015", "주문 항목이 비어있습니다."),
+    CART_OPTION_NOT_BELONG_TO_MENU(HttpStatus.CONFLICT, "O0016", "해당 메뉴에 속하지 않는 옵션입니다."),
+    CART_OPTION_GROUP_SELECTION_INVALID(HttpStatus.CONFLICT, "O0017", "옵션 그룹의 선택 개수 제한을 위반했습니다."),
 
     // System
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "서버 내부 오류가 발생했습니다."),

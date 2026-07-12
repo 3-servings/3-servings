@@ -4,6 +4,5 @@ import java.util.UUID;
 
 public record CartItemOptionRequestDto(
         UUID optionItemId,
-        String optionName,
-        Integer quantity
+        String optionName
 ) {}
