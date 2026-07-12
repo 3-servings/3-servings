@@ -1,5 +1,6 @@
 package com.sparta.server.threeserving.menu.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sparta.server.threeserving.menu.entity.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,7 +17,8 @@ public class MenuDetailResponse {
     private String name;
     private int price;
     private String description;
-    private boolean isDescriptionAiGenerated;
+    @JsonProperty("isDescriptionAiGenerated")
+    private Boolean isDescriptionAiGenerated;
     private MenuStatus status;
     private int displayOrder;
     // private String imageUrl;

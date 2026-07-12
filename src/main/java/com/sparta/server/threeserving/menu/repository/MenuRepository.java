@@ -14,7 +14,11 @@ import java.util.UUID;
 
 public interface MenuRepository extends JpaRepository<Menu, UUID> {
 
+    // 생성 시 중복 확인용
     boolean existsByStoreIdAndName(UUID storeId, String name);
+
+    // 수정 시 중복 확인용
+    boolean existsByStoreIdAndNameAndIdNot(UUID storeId, String name, UUID menuId);
 
     // 특정 카테고리 내에서의 displayOrder 최대값 조회
     @Query("SELECT COALESCE(MAX(m.displayOrder), 0) FROM Menu m WHERE m.menuCategory.id = :menuCategoryId")

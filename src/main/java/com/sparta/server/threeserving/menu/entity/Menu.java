@@ -70,4 +70,13 @@ public class Menu extends BaseEntity {
         this.isDescriptionAiGenerated = isDescriptionAiGenerated;
         this.displayOrder = displayOrder;
     }
+
+    public void update(MenuCategory menuCategory, String name, int price, String description, boolean isDescriptionAiGenerated, MenuStatus status) {
+        this.menuCategory = menuCategory;
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.isDescriptionAiGenerated = isDescriptionAiGenerated;
+        this.status = status;
+    }
 }

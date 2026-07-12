@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
+import com.sparta.server.threeserving.menu.dto.request.MenuUpdateRequest;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
@@ -79,5 +80,35 @@ public class MenuController {
         MenuDetailResponse response = menuService.getMenuDetail(storeId, menuId);
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS, response));
+    }
+
+    @PutMapping("/menus/{menuId}")
+    public ResponseEntity<ApiResponse<MenuResponse>> updateMenu(
+            @PathVariable UUID menuId,
+            @Valid @RequestBody MenuUpdateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        MenuResponse response = menuService.updateMenu(
+                menuId,
+                request,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED, response));
+    }
+
+    @DeleteMapping("/menus/{menuId}")
+    public ResponseEntity<ApiResponse<Void>> deleteMenu(
+            @PathVariable UUID menuId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        menuService.deleteMenu(
+                menuId,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.DELETED));
     }
 }

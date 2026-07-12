@@ -3,6 +3,7 @@ package com.sparta.server.threeserving.menu.service;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
+import com.sparta.server.threeserving.menu.dto.request.MenuUpdateRequest;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
@@ -129,5 +130,57 @@ public class MenuService {
                 .orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
 
         return MenuDetailResponse.from(menu);
+    }
+
+    @Transactional
+    public MenuResponse updateMenu(UUID menuId, MenuUpdateRequest request, Long userId, UserRoleEnum role) {
+        // menu 존재 여부 검증
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
+        // 사용자 권한 검증
+        if (role != UserRoleEnum.MASTER && !menu.getStore().getOwner().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // menu 이름이 변경된 경우, 이름 중복 검사
+        if (!menu.getName().equals(request.getName())) {
+            if (menuRepository.existsByStoreIdAndNameAndIdNot(menu.getStore().getId(), request.getName(), menuId)) {
+                throw new CustomException(ErrorCode.MENU_NAME_DUPLICATED);
+            }
+        }
+
+        // menuCategory 가 변경된 경우, 존재 여부 검증
+        MenuCategory menuCategory = menu.getMenuCategory();
+        if (!menuCategory.getId().equals(request.getMenuCategoryId())) {
+            menuCategory = menuCategoryRepository.findById(request.getMenuCategoryId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.MENU_CATEGORY_NOT_FOUND));
+        }
+
+        // menu Update
+        menu.update(
+                menuCategory,
+                request.getName(),
+                request.getPrice(),
+                request.getDescription(),
+                request.getIsDescriptionAiGenerated(),
+                request.getStatus()
+        );
+
+        return MenuResponse.from(menu);
+    }
+
+    @Transactional
+    public void deleteMenu(UUID menuId, Long userId, UserRoleEnum role) {
+        // menu 존재 여부 검증
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
+        // 사용자 권한 검증
+        if (role != UserRoleEnum.MASTER && !menu.getStore().getOwner().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        menu.softDelete(userId);
     }
 }
