@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
@@ -18,7 +18,6 @@ import java.util.UUID;
 @Getter
 @Table(name = "p_option_group")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE p_option_group SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class OptionGroup extends BaseEntity {
 
@@ -36,12 +35,14 @@ public class OptionGroup extends BaseEntity {
     private String name;
 
     @Column(name = "min_select", nullable = false)
-    private int minSelect = 1;
+    private int minSelect = 0;
 
     @Column(name = "max_select", nullable = false)
     private int maxSelect = 1;
 
     // 양방향: OptionGroup(1) <-> OptionItem(N)
+    @BatchSize(size = 100)
+    @OrderBy("displayOrder ASC")
     @OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OptionItem> optionItemList = new ArrayList<>();
 
@@ -56,5 +57,20 @@ public class OptionGroup extends BaseEntity {
     public void addOptionItem(OptionItem optionItem) {
         this.optionItemList.add(optionItem);
         optionItem.assignOptionGroup(this);
+    }
+
+    public void update(String name, int minSelect, int maxSelect) {
+        this.name = name;
+        this.minSelect = minSelect;
+        this.maxSelect = maxSelect;
+    }
+
+    @Override
+    public void softDelete(Long deletedBy) {
+        super.softDelete(deletedBy);
+
+        for (OptionItem optionItem : optionItemList) {
+            optionItem.softDelete(deletedBy);
+        }
     }
 }
