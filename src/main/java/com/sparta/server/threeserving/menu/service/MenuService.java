@@ -3,19 +3,27 @@ package com.sparta.server.threeserving.menu.service;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
+import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
 import com.sparta.server.threeserving.menu.entity.Menu;
 import com.sparta.server.threeserving.menu.entity.MenuCategory;
+import com.sparta.server.threeserving.menu.entity.MenuStatus;
 import com.sparta.server.threeserving.menu.repository.MenuCategoryRepository;
 import com.sparta.server.threeserving.menu.repository.MenuRepository;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +44,7 @@ public class MenuService {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
-        // 메뉴 카테고리 무결성 검증
+        // menuCategory 무결성 검증
         MenuCategory menuCategory = menuCategoryRepository.findById(request.getMenuCategoryId())
                 .orElseThrow(() -> new CustomException(ErrorCode.MENU_CATEGORY_NOT_FOUND));
 
@@ -69,6 +77,43 @@ public class MenuService {
         Menu savedMenu = menuRepository.save(menu);
 
         return MenuResponse.from(savedMenu);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MenuResponse> getMenus(UUID storeId, MenuStatus status, String keyword, Pageable pageable) {
+        // store 존재 여부 검증
+        if (!storeRepository.existsById(storeId)) {
+            throw new CustomException(ErrorCode.STORE_NOT_FOUND);
+        }
+
+        // 동적 쿼리로 데이터 조회
+        Page<Menu> menuPage = menuRepository.findMenusByCondition(storeId, status, keyword, pageable);
+
+        return menuPage.map(MenuResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MenuBoardResponse.MenuBoardCategory> getMenuBoard(UUID storeId) {
+        // store 존재 여부 검증
+        if (!storeRepository.existsById(storeId)) {
+            throw new CustomException(ErrorCode.STORE_NOT_FOUND);
+        }
+
+        // 고객 노출용 메뉴 상태값 필터링
+        List<MenuStatus> targetStatuses = List.of(MenuStatus.AVAILABLE, MenuStatus.SOLD_OUT);
+
+        // 데이터 조회 및 그룹핑
+        List<Menu> menus = menuRepository.findMenusWithCategory(storeId, targetStatuses);
+        Map<MenuCategory, List<Menu>> groupedMenus = menus.stream()
+                .collect(Collectors.groupingBy(
+                        Menu::getMenuCategory,
+                        LinkedHashMap::new,     // LinkedHashMap으로 DB 정렬 순서 보장
+                        Collectors.toList()
+                ));
+
+        return groupedMenus.entrySet().stream()
+                .map(entry -> MenuBoardResponse.MenuBoardCategory.from(entry.getKey(), entry.getValue()))
+                .toList();
     }
 
 }
