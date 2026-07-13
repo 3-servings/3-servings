@@ -4,28 +4,22 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.menu.entity.Menu;
-import com.sparta.server.threeserving.menu.entity.MenuOptionGroup;
-import com.sparta.server.threeserving.menu.entity.MenuStatus;
-import com.sparta.server.threeserving.menu.entity.OptionGroup;
-import com.sparta.server.threeserving.menu.entity.OptionItem;
+import com.sparta.server.threeserving.menu.entity.*;
 import com.sparta.server.threeserving.menu.repository.MenuOptionGroupRepository;
 import com.sparta.server.threeserving.menu.repository.MenuRepository;
 import com.sparta.server.threeserving.menu.repository.OptionItemRepository;
-import com.sparta.server.threeserving.order.dto.response.*;
-import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartAddItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartItemOptionRequestDto;
-import com.sparta.server.threeserving.order.entity.Cart;
-import com.sparta.server.threeserving.order.entity.CartItem;
-import com.sparta.server.threeserving.order.entity.CartItemOption;
-import com.sparta.server.threeserving.order.repository.CartItemOptionRepository;
-import com.sparta.server.threeserving.order.repository.CartItemRepository;
-import com.sparta.server.threeserving.order.repository.CartRepository;
+import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
+import com.sparta.server.threeserving.order.dto.request.CheckoutRequestDto;
+import com.sparta.server.threeserving.order.dto.response.*;
+import com.sparta.server.threeserving.order.entity.*;
+import com.sparta.server.threeserving.order.repository.*;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -37,11 +31,19 @@ import java.util.stream.Collectors;
 public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-    private final StoreRepository storeRepository;
     private final CartItemOptionRepository cartItemOptionRepository;
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderItemOptionRepository orderItemOptionRepository;
+
+    private final StoreRepository storeRepository;
+
     private final MenuRepository menuRepository;
     private final OptionItemRepository optionItemRepository;
     private final MenuOptionGroupRepository menuOptionGroupRepository;
+
+    private record CartLineItem(CartItem cartItem, Menu menu, List<OptionItem> options) {}
 
     @Transactional
     public ApiResponse<CartResponseDto> createOrFindCart(Long userId, UUID storeId) {
@@ -93,18 +95,39 @@ public class CartService {
             return ApiResponse.success(SuccessCode.SUCCESS, new CartDetailResponseDto(cart, 0, List.of()));
         }
 
-        // 1. 카트Item에 따라서 메뉴명 조회 -> Map<menuId, Menu> 필요
-        // 2. 카트Item의 OptionList의 price*quantity 합산 -> Map<cartItem, List<OptionItem>>, Map<optionId, OptionItem>> 필요
-        // 3. total_price계산 / 각 카트별 메뉴 수, 메뉴별 option 수가 100개 미만이라고 치면 합리적인 latency 나옴
-        // 더 최적화 할 방안 찾기
+        List<CartLineItem> cartLineItem = getCartLineItems(cartItems);
 
+        List<CartItemDetailResponseDto> totalItemList = new ArrayList<>();
+        int estimatedTotalPrice = 0;
+
+        for (CartLineItem lineItem : cartLineItem) {
+            totalItemList.add(
+                    new CartItemDetailResponseDto(
+                            lineItem.cartItem().getId(),
+                            lineItem.menu().getId(),
+                            lineItem.menu().getName(),
+                            lineItem.cartItem().getQuantity(),
+                            lineItem.options().stream().map(
+                                    optionItem ->
+                                            new CartItemOptionRequestDto(optionItem.getId(), optionItem.getName())
+                            ).toList()
+                    )
+            );
+        }
+
+        CartDetailResponseDto responseDto = new CartDetailResponseDto(cart, estimatedTotalPrice, totalItemList);
+        return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
+    }
+
+    @NonNull
+    private List<CartLineItem> getCartLineItems(List<CartItem> cartItemList) {
         // 메뉴 배치 조회 후 id로 매핑
-        List<UUID> menuIds = cartItems.stream().map(CartItem::getMenuId).distinct().toList();
+        List<UUID> menuIds = cartItemList.stream().map(CartItem::getMenuId).distinct().toList();
         Map<UUID, Menu> menuById = menuRepository.findAllById(menuIds).stream()
                 .collect(Collectors.toMap(Menu::getId, Function.identity()));
 
         // 항목별 옵션을 한 번에 배치 조회 후 cartItemId 기준으로 묶기
-        List<CartItemOption> cartItemOptions = cartItemOptionRepository.findAllByCartItemIn(cartItems);
+        List<CartItemOption> cartItemOptions = cartItemOptionRepository.findAllByCartItemIn(cartItemList);
         Map<UUID, List<CartItemOption>> optionsByCartItemId = cartItemOptions.stream()
                 .collect(Collectors.groupingBy(option -> option.getCartItem().getId()));
 
@@ -114,36 +137,19 @@ public class CartService {
         Map<UUID, OptionItem> optionItemById = optionItemRepository.findAllById(optionItemIds).stream()
                 .collect(Collectors.toMap(OptionItem::getId, Function.identity()));
 
-        List<CartItemDetailResponseDto> totalItemList = new ArrayList<>();
-        int estimatedTotalPrice = 0;
-
-        for (CartItem cartItem : cartItems) {
-            Menu menu = menuById.get(cartItem.getMenuId());
-            if (menu == null) {
-                // 카트의 메뉴Id가 지워졌거나 잘못된 id저장.
-                throw new CustomException(ErrorCode.MENU_NOT_FOUND);
-            }
-
-            List<CartItemOptionRequestDto> optionDtos = new ArrayList<>();
-            int optionPriceSum = 0;
-            for (CartItemOption option : optionsByCartItemId.getOrDefault(cartItem.getId(), List.of())) {
-                OptionItem optionItem = optionItemById.get(option.getOptionItemId());
-                if (optionItem == null) {
-                    // 담긴 뒤 삭제된 옵션 - 조회 화면에서는 조용히 제외
-                    continue;
-                }
-                optionDtos.add(new CartItemOptionRequestDto(optionItem.getId(), optionItem.getName()));
-                optionPriceSum += optionItem.getPrice();
-            }
-
-            totalItemList.add(new CartItemDetailResponseDto(
-                    cartItem.getId(), cartItem.getMenuId(), menu.getName(), cartItem.getQuantity(), optionDtos));
-
-            estimatedTotalPrice += (menu.getPrice() + optionPriceSum) * cartItem.getQuantity();
-        }
-
-        CartDetailResponseDto responseDto = new CartDetailResponseDto(cart, estimatedTotalPrice, totalItemList);
-        return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
+        return cartItemList.stream()
+                .map(cartItem -> {
+                    Menu menu = menuById.get(cartItem.getMenuId());
+                    if (menu == null) {
+                        throw new CustomException(ErrorCode.MENU_NOT_FOUND);
+                    }
+                    List<OptionItem> options = optionsByCartItemId.
+                            getOrDefault(cartItem.getId(), List.of()).stream()
+                            .map(option -> optionItemById.get(option.getOptionItemId()))
+                            .filter(Objects::nonNull)
+                            .toList();
+                    return new CartLineItem(cartItem, menu, options);
+                }).toList();
     }
 
     @Transactional
@@ -242,5 +248,64 @@ public class CartService {
             throw new CustomException(ErrorCode.NOT_CART_OWNER);
         }
         return cart;
+    }
+
+    @Transactional
+    public ApiResponse<CheckoutResponseDto> checkout(Long userId, UUID cartId, CheckoutRequestDto requestDto) {
+        // validation
+        // userId - 카트 주인 확인, delete 상태 확인
+        // cart item 최소 하나 이상
+        // 금액 계산, 최소 주문 금액
+        Cart cart = validateCartOwner(userId, cartId);
+        List<CartItem> cartItemList = cartItemRepository.findAllByCart_IdAndDeletedAtIsNull(cartId);
+        if(cartItemList.isEmpty())
+            throw new CustomException(ErrorCode.ORDER_ITEMS_IS_EMPTY);
+
+        List<CartLineItem> lineItemList = getCartLineItems(cartItemList);
+
+        int totalPrice = lineItemList.stream().mapToInt(lineItem -> {
+            int optionPriceSum = lineItem.options.stream().mapToInt(OptionItem::getPrice).sum();
+            return (optionPriceSum + lineItem.menu().getPrice()) * lineItem.cartItem().getQuantity();
+        }).sum();
+
+        // logic
+        // order/orderItem/orderItemOption persist
+        // cart softDelete
+        Orders order = new Orders(
+                userId, cart.getStoreId(), cart, OrderStatusEnum.PENDING, totalPrice,
+                requestDto.deliveryAddress(), requestDto.requestMessage()
+        );
+        Orders savedOrder = orderRepository.save(order);
+
+        List<OrderItem> orderItemList = lineItemList.stream()
+                .map(lineItem -> new OrderItem(
+                        savedOrder,
+                        lineItem.menu().getId(),
+                        lineItem.menu().getName(),
+                        lineItem.menu().getPrice(),
+                        lineItem.cartItem().getQuantity()
+                )).toList();
+        List<OrderItem> savedOrderItemList = orderItemRepository.saveAll(orderItemList);
+
+        List<OrderItemOption> orderItemOptions = new ArrayList<>();
+        for (int i = 0; i < lineItemList.size(); i++) {
+            OrderItem savedItem = savedOrderItemList.get(i);
+            for (OptionItem option : lineItemList.get(i).options()) {
+                orderItemOptions.add(new OrderItemOption(savedItem, option.getId(), option.getName(), option.getPrice()));
+            }
+        }
+        orderItemOptionRepository.saveAll(orderItemOptions);
+
+        cart.softDelete(userId);
+        for (CartItem cartItem : cartItemList) {
+            cartItem.softDelete(userId);
+        }
+        List<CartItemOption> cartItemOptionList = cartItemOptionRepository.findAllByCartItemIn(
+                lineItemList.stream().map(CartLineItem::cartItem).toList()
+        );
+        cartItemOptionRepository.deleteAll(cartItemOptionList);
+
+        return ApiResponse.success(SuccessCode.SUCCESS,
+                new CheckoutResponseDto(savedOrder, requestDto.deliveryAddress(), requestDto.requestMessage()));
     }
 }

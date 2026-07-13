@@ -37,10 +37,6 @@ public class OrderItemOption {
     @Min(value = 0)
     private Integer additionalPrice;
 
-    @Column(name="quantity", nullable = false)
-    @Min(value = 1)
-    private Integer quantity = 1;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -49,11 +45,10 @@ public class OrderItemOption {
     @Column(name = "created_by", nullable = false, updatable = false)
     private Long createdBy;
 
-    public OrderItemOption(OrderItem orderItem, UUID optionItemId, String optionName, Integer additionalPrice, Integer quantity) {
+    public OrderItemOption(OrderItem orderItem, UUID optionItemId, String optionName, Integer additionalPrice) {
         this.orderItem = orderItem;
         this.optionItemId = optionItemId;
         this.optionName = optionName;
         this.additionalPrice = additionalPrice;
-        this.quantity = quantity;
     }
 }

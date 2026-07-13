@@ -75,7 +75,7 @@ public class OrderService {
             List<OrderItemOption> options = dto.options().stream()
                     .map(optDto -> new OrderItemOption(
                             savedItem, optDto.optionItemId(), optDto.optionName(),
-                            optDto.additionalPrice(), 1))
+                            optDto.additionalPrice()))
                     .toList();
 
             orderItemOptionList.addAll(options);
