@@ -58,6 +58,7 @@ services:
       POSTGRES_DB: threeservings
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY}
 
     volumes:
       - threeservings-postgres-data:/var/lib/postgresql/data
