@@ -49,10 +49,12 @@ public class CategoryController {
     }
 
     @GetMapping("/")
-    public ApiResponse<Page<CategoryResponse>> getCategories(
+    public ApiResponse<Page<CategoryResponse>> searchCategories(
+            @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = "true") Boolean isActive,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable
             ){
-        return categoryService.getCategories(pageable);
+        return categoryService.searchCategories(name,isActive, pageable);
     }
 
     @DeleteMapping("/{categoryId}")
