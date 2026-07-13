@@ -1,0 +1,114 @@
+env:
+  IMAGE_NAME: leunbin/threeservings-api
+
+name: CI/CD
+
+permissions:
+  contents: read
+
+on:
+  pull_request: #PR 올라오면 CI 실행
+    branches:
+      - develop
+
+  push: #main으로 머지되면 CD 실행
+    branches:
+      - main
+
+jobs:
+  ci:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: threeservings
+          POSTGRES_USER: threeservings
+          POSTGRES_PASSWORD: threeservingspwd
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U threeservings"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        env:
+          SPRING_PROFILES_ACTIVE: ci
+
+          DB_URL: jdbc:postgresql://127.0.0.1:5432/threeservings
+          DB_USERNAME: threeservings
+          DB_PASSWORD: threeservingspwd
+
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+
+          AWS_REGION: ap-northeast-2
+          S3_BUCKET_NAME: test-bucket
+        run: ./gradlew build
+  cd:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      - name: Build
+        run: ./gradlew build -x test
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker Image
+        run: docker build -t $IMAGE_NAME:latest .
+
+      - name: Push Docker Image
+        run: docker push $IMAGE_NAME:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/3-servings
+            
+            git fetch origin
+            
+            git reset --hard origin/main
+            
+            docker-compose pull
+            
+            docker-compose up -d --force-recreate --remove-orphans
+            
+            docker image prune -f

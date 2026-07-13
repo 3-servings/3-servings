@@ -1,1 +1,27 @@
-spring.application.name=three-serving
+spring:
+  application:
+    name: three-servings-api
+
+  # local 환경 실행 기분
+  profiles:
+    default: local
+
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 19096
+
+logging:
+  level:
+    root: info
+  pattern:
+    # %X{traceId:-} : MDC의 traceId, 없으면 빈칸 Spring Boot 표준 user추가 되면 이것도 중간에 넣기 ->  [%X{userId}]
+    console: "%d{HH:mm:ss.SSS} [%X{traceId:-________}] %-5level %logger{15} - %msg%n"
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: 1800000     # 30분
+  refresh-expiration: 1209600000 # 14일

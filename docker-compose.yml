@@ -1,0 +1,82 @@
+services:
+  nginx:
+    build:
+      context : ./nginx
+
+    container_name: threeservings-nginx
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+
+    depends_on:
+      - spring
+
+    restart: always
+
+  spring:
+    image: leunbin/threeservings-api:latest
+
+    container_name: threeservings-server
+
+    expose:
+      - "19096"
+
+    depends_on:
+      - postgres
+      - redis
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      AWS_REGION: ${AWS_REGION}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+
+    restart: always
+
+  postgres:
+    image: postgres:16
+
+    container_name: threeservings-db
+
+    ports:
+      - "5432:5432"
+
+    environment:
+      POSTGRES_DB: threeservings
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    volumes:
+      - threeservings-postgres-data:/var/lib/postgresql/data
+
+    restart: always
+
+  redis:
+    image: redis:7
+
+    container_name: threeservings-redis
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - threeservings-redis-data:/data
+
+    restart: always
+
+volumes:
+  threeservings-postgres-data:
+  threeservings-redis-data:
