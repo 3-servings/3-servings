@@ -8,7 +8,6 @@ import com.sparta.server.threeserving.menu.dto.request.MenuCategoryDisplayOrderU
 import com.sparta.server.threeserving.menu.dto.request.MenuCategoryUpdateRequest;
 import com.sparta.server.threeserving.menu.dto.response.MenuCategoryResponse;
 import com.sparta.server.threeserving.menu.service.MenuCategoryService;
-import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,9 +33,8 @@ public class MenuCategoryController {
         MenuCategoryResponse response = menuCategoryService.createMenuCategory(
                 storeId,
                 request,
-//                userDetails.getUser().getId(),
-//                userDetails.getUser().getRole()
-                1L, UserRoleEnum.OWNER
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
         );
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.CREATED, response));
@@ -60,10 +58,8 @@ public class MenuCategoryController {
         MenuCategoryResponse response = menuCategoryService.updateMenuCategory(
                 menuCategoryId,
                 request,
-//                userDetails.getUser().getId(),
-//                userDetails.getUser().getRole()
-                1L, UserRoleEnum.OWNER
-
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
         );
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED, response));
@@ -74,14 +70,12 @@ public class MenuCategoryController {
             @PathVariable UUID storeId,
             @Valid @RequestBody MenuCategoryDisplayOrderUpdateRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails
-            ) {
+    ) {
         menuCategoryService.updateDisplayOrders(
                 storeId,
-                request.getMenuCategoryIds(),
-//                userDetails.getUser().getId(),
-//                userDetails.getUser().getRole()
-                1L, UserRoleEnum.OWNER
-
+                request,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
         );
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED));
     }
@@ -93,10 +87,8 @@ public class MenuCategoryController {
     ) {
         menuCategoryService.deleteMenuCategory(
                 menuCategoryId,
-//                userDetails.getUser().getId(),
-//                userDetails.getUser().getRole()
-                1L, UserRoleEnum.OWNER
-
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
         );
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.DELETED));

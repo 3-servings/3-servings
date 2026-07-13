@@ -42,7 +42,10 @@ public enum ErrorCode {
     OPTION_MIN_SELECT_VIOLATION(HttpStatus.BAD_REQUEST, "M007", "필수 옵션의 판매 가능한 항목이 최소 선택 개수보다 적어질 수 없습니다."),
 
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M000", "메뉴를 찾을 수 없습니다."),
-    DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M000", "삭제된 메뉴의 상태는 변경할 수 없습니다."),
+    MENU_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 이름입니다."),
+    MENU_STORE_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 메뉴는 요청한 가게에 속해 있지 않습니다."),
+    MENU_MENU_CATEGORY_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 메뉴는 요청한 카테고리에 속해 있지 않습니다."),
+    OPTION_GROUP_STORE_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 옵션 그룹은 요청한 가게에 속해 있지 않습니다."),
 
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),

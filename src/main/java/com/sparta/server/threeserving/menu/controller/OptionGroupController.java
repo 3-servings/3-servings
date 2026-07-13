@@ -31,7 +31,7 @@ public class OptionGroupController {
             @PathVariable UUID storeId,
             @Valid @RequestBody OptionGroupCreateRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails
-            ) {
+    ) {
         OptionGroupResponse response = optionGroupService.createOptionGroup(
                 storeId,
                 request,
@@ -62,7 +62,7 @@ public class OptionGroupController {
             @PathVariable UUID optionGroupId,
             @Valid @RequestBody OptionGroupUpdateRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails
-            ) {
+    ) {
         OptionGroupResponse response = optionGroupService.updateOptionGroup(
                 optionGroupId,
                 request,

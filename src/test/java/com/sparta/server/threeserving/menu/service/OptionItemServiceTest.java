@@ -8,6 +8,7 @@ import com.sparta.server.threeserving.menu.entity.OptionItem;
 import com.sparta.server.threeserving.menu.entity.OptionItemStatus;
 import com.sparta.server.threeserving.menu.repository.OptionItemRepository;
 import com.sparta.server.threeserving.store.entity.Store;
+import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,13 +40,18 @@ public class OptionItemServiceTest {
     @Mock
     private OptionItemRepository optionItemRepository;
 
+    @Mock
+    private StoreRepository storeRepository;
+
     @Test
     @DisplayName("실패: 모든 아이템들을 품절시켜 minSelect=1 보다 선택 가능한 아이템이 작은 경우, 예외 발생")
     void updateOptionItemsStatus_Fail_MinSelectViolation() {
         // [Given]
         Long ownerId = 1L;
+        UUID storeId = UUID.randomUUID();
         User owner = User.builder().id(ownerId).role(UserRoleEnum.OWNER).build();
         Store store = Store.builder().owner(owner).build();
+        ReflectionTestUtils.setField(store, "id", storeId);
 
         OptionGroup group = OptionGroup.builder().store(store).name("소스 선택").minSelect(1).maxSelect(2).build();
 
@@ -62,6 +69,7 @@ public class OptionItemServiceTest {
         group.addOptionItem(mustard);
 
         // Mocking
+        given(storeRepository.findById(storeId)).willReturn(Optional.of(store));
         given(optionItemRepository.findAllWithGroupAndStoreByIdIn(anyIterable())).willReturn(List.of(ketchup, mustard));
 
         // 클라이언트 요청 : 모두 SOLD_OUT 변경
@@ -72,7 +80,7 @@ public class OptionItemServiceTest {
 
         // [When & Then]
         CustomException exception = assertThrows(CustomException.class, () -> {
-            optionItemService.updateOptionItemsStatus(request, ownerId, UserRoleEnum.OWNER);
+            optionItemService.updateOptionItemsStatus(storeId, request, ownerId, UserRoleEnum.OWNER);
         });
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.OPTION_MIN_SELECT_VIOLATION);

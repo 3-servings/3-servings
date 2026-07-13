@@ -3,6 +3,7 @@ package com.sparta.server.threeserving.menu.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -69,5 +70,27 @@ public class Menu extends BaseEntity {
         this.description = description;
         this.isDescriptionAiGenerated = isDescriptionAiGenerated;
         this.displayOrder = displayOrder;
+    }
+
+    public void update(MenuCategory menuCategory, String name, int price, String description, boolean isDescriptionAiGenerated, MenuStatus status) {
+        this.menuCategory = menuCategory;
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.isDescriptionAiGenerated = isDescriptionAiGenerated;
+        this.status = status;
+    }
+
+    public void updateStatus(MenuStatus status) {
+        this.status = status;
+    }
+
+    public void updateDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public void assignOptionGroups(List<MenuOptionGroup> newOptionGroups) {
+        this.menuOptionGroups.clear();                  // 기존 매핑 전부 물리 삭제 (orphanRemoval 작동)
+        this.menuOptionGroups.addAll(newOptionGroups);  // 새로운 순서와 매핑으로 덮어쓰기
     }
 }

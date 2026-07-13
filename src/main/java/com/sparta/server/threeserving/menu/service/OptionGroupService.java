@@ -81,7 +81,7 @@ public class OptionGroupService {
 
     @Transactional(readOnly = true)
     public Page<OptionGroupResponse> getOptionGroups(UUID storeId, String keyword, Pageable pageable) {
-        // 가게 존재 여부 검증
+        // store 존재 여부 검증
         if (!storeRepository.existsById(storeId)) {
             throw new CustomException(ErrorCode.STORE_NOT_FOUND);
         }

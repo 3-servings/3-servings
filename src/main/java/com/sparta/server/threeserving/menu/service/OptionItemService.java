@@ -7,6 +7,8 @@ import com.sparta.server.threeserving.menu.entity.OptionGroup;
 import com.sparta.server.threeserving.menu.entity.OptionItem;
 import com.sparta.server.threeserving.menu.entity.OptionItemStatus;
 import com.sparta.server.threeserving.menu.repository.OptionItemRepository;
+import com.sparta.server.threeserving.store.entity.Store;
+import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,9 +24,13 @@ import java.util.stream.Collectors;
 public class OptionItemService {
 
     private final OptionItemRepository optionItemRepository;
+    private final StoreRepository storeRepository;
 
     @Transactional
-    public void updateOptionItemsStatus(OptionItemStatusUpdateRequest request, Long userId, UserRoleEnum role) {
+    public void updateOptionItemsStatus(UUID storeId, OptionItemStatusUpdateRequest request, Long userId, UserRoleEnum role) {
+        // store 존재 여부 검증
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
         Map<UUID, OptionItemStatus> statusUpdateMap = request.getItemStatusUpdates().stream()
                 .collect(Collectors.toMap(
