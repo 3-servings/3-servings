@@ -18,12 +18,14 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
             "LEFT JOIN s.categoryList sc " +
             "LEFT JOIN Menu m ON m.store = s " +
             "WHERE (:name IS NULL OR s.name LIKE CONCAT('%', :name, '%') OR m.name LIKE CONCAT('%', :name, '%'))  " +
+            "AND (:onlyServiceArea = false OR s.region.isServiceArea = true) " +
             "AND (:regionId IS NULL OR s.region.id = :regionId) " +
             "AND (:categoryId IS NULL OR sc.category.id = :categoryId)")
     Page<Store> searchStores(
             @Param("name") String name,
             @Param("regionId") UUID regionId,
             @Param("categoryId") UUID categoryId,
+            @Param("onlyServiceArea") boolean onlyServiceArea,
             Pageable pageable
     );
     List<UUID> findStoreIdsByOwnerId(Long ownerId);

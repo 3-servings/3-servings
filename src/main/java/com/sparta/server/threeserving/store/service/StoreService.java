@@ -63,7 +63,7 @@ public class StoreService {
         return ApiResponse.success(SuccessCode.CREATED, new StoreResponse(savedStore));
     }
 
-    public ApiResponse<Page<StoreResponse>> getStores(StoreSearchCondition condition, Pageable pageable) {
+    public ApiResponse<Page<StoreResponse>> getStores(StoreSearchCondition condition, Pageable pageable, boolean isAdmin) {
         Pageable newPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 PageService.resolvePageSize(pageable.getPageSize()),
@@ -74,6 +74,7 @@ public class StoreService {
                 condition.getName(),
                 condition.getRegionId(),
                 condition.getCategoryId(),
+                isAdmin,
                 newPageable
         ).map(StoreResponse::new);
 
