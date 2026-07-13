@@ -7,7 +7,7 @@ import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartAddItemRequestDto;
-import com.sparta.server.threeserving.order.dto.request.CartItemOptionDto;
+import com.sparta.server.threeserving.order.dto.request.CartItemOptionRequestDto;
 import com.sparta.server.threeserving.order.entity.Cart;
 import com.sparta.server.threeserving.order.entity.CartItem;
 import com.sparta.server.threeserving.order.entity.CartItemOption;
@@ -51,7 +51,6 @@ public class CartService {
     }
 
     public ApiResponse<List<CartListResponseDto>> getCartList(Long userId) {
-        // N+1 문제 발생 및 해결
         List<Cart> cartList = cartRepository.findAllByUserIdAndDeletedAtIsNull(userId);
         if (cartList.isEmpty()) {
             return ApiResponse.success(SuccessCode.SUCCESS, List.of());
@@ -89,14 +88,14 @@ public class CartService {
                 .collect(Collectors.groupingBy(option -> option.getCartItem().getId()));
 
         // TODO: Menu 도메인 완성되면 menuRepository/optionItemRepository로 menu_name, option_name, 실제 가격 조회
-        List<CartItemDetailDto> items = cartItems.stream()
-                .map(cartItem -> new CartItemDetailDto(
+        List<CartItemDetailResponseDto> items = cartItems.stream()
+                .map(cartItem -> new CartItemDetailResponseDto(
                         cartItem.getId(),
                         cartItem.getMenuId(),
                         null,
                         cartItem.getQuantity(),
                         optionsByCartItemId.getOrDefault(cartItem.getId(), List.of()).stream()
-                                .map(option -> new CartItemOptionDto(option.getOptionItemId(), null))
+                                .map(option -> new CartItemOptionRequestDto(option.getOptionItemId(), null))
                                 .toList()
                 ))
                 .toList();

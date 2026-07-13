@@ -2,6 +2,7 @@ package com.sparta.server.threeserving.payment.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.order.entity.Orders;
+import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
 import com.sparta.server.threeserving.payment.enums.PaymentMethod;
 import com.sparta.server.threeserving.payment.enums.PaymentStatus;
 import jakarta.persistence.*;
@@ -48,6 +49,20 @@ public class Payment extends BaseEntity {
     private Instant approvedAt;
 
     private Instant refundAt;
+
+    public static Payment create(Orders order, PaymentRequest request){
+        Instant now = Instant.now();
+
+        return Payment.builder()
+                .order(order)
+                .paymentMethod(request.getPaymentMethod())
+                .amount((long) order.getTotalPrice())
+                .transactionId(UUID.randomUUID().toString())
+                .status(PaymentStatus.SUCCESS)
+                .requestedAt(now)
+                .approvedAt(now)
+                .build();
+    }
 
     public void refund(){
         this.status = PaymentStatus.REFUNDED;

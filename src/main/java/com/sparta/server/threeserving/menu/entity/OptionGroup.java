@@ -1,12 +1,13 @@
 package com.sparta.server.threeserving.menu.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
+import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
@@ -17,7 +18,6 @@ import java.util.UUID;
 @Getter
 @Table(name = "p_option_group")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE p_option_group SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class OptionGroup extends BaseEntity {
 
@@ -26,34 +26,51 @@ public class OptionGroup extends BaseEntity {
     @Column(name = "id", updatable = false, columnDefinition = "uuid")
     private UUID id;
 
-    // 양방향: OptionGroup(N) <-> Menu(1)
+    // 단방향: OptionGroup(N) <-> Store(1)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_id", nullable = false)
-    private Menu menu;
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 
     @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(name = "is_multiple", nullable = false)
-    private boolean isMultiple = false;
+    @Column(name = "min_select", nullable = false)
+    private int minSelect = 0;
 
-    // 양방향: OptionItem(N) <-> OptionGroup(1)
+    @Column(name = "max_select", nullable = false)
+    private int maxSelect = 1;
+
+    // 양방향: OptionGroup(1) <-> OptionItem(N)
+    @BatchSize(size = 100)
+    @OrderBy("displayOrder ASC")
     @OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OptionItem> optionItemList = new ArrayList<>();
 
     @Builder
-    public OptionGroup(Menu menu, String name, boolean isMultiple) {
-        this.menu = menu;
+    public OptionGroup(Store store, String name, int minSelect, int maxSelect) {
+        this.store = store;
         this.name = name;
-        this.isMultiple = isMultiple;
-    }
-
-    public void assignMenu(Menu menu) {
-        this.menu = menu;
+        this.minSelect = minSelect;
+        this.maxSelect = maxSelect;
     }
 
     public void addOptionItem(OptionItem optionItem) {
         this.optionItemList.add(optionItem);
         optionItem.assignOptionGroup(this);
+    }
+
+    public void update(String name, int minSelect, int maxSelect) {
+        this.name = name;
+        this.minSelect = minSelect;
+        this.maxSelect = maxSelect;
+    }
+
+    @Override
+    public void softDelete(Long deletedBy) {
+        super.softDelete(deletedBy);
+
+        for (OptionItem optionItem : optionItemList) {
+            optionItem.softDelete(deletedBy);
+        }
     }
 }

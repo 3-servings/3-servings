@@ -18,7 +18,10 @@ public record OrderCreateResponseDto(
     Long created_by
 ) {
     public OrderCreateResponseDto(Orders orders){
-        this(orders.getId(), orders.getCart().getId(), orders.getStoreId(), orders.getUserId(),
+        this(
+                orders.getId(), 
+                (orders.getCart() == null) ? null : orders.getCart().getId(),
+                orders.getStoreId(), orders.getUserId(),
                 orders.getOrderStatus(), orders.getTotalPrice(), orders.getDeliveryAddress(), orders.getCreatedAt(), orders.getCreatedBy());
     }
 }

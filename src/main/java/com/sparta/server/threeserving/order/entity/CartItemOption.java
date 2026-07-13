@@ -22,7 +22,7 @@ public class CartItemOption {
     private UUID id;
 
     @JoinColumn(name = "cart_item_id", nullable = false)
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private CartItem cartItem;
 
     @Column(name="option_item_id")

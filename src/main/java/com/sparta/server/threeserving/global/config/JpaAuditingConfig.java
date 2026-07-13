@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import java.time.Instant;
 import java.util.Optional;
 
-@EnableJpaAuditing(dateTimeProviderRef = "utcDateTimeProvider")
+@EnableJpaAuditing(dateTimeProviderRef = "utcDateTimeProvider", auditorAwareRef = "auditorAwareImpl")
 @Configuration
 public class JpaAuditingConfig {
 

@@ -1,10 +1,9 @@
 package com.sparta.server.threeserving.global.config;
 
-import com.sparta.server.threeserving.auth.cookie.CookieUtil;
+import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthenticationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthorizationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtUtil;
-import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.auth.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -68,11 +67,13 @@ public class SecurityConfig {
                     .requestMatchers("/signup").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
 
-                    // Order 예시. 실제 권한 확정 후 채워넣기
-                    // .requestMatchers("/api/carts/**").hasRole("CUSTOMER")
-                    // .requestMatchers("/api/carts/**", "/api/carts").hasRole("CUSTOMER")
-                    // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
-                    // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
+                    // Order
+                    .requestMatchers("/api/carts/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
+
+                    .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
+                    .requestMatchers(HttpMethod.PATCH, "/api/orders/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/orders/{orderId}").hasAnyRole("MASTER", "MANAGER")
 
                     // Store
                     .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
@@ -92,6 +93,9 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.PUT, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
                     .requestMatchers(HttpMethod.PATCH, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
                     .requestMatchers(HttpMethod.DELETE, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
+                    // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
+
 
                     // Menu
 
@@ -101,7 +105,9 @@ public class SecurityConfig {
                     // Payment
 
                     // review
-
+                    .requestMatchers(HttpMethod.GET, "/api/reviews/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/stores/*/reviews").permitAll()
+                    .requestMatchers("/api/reviews/**").authenticated()
 
 
                     // ⚠️ 임시: 위 도메인 규칙이 채워지기 전까지 나머지는 모두 허용.

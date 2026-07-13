@@ -3,6 +3,9 @@ package com.sparta.server.threeserving.payment.service;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.Orders;
+import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.dto.request.OrderManagementCreateRequest;
+import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
 import com.sparta.server.threeserving.payment.dto.response.PaymentLogResponse;
 import com.sparta.server.threeserving.payment.dto.response.PaymentResponse;
@@ -29,28 +32,56 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentLogRepository paymentLogRepository;
-    //Todo
-    //private final OrderRepository orderRepository;
+    private final OrderRepository orderRepository;
+    private final OrderManagementService orderManagementService;
 
-    public PaymentResponse createPayment(UUID orderId, PaymentRequest request){
-        //Todo order 조회
-        //Orders order = orderRepository.findById(orderId).orElseThrow(...)
+    private Orders validateOrder(Long userId, UUID orderId){
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        return null;
+        if(!order.getUserId().equals(userId)){
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        return order;
     }
 
-    public RefundSuccessResponse refund (UUID userId, UUID orderId){
-//        Todo
-//        Orders order = orderRepository.findById(orderId)
-//                .orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
-//
-//        if(!order.getUser().getId().equals(userId)){
-//            throw new CustomException(ErrorCode.ACCESS_DENIED);
-//        }
+    private Payment findPayment(UUID orderId){
+        return paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+    }
 
+    public PaymentResponse createPayment(Long userId, UUID orderId, PaymentRequest request){
 
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+        Orders order = validateOrder(userId, orderId);
+
+        if(paymentRepository.findByOrderId(orderId).isPresent()){
+            throw new CustomException(ErrorCode.PAYMENT_ALREADY_EXISTS);
+        }
+
+        Payment payment = Payment.create(order, request);
+
+        Payment savedPayment = paymentRepository.save(payment);
+
+        paymentLogRepository.save(
+                PaymentLog.create(
+                        savedPayment,
+                        PaymentStatus.SUCCESS,
+                        "결제 완료"
+                )
+        );
+
+        orderManagementService.create(
+                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
+        );
+
+        return PaymentResponse.from(savedPayment);
+    }
+
+    public RefundSuccessResponse refund (Long userId, UUID orderId){
+
+        validateOrder(userId, orderId);
+        Payment payment = findPayment(orderId);
 
         if(payment.getStatus() == PaymentStatus.REFUNDED){
             throw new CustomException(ErrorCode.PAYMENT_ALREADY_REFUNDED);
@@ -82,24 +113,21 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public PaymentResponse getPayment(UUID userId, UUID orderId){
+    public PaymentResponse getPayment(Long userId, UUID orderId){
 
-        //Todo : 사용자 권한 검증 추가
+        validateOrder(userId, orderId);
+        Payment payment = findPayment(orderId);
 
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
         return PaymentResponse.from(payment);
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentLogResponse> getPaymentLogs(UUID userId, UUID orderId){
+    public List<PaymentLogResponse> getPaymentLogs(Long userId, UUID orderId){
 
-        //Todo: 사용자 권한 검증 추가
+        validateOrder(userId, orderId);
 
         List<PaymentLogResponse> responseList = new ArrayList<>();
-
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+        Payment payment = findPayment(orderId);
 
         List<PaymentLog> paymentLogs = paymentLogRepository.findAllByPayment(payment);
 

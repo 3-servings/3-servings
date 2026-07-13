@@ -3,6 +3,11 @@ package com.sparta.server.threeserving.payment.service;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.Orders;
+import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.dto.request.OrderManagementCreateRequest;
+import com.sparta.server.threeserving.order_management.entity.OrderManagement;
+import com.sparta.server.threeserving.order_management.service.OrderManagementService;
+import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
 import com.sparta.server.threeserving.payment.dto.response.PaymentLogResponse;
 import com.sparta.server.threeserving.payment.dto.response.PaymentResponse;
 import com.sparta.server.threeserving.payment.dto.response.RefundSuccessResponse;
@@ -44,18 +49,26 @@ class PaymentServiceTest {
     @Mock
     private PaymentLogRepository paymentLogRepository;
 
-    private UUID userId;
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private OrderManagementService orderManagementService;
+
+    private Long userId;
     private UUID orderId;
     private Orders order;
     private Payment payment;
 
     @BeforeEach
     void setUp(){
-        userId = UUID.randomUUID();
+        userId = 1L;
         orderId = UUID.randomUUID();
 
         order = new Orders();
         order.setId(orderId);
+        order.setUserId(userId);
+        order.setTotalPrice(10000);
 
         payment = Payment.builder()
                 .order(order)
@@ -69,8 +82,110 @@ class PaymentServiceTest {
     }
 
     @Test
+    @DisplayName("결제 생성 성공")
+    void createPaymentSuccess(){
+        PaymentRequest request = new PaymentRequest(PaymentMethod.CARD);
+
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
+        when(paymentRepository.findByOrderId(orderId))
+                .thenReturn(Optional.empty());
+
+        when(paymentRepository.save(any(Payment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(orderManagementService.create(any(OrderManagementCreateRequest.class)))
+                .thenReturn(mock(OrderManagement.class));
+
+        PaymentResponse response = paymentService.createPayment(userId, orderId, request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getOrderId()).isEqualTo(orderId);
+        assertThat(response.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+
+        verify(paymentRepository).save(any(Payment.class));
+        verify(paymentLogRepository).save(any(PaymentLog.class));
+        verify(orderManagementService).create(any(OrderManagementCreateRequest.class));
+    }
+
+    @Test
+    @DisplayName("이미 결제된 주문")
+    void createPaymentAlreadyExists() {
+        PaymentRequest request = new PaymentRequest(PaymentMethod.CARD);
+
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
+        when(paymentRepository.findByOrderId(orderId))
+                .thenReturn(Optional.of(payment));
+
+        CustomException exception = assertThrows(
+                CustomException.class,
+                () -> paymentService.createPayment(userId, orderId, request)
+        );
+
+        assertThat(exception.getErrorCode())
+                .isEqualTo(ErrorCode.PAYMENT_ALREADY_EXISTS);
+
+        verify(paymentRepository, never())
+                .save(any(Payment.class));
+
+        verify(paymentLogRepository, never())
+                .save(any(PaymentLog.class));
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 주문으로 결제 생성 실패")
+    void createPaymentAccessDenied(){
+        PaymentRequest request = new PaymentRequest(PaymentMethod.CARD);
+
+        order.setUserId(2L);
+
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
+        CustomException exception = assertThrows(
+                CustomException.class,
+                () -> paymentService.createPayment(userId, orderId, request)
+        );
+
+        assertThat(exception.getErrorCode())
+                .isEqualTo(ErrorCode.ACCESS_DENIED);
+
+        verify(paymentRepository, never())
+                .save(any(Payment.class));
+
+        verify(paymentLogRepository, never())
+                .save(any(PaymentLog.class));
+    }
+
+    @Test
+    @DisplayName("주문 없음")
+    void createPaymentOrderNotFound() {
+        PaymentRequest request = new PaymentRequest(PaymentMethod.CARD);
+
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.empty());
+
+        CustomException exception = assertThrows(
+                CustomException.class,
+                ()->paymentService.createPayment(userId, orderId, request)
+        );
+
+        assertThat(exception.getErrorCode())
+                .isEqualTo(ErrorCode.RESOURCE_NOT_FOUND);
+
+        verify(paymentRepository, never()).save(any());
+        verify(paymentLogRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("환불 성공")
     void refundSuccess() {
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
         when(paymentRepository.findByOrderId(orderId))
                 .thenReturn(Optional.of(payment));
 
@@ -88,6 +203,9 @@ class PaymentServiceTest {
     @DisplayName("이미 환불된 결제")
     void alreadyRefunded(){
         payment.refund();
+
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
 
         when(paymentRepository.findByOrderId(orderId))
                 .thenReturn(Optional.of(payment));
@@ -107,6 +225,9 @@ class PaymentServiceTest {
     @Test
     @DisplayName("환불 가능 시간 초과")
     void refundExpired(){
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
         payment = Payment.builder()
                 .order(order)
                 .paymentMethod(PaymentMethod.CARD)
@@ -135,6 +256,9 @@ class PaymentServiceTest {
     @Test
     @DisplayName("결제 정보를 찾을 수 없는 경우")
     void paymentNotFound(){
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
         when(paymentRepository.findByOrderId(orderId))
                 .thenReturn(Optional.empty());
 
@@ -153,6 +277,9 @@ class PaymentServiceTest {
     @Test
     @DisplayName("결제 조회 성공")
     void getPaymentSuccess(){
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
         when(paymentRepository.findByOrderId(orderId))
                 .thenReturn(Optional.of(payment));
 
@@ -170,6 +297,9 @@ class PaymentServiceTest {
     @Test
     @DisplayName("결제 조회 실패 - 결제 정보 없음")
     void getPaymentNotFound() {
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
         when(paymentRepository.findByOrderId(orderId))
                 .thenReturn(Optional.empty());
 
@@ -197,6 +327,9 @@ class PaymentServiceTest {
                 "환불 완료"
         );
 
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
         when(paymentRepository.findByOrderId(orderId))
                 .thenReturn(Optional.of(payment));
 
@@ -220,6 +353,9 @@ class PaymentServiceTest {
     @Test
     @DisplayName("결제 로그 조회 실패 - 결제 정보 없음")
     void getPaymentLogsNotFound(){
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
         when(paymentRepository.findByOrderId(orderId))
                 .thenReturn(Optional.empty());
 

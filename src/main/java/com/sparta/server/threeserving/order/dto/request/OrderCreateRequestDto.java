@@ -16,5 +16,5 @@ public record OrderCreateRequestDto (
         @NotNull @Min(value = 0L) Integer totalPrice,
         @NotNull String deliveryAddress,
         String requestMessage,
-        List<OrderItemRequestDto> orderItems
+        @NotNull List<OrderItemRequestDto> orderItems
 ) {}

@@ -2,10 +2,12 @@ package com.sparta.server.threeserving.order_management.controller;
 
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
-import com.sparta.server.threeserving.order_management.dto.*;
 import com.sparta.server.threeserving.order_management.dto.request.OrderAcceptRequest;
 import com.sparta.server.threeserving.order_management.dto.request.OrderRejectRequest;
 import com.sparta.server.threeserving.order_management.dto.request.OrderStatusUpdateRequest;
+import com.sparta.server.threeserving.order_management.dto.request.UpdateCookingTimeRequest;
+import com.sparta.server.threeserving.order_management.dto.response.OrderManagementListResponse;
+import com.sparta.server.threeserving.order_management.dto.response.OrderManagementResponse;
 import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +49,7 @@ public class OrderManagementController {
         return ApiResponse.success(SUCCESS,response);
     }
 
-    @PatchMapping("/{orderManagementId}/accept")
+    @PatchMapping("/orders/{orderManagementId}/accept")
     public ApiResponse<Void> acceptOrder( @PathVariable UUID orderManagementId,@RequestBody @Valid OrderAcceptRequest request) {
 
         orderManagementService.acceptOrder(orderManagementId,request.getEstimatedCookTime());
@@ -55,7 +57,7 @@ public class OrderManagementController {
         return ApiResponse.success(SUCCESS, null);
     }
 
-    @PatchMapping("/{orderManagementId}/reject")
+    @PatchMapping("/orders/{orderManagementId}/reject")
     public ApiResponse<Void> rejectOrder( @PathVariable UUID orderManagementId,@RequestBody @Valid OrderRejectRequest request) {
 
         orderManagementService.rejectOrder(orderManagementId,request.getRejectReasonCodeId(),request.getMemo());
@@ -63,10 +65,19 @@ public class OrderManagementController {
         return ApiResponse.success(SUCCESS, null);
     }
 
-    @PatchMapping("/{orderManagementId}/status")
+    @PatchMapping("/orders/{orderManagementId}/status")
     public ApiResponse<Void> updateStatus(@PathVariable UUID orderManagementId,@RequestBody @Valid OrderStatusUpdateRequest request) {
 
         orderManagementService.updateStatus(orderManagementId,request.getStatus());
+
+        return ApiResponse.success(SUCCESS,null);
+    }
+
+
+    @PatchMapping("/orders/{orderManagementId}/cook-time")
+    public ApiResponse<Void> updateCookingTime(@PathVariable UUID orderManagementId,@RequestBody @Valid UpdateCookingTimeRequest request) {
+
+        orderManagementService.updateCookingTime(orderManagementId,request.getEstimatedCookTime());
 
         return ApiResponse.success(SUCCESS,null);
     }

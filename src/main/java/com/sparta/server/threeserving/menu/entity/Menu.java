@@ -3,11 +3,11 @@ package com.sparta.server.threeserving.menu.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
@@ -18,7 +18,6 @@ import java.util.UUID;
 @Getter
 @Table(name = "p_menu")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE p_menu SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class Menu extends BaseEntity {
 
@@ -56,9 +55,9 @@ public class Menu extends BaseEntity {
     @Column(name = "display_order", nullable = false)
     private int displayOrder = 0;
 
-    // 양방향: OptionGroup(N) <-> Menu(1)
+    // 양방향: Menu(1) <-> 매핑 테이블(N) 참조
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OptionGroup> optionGroupList = new ArrayList<>();
+    private List<MenuOptionGroup> menuOptionGroups = new ArrayList<>();
 
     // store 반영 후 다시 수정
     @Builder
@@ -73,8 +72,25 @@ public class Menu extends BaseEntity {
         this.displayOrder = displayOrder;
     }
 
-    public void addOptionGroup(OptionGroup optionGroup) {
-        this.optionGroupList.add(optionGroup);
-        optionGroup.assignMenu(this);
+    public void update(MenuCategory menuCategory, String name, int price, String description, boolean isDescriptionAiGenerated, MenuStatus status) {
+        this.menuCategory = menuCategory;
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.isDescriptionAiGenerated = isDescriptionAiGenerated;
+        this.status = status;
+    }
+
+    public void updateStatus(MenuStatus status) {
+        this.status = status;
+    }
+
+    public void updateDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public void assignOptionGroups(List<MenuOptionGroup> newOptionGroups) {
+        this.menuOptionGroups.clear();                  // 기존 매핑 전부 물리 삭제 (orphanRemoval 작동)
+        this.menuOptionGroups.addAll(newOptionGroups);  // 새로운 순서와 매핑으로 덮어쓰기
     }
 }
