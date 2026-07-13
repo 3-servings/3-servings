@@ -22,8 +22,9 @@ public class MenuResponse {
     private Boolean isDescriptionAiGenerated;
     private MenuStatus status;
     private int displayOrder;
+    private String imageUrl;
 
-    public static MenuResponse from(Menu menu) {
+    public static MenuResponse from(Menu menu, String imageUrl) {
         return MenuResponse.builder()
                 .id(menu.getId())
                 .storeId(menu.getStore().getId())
@@ -34,6 +35,7 @@ public class MenuResponse {
                 .isDescriptionAiGenerated(menu.isDescriptionAiGenerated())
                 .status(menu.getStatus())
                 .displayOrder(menu.getDisplayOrder())
+                .imageUrl(imageUrl)
                 .build();
     }
 }
