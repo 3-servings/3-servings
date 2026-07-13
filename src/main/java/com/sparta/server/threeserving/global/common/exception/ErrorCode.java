@@ -14,6 +14,11 @@ public enum ErrorCode {
     USERNAME_DUPLICATED(HttpStatus.CONFLICT, "U004", "이미 사용 중인 아이디입니다."),
     NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "U005", "이미 사용 중인 닉네임입니다."),
     DUPLICATED_RESOURCE(HttpStatus.CONFLICT, "U006", "이미 사용 중인 정보입니다."),
+    ALREADY_WITHDRAWN(HttpStatus.CONFLICT,     "U007", "이미 탈퇴한 회원입니다."),
+    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST,"U008", "기존 비밀번호와 동일합니다."),
+    EMAIL_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "U009", "인증코드가 일치하지 않습니다."),
+    EMAIL_CODE_EXPIRED(HttpStatus.BAD_REQUEST,  "U010", "인증코드가 만료되었습니다. 다시 요청해주세요."),
+    EMAIL_SEND_FAILED(HttpStatus.BAD_GATEWAY,   "U011", "이메일 발송에 실패했습니다."),
     UNAUTHENTICATED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "만료된 토큰입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A003", "재발급이 불가능합니다. 다시 로그인해주세요."),
@@ -29,7 +34,9 @@ public enum ErrorCode {
 
     // Store
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "가게를 찾을 수 없습니다."),
-
+    REGION_NOT_FOUND(HttpStatus.NOT_FOUND,"S002" , "지역을 찾을 수 없습니다."),
+    REGION_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "S003", "이미 삭제된 지역입니다."),
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S004", "카테고리를 찾을 수 없습니다."),
     // Menu
     MENU_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴 카테고리를 찾을 수 없습니다."),
     MENU_CATEGORY_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 카테고리 이름입니다."),
@@ -50,7 +57,14 @@ public enum ErrorCode {
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),
     NOT_CART_OWNER(HttpStatus.FORBIDDEN, "O002", "본인의 장바구니가 아닙니다."),
-    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O009", "장바구니에 존재하지 않는 항목이거나 다른 카트 소속입니다."),
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O003", "주문정보를 찾을 수 없습니다."),
+    NOT_ORDER_OWNER(HttpStatus.FORBIDDEN, "O004", "본인의 주문이 아닙니다."),
+    NOT_STORE_OWNER_OF_ORDER(HttpStatus.FORBIDDEN, "O005", "본인 가게의 주문이 아닙니다."),
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O009", "장바구니에 존재하지 않는 항목이거나 다른 카트에 속합니다."),
+    ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O010", "주문 정보에 존재하지 않는 항목이거나 다른 주문 정보에 속합니다."),
+    EXPIRED_CANCEL_TIME(HttpStatus.BAD_REQUEST, "O011", "주문 취소 가능 시간이 지났습니다."),
+    ORDER_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "O014", "이미 주문이 처리되었습니다."),
+    ORDER_ITEMS_IS_EMPTY(HttpStatus.BAD_REQUEST, "O015", "주문 항목이 비어있습니다."),
 
     // System
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "서버 내부 오류가 발생했습니다."),
@@ -60,8 +74,7 @@ public enum ErrorCode {
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "R002", "이미 해당 주문에 리뷰를 작성했습니다."),
     REVIEW_NOT_OWNER(HttpStatus.FORBIDDEN, "R003", "본인이 작성한 리뷰만 수정/삭제할 수 있습니다."),
     ORDER_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "R004", "배달이 완료된 주문에만 리뷰를 작성할 수 있습니다."),
-    NOT_ORDER_OWNER(HttpStatus.FORBIDDEN, "R005", "본인의 주문에만 리뷰를 작성할 수 있습니다."),
-    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "R006", "주문을 찾을 수 없습니다."),
+    NOT_ORDER_OWNER_OF_REVIEW(HttpStatus.FORBIDDEN, "R005", "본인의 주문에만 리뷰를 작성할 수 있습니다."),
 
     // Review Comment (사장 답글)
     REVIEW_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RC001", "답글을 찾을 수 없습니다."),
