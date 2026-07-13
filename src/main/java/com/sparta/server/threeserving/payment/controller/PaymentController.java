@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
+import com.sparta.server.threeserving.payment.dto.request.TossConfirmRequest;
 import com.sparta.server.threeserving.payment.dto.response.PaymentLogResponse;
 import com.sparta.server.threeserving.payment.dto.response.PaymentResponse;
 import com.sparta.server.threeserving.payment.dto.response.RefundSuccessResponse;
@@ -23,6 +24,23 @@ import java.util.UUID;
 public class PaymentController {
 
     private final PaymentService paymentService;
+
+    @PostMapping("/{orderId}/payments/confirm")
+    public ResponseEntity<ApiResponse<PaymentResponse>> confirmPayment(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID orderId,
+            @RequestBody TossConfirmRequest request
+            ) {
+        PaymentResponse response = paymentService.confirmPayment(
+                userDetails.getUser().getId(),
+                orderId,
+                request
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(SuccessCode.CREATED, response)
+        );
+    }
 
     @PostMapping("/{orderId}/payments")
     public ResponseEntity<ApiResponse<PaymentResponse>> postPayment(
