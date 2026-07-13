@@ -95,9 +95,12 @@ public class CategoryService {
         return ApiResponse.success(SuccessCode.UPDATED);
     }
 
-    public ApiResponse<Page<CategoryResponse>> getCategories(Pageable pageable) {
-        Pageable newPageable = PageRequest.of(pageable.getPageNumber(),PageService.resolvePageSize(pageable.getPageSize()),  pageable.getSort());
-        Page<CategoryResponse> categories = categoryRepository.findByIsActive(true, newPageable).map(CategoryResponse::new);
+    public ApiResponse<Page<CategoryResponse>> searchCategories(String name,Boolean isActive, Pageable pageable) {
+        Pageable newPageable = PageRequest.of(pageable.getPageNumber(),
+                PageService.resolvePageSize(pageable.getPageSize()),
+                pageable.getSort());
+
+        Page<CategoryResponse> categories = categoryRepository.searchCategories(isActive, name, newPageable).map(CategoryResponse::new);
         return ApiResponse.success(SuccessCode.SUCCESS, categories);
     }
 
