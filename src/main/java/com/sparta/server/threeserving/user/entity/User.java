@@ -106,6 +106,7 @@ public class User extends BaseEntity {
         this.email += suffix;
         this.username += suffix;
         this.nickname += suffix;
+        softDelete(this.id); // BaseEntity deletedAt/deleteBy 세팅
     }
 
     public void block(){
