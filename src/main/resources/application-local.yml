@@ -34,3 +34,6 @@ jwt:
   secret: ${JWT_SECRET}
   access-expiration: 1800000     # 30분
   refresh-expiration: 1209600000 # 14일
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
