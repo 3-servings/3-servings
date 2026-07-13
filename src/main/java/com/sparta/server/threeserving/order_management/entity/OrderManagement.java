@@ -5,11 +5,9 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
-import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -17,11 +15,16 @@ import java.util.UUID;
 @Entity
 @Table(name = "p_order_management")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class OrderManagement extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "store_id", nullable = false)
+    private UUID storeId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
@@ -57,21 +60,17 @@ public class OrderManagement extends BaseEntity {
     @JoinColumn(name = "reject_reason_id")
     private RejectReasonCode rejectReasonCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id", nullable = false)
-    private Store store;
 
-
-    public OrderManagement(Orders order, Store store,OrderStatusEnum status) {
+    public OrderManagement(Orders order,  OrderStatusEnum status) {
         this.orders = order;
-        this.store = store;
+        this.storeId = order.getStoreId();
         this.orderStatus = status;
     }
 
     //승인
     public void accept(Integer estimatedCookTime) {
 
-        validatePending();
+        validateStatusTransition(OrderStatusEnum.ACCEPTED);
 
         this.orderStatus = OrderStatusEnum.ACCEPTED;
         this.estimatedCookTime = estimatedCookTime;
@@ -81,7 +80,7 @@ public class OrderManagement extends BaseEntity {
     //거절
     public void reject(RejectReasonCode rejectReasonCode, String memo) {
 
-        validatePending();
+        validateStatusTransition(OrderStatusEnum.REJECTED);
 
         this.orderStatus = OrderStatusEnum.REJECTED;
         this.rejectReasonCode = rejectReasonCode;
@@ -103,13 +102,10 @@ public class OrderManagement extends BaseEntity {
         }
     }
 
+    //조리시간 변경
+    public void changeCookingTime(Integer estimatedCookTime) {
 
-    private void validatePending() {
-        if (this.orderStatus != OrderStatusEnum.PENDING) {
-            throw new CustomException(
-                    ErrorCode.ORDER_STATUS_TRANSITION_INVALID
-            );
-        }
+        this.estimatedCookTime = estimatedCookTime;
     }
 
 
@@ -119,31 +115,5 @@ public class OrderManagement extends BaseEntity {
         }
     }
 
-//    private void validateStatusTransition(OrderStatusEnum status) {
-//
-//        if (this.orderStatusEnum == OrderStatusEnum.PENDING
-//                && status != OrderStatusEnum.ACCEPTED
-//                && status != OrderStatusEnum.REJECTED) {
-//
-//            throw new CustomException(
-//                    ErrorCode.ORDER_STATUS_TRANSITION_INVALID
-//            );
-//        }
-//
-//        if (this.orderStatusEnum == OrderStatusEnum.ACCEPTED
-//                && status != OrderStatusEnum.COOKING) {
-//
-//            throw new CustomException(
-//                    ErrorCode.ORDER_STATUS_TRANSITION_INVALID
-//            );
-//        }
-//
-//        if (this.orderStatusEnum == OrderStatusEnum.COOKING
-//                && status != OrderStatusEnum.READY) {
-//
-//            throw new CustomException(
-//                    ErrorCode.ORDER_STATUS_TRANSITION_INVALID
-//            );
-//        }
-//    }
+
 }

@@ -11,7 +11,6 @@ import com.sparta.server.threeserving.menu.service.MenuCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,13 +25,16 @@ public class MenuCategoryController {
     private final MenuCategoryService menuCategoryService;
 
     @PostMapping("/stores/{storeId}/menu-categories")
-//    @PreAuthorize("hasRole('OWNER')") // todo: security 활성화 이후 반영
     public ResponseEntity<ApiResponse<MenuCategoryResponse>> createMenuCategory(
             @PathVariable UUID storeId,
-            @Valid @RequestBody MenuCategoryCreateRequest request
+            @Valid @RequestBody MenuCategoryCreateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        MenuCategoryResponse response = MenuCategoryResponse.from(
-                menuCategoryService.createMenuCategory(storeId, request)
+        MenuCategoryResponse response = menuCategoryService.createMenuCategory(
+                storeId,
+                request,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
         );
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.CREATED, response));
@@ -42,20 +44,22 @@ public class MenuCategoryController {
     public ResponseEntity<ApiResponse<List<MenuCategoryResponse>>> getMenuCategories(
             @PathVariable UUID storeId
     ) {
-        List<MenuCategoryResponse> responses = menuCategoryService.getMenuCategories(storeId)
-                .stream().map(MenuCategoryResponse::from).toList();
+        List<MenuCategoryResponse> responses = menuCategoryService.getMenuCategories(storeId);
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS, responses));
     }
 
     @PutMapping("/menu-categories/{menuCategoryId}")
-//    @PreAuthorize("hasRole('OWNER')") // todo: security 활성화 이후 반영
     public ResponseEntity<ApiResponse<MenuCategoryResponse>> updateMenuCategory(
             @PathVariable UUID menuCategoryId,
-            @Valid @RequestBody MenuCategoryUpdateRequest request
+            @Valid @RequestBody MenuCategoryUpdateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        MenuCategoryResponse response = MenuCategoryResponse.from(
-                menuCategoryService.updateMenuCategory(menuCategoryId, request)
+        MenuCategoryResponse response = menuCategoryService.updateMenuCategory(
+                menuCategoryId,
+                request,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
         );
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED, response));
@@ -64,15 +68,19 @@ public class MenuCategoryController {
     @PatchMapping("/stores/{storeId}/menu-categories/display-order")
     public ResponseEntity<ApiResponse<Void>> updateDisplayOrders(
             @PathVariable UUID storeId,
-            @Valid @RequestBody MenuCategoryDisplayOrderUpdateRequest request
-            ) {
-        menuCategoryService.updateDisplayOrders(storeId, request.getCategoryIds());
-
+            @Valid @RequestBody MenuCategoryDisplayOrderUpdateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        menuCategoryService.updateDisplayOrders(
+                storeId,
+                request,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
+        );
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED));
     }
 
     @DeleteMapping("/menu-categories/{menuCategoryId}")
-//    @PreAuthorize("hasRole('OWNER')") // todo: security 활성화 이후 반영
     public ResponseEntity<ApiResponse<Void>> deleteMenuCategory(
             @PathVariable UUID menuCategoryId,
             @AuthenticationPrincipal UserDetailsImpl userDetails

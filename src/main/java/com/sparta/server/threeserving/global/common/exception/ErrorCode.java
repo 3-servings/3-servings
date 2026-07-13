@@ -14,6 +14,11 @@ public enum ErrorCode {
     USERNAME_DUPLICATED(HttpStatus.CONFLICT, "U004", "이미 사용 중인 아이디입니다."),
     NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "U005", "이미 사용 중인 닉네임입니다."),
     DUPLICATED_RESOURCE(HttpStatus.CONFLICT, "U006", "이미 사용 중인 정보입니다."),
+    ALREADY_WITHDRAWN(HttpStatus.CONFLICT,     "U007", "이미 탈퇴한 회원입니다."),
+    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST,"U008", "기존 비밀번호와 동일합니다."),
+    EMAIL_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "U009", "인증코드가 일치하지 않습니다."),
+    EMAIL_CODE_EXPIRED(HttpStatus.BAD_REQUEST,  "U010", "인증코드가 만료되었습니다. 다시 요청해주세요."),
+    EMAIL_SEND_FAILED(HttpStatus.BAD_GATEWAY,   "U011", "이메일 발송에 실패했습니다."),
     UNAUTHENTICATED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "만료된 토큰입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A003", "재발급이 불가능합니다. 다시 로그인해주세요."),
@@ -29,13 +34,25 @@ public enum ErrorCode {
 
     // Store
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "가게를 찾을 수 없습니다."),
-
+    REGION_NOT_FOUND(HttpStatus.NOT_FOUND,"S002" , "지역을 찾을 수 없습니다."),
+    REGION_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "S003", "이미 삭제된 지역입니다."),
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S004", "카테고리를 찾을 수 없습니다."),
     // Menu
     MENU_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴 카테고리를 찾을 수 없습니다."),
     MENU_CATEGORY_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 카테고리 이름입니다."),
-    MENU_CATEGORY_ALREADY_DELETED(HttpStatus.CONFLICT, "M003", "이미 삭제된 메뉴 카테고리입니다."),
+
+    OPTION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "M004", "옵션 그룹을 찾을 수 없습니다."),
+    OPTION_GROUP_NAME_DUPLICATED(HttpStatus.CONFLICT, "M005", "이미 존재하는 옵션 그룹 이름입니다."),
+
+    OPTION_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "M006", "옵션 아이템을 찾을 수 없습니다."),
+    INVALID_OPTION_SELECTION(HttpStatus.BAD_REQUEST, "O004", "최소/최대 선택 개수가 올바르지 않습니다."),
+    OPTION_MIN_SELECT_VIOLATION(HttpStatus.BAD_REQUEST, "M007", "필수 옵션의 판매 가능한 항목이 최소 선택 개수보다 적어질 수 없습니다."),
+
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M000", "메뉴를 찾을 수 없습니다."),
-    DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M000", "삭제된 메뉴의 상태는 변경할 수 없습니다."),
+    MENU_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 이름입니다."),
+    MENU_STORE_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 메뉴는 요청한 가게에 속해 있지 않습니다."),
+    MENU_MENU_CATEGORY_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 메뉴는 요청한 카테고리에 속해 있지 않습니다."),
+    OPTION_GROUP_STORE_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 옵션 그룹은 요청한 가게에 속해 있지 않습니다."),
 
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),

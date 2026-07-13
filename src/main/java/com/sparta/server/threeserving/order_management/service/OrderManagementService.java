@@ -4,8 +4,11 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
+import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.dto.request.OrderManagementCreateRequest;
 import com.sparta.server.threeserving.order_management.dto.response.OrderManagementListResponse;
 import com.sparta.server.threeserving.order_management.dto.response.OrderManagementResponse;
+import com.sparta.server.threeserving.order_management.dto.response.OrderStatusHistoryResponse;
 import com.sparta.server.threeserving.order_management.entity.OrderManagement;
 import com.sparta.server.threeserving.order_management.entity.OrderStatusHistory;
 import com.sparta.server.threeserving.order_management.entity.RejectReasonCode;
@@ -19,33 +22,31 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class OrderManagementService {
 
-    private OrderManagementRepository orderManagementRepository;
-    private OrderStatusHistoryRepository orderStatusHistoryRepository;
-    private RejectReasonCodeRepository rejectReasonCodeRepository;
+    private final OrderManagementRepository orderManagementRepository;
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final RejectReasonCodeRepository rejectReasonCodeRepository;
+    private final OrderRepository orderRepository;
 
 
-    // TODO
 // Payment 성공 시 호출
-//    @Transactional
-//    public OrderManagement create(OrderManagementCreateRequest request) {
-//
-//        Orders order = orderRepository.findById(request.getOrderId())
-//                .orElseThrow(() -> new IllegalArgumentException("주문 없음"));
-//
-//        Store store = order.getStore();
-//
-//        OrderManagement orderManagement =
-//                new OrderManagement(order, store);
-//
-//        return orderManagementRepository.save(orderManagement);
-//        return null;
-//    }
+    @Transactional
+    public OrderManagement create(OrderManagementCreateRequest request) {
+        System.out.println(request.getOrderId());
+        Orders order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new IllegalArgumentException("주문 없음"));
+        System.out.println(order);
+        OrderManagement orderManagement =
+                new OrderManagement(order,OrderStatusEnum.PENDING);
+
+        return orderManagementRepository.save(orderManagement);
+    }
 
     public Page<OrderManagementListResponse> getOrderManagementList(UUID storeId, OrderStatusEnum status, Pageable pageable) {
 
@@ -77,7 +78,7 @@ public class OrderManagementService {
         // 1. 주문 관리 상태 변경
         orderManagement.accept(estimatedCookTime);
 
-        // 2. 상태 이력 저장
+        // 2. 주문상태 변경, 상태 이력 저장
         updateOrderAndHistory(orderManagement,previousStatus,OrderStatusEnum.ACCEPTED);
 
     }
@@ -98,7 +99,7 @@ public class OrderManagementService {
         // 1. 주문 관리 상태 변경
         orderManagement.reject(rejectReasonCode,memo);
 
-        // 2. 상태 이력 저장
+        // 2. 주문상태 변경, 상태 이력 저장
         updateOrderAndHistory(orderManagement,previousStatus,OrderStatusEnum.REJECTED);
 
     }
@@ -112,9 +113,47 @@ public class OrderManagementService {
         // 1. 주문 관리 상태 변경
         orderManagement.changeStatus(status);
 
-        // 2. 상태 이력 저장
+        // 2. 주문상태 변경, 상태 이력 저장
         updateOrderAndHistory(orderManagement,previousStatus,status);
 
+    }
+
+    @Transactional
+    public void updateCookingTime(UUID orderManagementId, Integer estimatedCookTime) {
+
+        OrderManagement orderManagement = getOrderManagement(orderManagementId);
+        OrderStatusEnum status = orderManagement.getOrderStatus();
+        if (status != OrderStatusEnum.ACCEPTED &&
+                status != OrderStatusEnum.COOKING) {
+            throw new CustomException(ErrorCode.ORDER_STATUS_TRANSITION_INVALID);
+        }
+
+        orderManagement.changeCookingTime(estimatedCookTime);
+
+    }
+
+    @Transactional
+    public OrderStatusHistoryResponse getOrderStatusHistory(UUID orderManagementId) {
+
+        getOrderManagement(orderManagementId);
+
+        List<OrderStatusHistory> histories =
+                orderStatusHistoryRepository.findByOrderManagementIdOrderByCreatedAtAsc(orderManagementId);
+
+
+        List<OrderStatusHistoryResponse.History> history =
+                orderStatusHistoryRepository
+                        .findByOrderManagementIdOrderByCreatedAtAsc(orderManagementId)
+                        .stream()
+                        .map(h -> new OrderStatusHistoryResponse.History(
+                                h.getPreviousStatus(),
+                                h.getCurrentStatus(),
+                                h.getMemo(),
+                                h.getCreatedAt()
+                        ))
+                        .toList();
+
+        return new OrderStatusHistoryResponse(orderManagementId, history);
     }
 
 

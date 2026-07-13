@@ -4,6 +4,9 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.dto.request.OrderManagementCreateRequest;
+import com.sparta.server.threeserving.order_management.entity.OrderManagement;
+import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
 import com.sparta.server.threeserving.payment.dto.response.PaymentLogResponse;
 import com.sparta.server.threeserving.payment.dto.response.PaymentResponse;
@@ -49,6 +52,9 @@ class PaymentServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private OrderManagementService orderManagementService;
+
     private Long userId;
     private UUID orderId;
     private Orders order;
@@ -89,6 +95,9 @@ class PaymentServiceTest {
         when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
+        when(orderManagementService.create(any(OrderManagementCreateRequest.class)))
+                .thenReturn(mock(OrderManagement.class));
+
         PaymentResponse response = paymentService.createPayment(userId, orderId, request);
 
         assertThat(response).isNotNull();
@@ -97,6 +106,7 @@ class PaymentServiceTest {
 
         verify(paymentRepository).save(any(Payment.class));
         verify(paymentLogRepository).save(any(PaymentLog.class));
+        verify(orderManagementService).create(any(OrderManagementCreateRequest.class));
     }
 
     @Test

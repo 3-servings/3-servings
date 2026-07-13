@@ -33,7 +33,7 @@ public class MenuOptionGroup {
     private OptionGroup optionGroup;
 
     @Column(name = "display_order", nullable = false)
-    private int displayOrder;
+    private int displayOrder = 0;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

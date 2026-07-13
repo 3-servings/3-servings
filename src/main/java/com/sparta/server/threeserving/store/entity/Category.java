@@ -3,6 +3,7 @@ package com.sparta.server.threeserving.store.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("deleted_at IS NULL")
 public class Category extends BaseEntity {
 
     @Id
@@ -29,6 +31,7 @@ public class Category extends BaseEntity {
         this.name = name;
     }
 
+    public void changeName(String name){ this.name = name;}
 
     public void changeIsActive(Boolean isActive){
         this.isActive = isActive;

@@ -76,6 +76,23 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.DELETE, "/api/orders/{orderId}").hasAnyRole("MASTER", "MANAGER")
 
                     // Store
+                    .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.PUT, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/stores/**").hasAnyRole("OWNER", "MASTER", "MANAGER")
+
+                    .requestMatchers(HttpMethod.GET, "/api/regions/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PUT, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+
+                    .requestMatchers(HttpMethod.GET, "/api/categorys/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PUT, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
                     // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
                     // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
 
