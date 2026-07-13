@@ -60,6 +60,7 @@ public class Payment extends BaseEntity {
                 .transactionId(UUID.randomUUID().toString())
                 .status(PaymentStatus.SUCCESS)
                 .requestedAt(now)
+                .approvedAt(now)
                 .build();
     }
 
