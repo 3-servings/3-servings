@@ -8,7 +8,6 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Getter
-@Setter
 @Entity
 @Table(name = "p_reject_reason_code")
 public class RejectReasonCode extends BaseEntity {
