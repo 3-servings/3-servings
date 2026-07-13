@@ -3,6 +3,7 @@ package com.sparta.server.threeserving.payment.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
+import com.sparta.server.threeserving.payment.dto.response.TossConfirmResponse;
 import com.sparta.server.threeserving.payment.enums.PaymentMethod;
 import com.sparta.server.threeserving.payment.enums.PaymentStatus;
 import jakarta.persistence.*;
@@ -61,6 +62,18 @@ public class Payment extends BaseEntity {
                 .status(PaymentStatus.SUCCESS)
                 .requestedAt(now)
                 .approvedAt(now)
+                .build();
+    }
+
+    public static Payment createFromToss(Orders order, TossConfirmResponse response){
+        return Payment.builder()
+                .order(order)
+                .paymentMethod(PaymentMethod.valueOf(response.getMethod()))
+                .amount(response.getTotalAmount())
+                .transactionId(response.getPaymentKey())
+                .status(PaymentStatus.SUCCESS)
+                .requestedAt(Instant.now())
+                .approvedAt(response.getApprovedAt().toInstant())
                 .build();
     }
 
