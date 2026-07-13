@@ -1,10 +1,9 @@
-package com.sparta.server.threeserving.image.domain.entity;
+package com.sparta.server.threeserving.image.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -17,8 +16,7 @@ import java.util.UUID;
 @Getter
 @Table(name = "p_image")
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class) // ✨ Auditing 기능 활성화
-@SQLDelete(sql = "UPDATE p_image SET deleted_at = NOW() WHERE id = ?")
+@EntityListeners(AuditingEntityListener.class)
 @SQLRestriction("deleted_at IS NULL")
 public class Image {
 
