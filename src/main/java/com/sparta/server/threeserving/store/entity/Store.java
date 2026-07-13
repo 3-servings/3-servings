@@ -72,6 +72,10 @@ public class Store extends BaseEntity {
     private Integer reviewCount = 0;
 
     @Builder.Default
+    @Column(name = "order_count", nullable = false)
+    private Integer orderCount = 0;
+
+    @Builder.Default
     @Column(name = "is_open", nullable = false)
     private Boolean isOpen = false;
 
@@ -126,13 +130,10 @@ public class Store extends BaseEntity {
         this.reviewCount = reviewCount;
     }
 
-    public void changeDeliveryFee(Integer deliveryFee){
-        this.deliveryFee = deliveryFee;
+    public void updateOrderCnt(Integer orderCount){
+        this.orderCount = orderCount;
     }
 
-    public void changeMinOrderPrice(Integer minOrderPrice){
-        this.minOrderPrice = minOrderPrice;
-    }
 
 
     public void changeRegion(Region region) {
