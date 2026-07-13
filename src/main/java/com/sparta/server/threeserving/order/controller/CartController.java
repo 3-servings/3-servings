@@ -7,6 +7,7 @@ import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.dto.request.CartAddItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
+import com.sparta.server.threeserving.order.dto.request.CheckoutRequestDto;
 import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.service.CartService;
 import jakarta.validation.Valid;
@@ -82,8 +83,18 @@ public class CartController {
         return cartService.deleteCartItem(userId, cartId, cartItemId);
     }
 
+    @PostMapping("/{cartId}/checkout")
+    public ApiResponse<CheckoutResponseDto> checkout(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID cartId,
+            @RequestBody @Valid CheckoutRequestDto requestDto
+            ){
+        Long userId = requireCartAccessibleUserId(userDetails);
+        return cartService.checkout(userId, cartId, requestDto);
+    }
+
     private Long requireCartAccessibleUserId(UserDetailsImpl userDetails) {
-        if(userDetails == null){
+        if (userDetails == null) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
         return userDetails.getUser().getId();
