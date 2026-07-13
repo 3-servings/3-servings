@@ -77,9 +77,10 @@ public class SecurityConfig {
                     .requestMatchers("/api/carts/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
 
                     .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("MASTER", "MANAGER")
-                    // TODO: 와일드카드 없애고 OrderManagement랑 Payment에서 따로 걸어주는게 좋을듯.
-                    .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
-                    .requestMatchers(HttpMethod.PATCH, "/api/orders/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/orders").authenticated()
+                    .requestMatchers(HttpMethod.PATCH, "/api/orders/{orderId}").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/orders/{orderId}/cancel").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
                     .requestMatchers(HttpMethod.DELETE, "/api/orders/{orderId}").hasAnyRole("MASTER", "MANAGER")
 
                     // Store
