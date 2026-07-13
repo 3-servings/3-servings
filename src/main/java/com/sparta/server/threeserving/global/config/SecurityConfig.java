@@ -9,6 +9,7 @@ import com.sparta.server.threeserving.auth.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -74,7 +75,23 @@ public class SecurityConfig {
                     // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
 
                     // Store
+                    .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.PUT, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/stores/**").hasAnyRole("OWNER", "MASTER", "MANAGER")
 
+                    .requestMatchers(HttpMethod.GET, "/api/regions/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PUT, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+
+                    .requestMatchers(HttpMethod.GET, "/api/categorys/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PUT, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
 
                     // Menu
 
