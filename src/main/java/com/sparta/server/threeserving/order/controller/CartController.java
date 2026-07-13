@@ -19,11 +19,11 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(value = "/api")
+@RequestMapping(value = "/api/carts")
 public class CartController {
     private final CartService cartService;
 
-    @PostMapping("/carts")
+    @PostMapping("")
     public ApiResponse<CartResponseDto> createOrFindCart(
             @RequestBody @Valid CartCreateRequestDto cartCreateRequestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails
@@ -32,7 +32,7 @@ public class CartController {
         return cartService.createOrFindCart(userId, cartCreateRequestDto.storeId());
     }
 
-    @GetMapping("/carts")
+    @GetMapping("")
     public ApiResponse<List<CartListResponseDto>> getCartList(
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
@@ -40,7 +40,7 @@ public class CartController {
         return cartService.getCartList(userId);
     }
 
-    @GetMapping("/carts/{cartId}")
+    @GetMapping("/{cartId}")
     public ApiResponse<CartDetailResponseDto> getCartDetail(
             @PathVariable UUID cartId,
             @AuthenticationPrincipal UserDetailsImpl userDetails
@@ -50,7 +50,7 @@ public class CartController {
     }
 
 
-    @PostMapping("/carts/{cartId}/items")
+    @PostMapping("/{cartId}/items")
     public ApiResponse<CartAddItemResponseDto> addMenuToCart(
             @PathVariable UUID cartId,
             @RequestBody @Valid CartAddItemRequestDto cartAddItemRequestDto,
@@ -61,7 +61,7 @@ public class CartController {
     }
 
 
-    @PatchMapping("/carts/{cartId}/items/{cartItemId}")
+    @PatchMapping("/{cartId}/items/{cartItemId}")
     public ApiResponse<CartUpdateItemAmountResponseDto> updateCartItemAmount(
             @PathVariable UUID cartId,
             @PathVariable UUID cartItemId,
@@ -72,7 +72,7 @@ public class CartController {
         return cartService.updateCartItemAmount(userId, cartId, cartItemId, cartUpdateItemAmountRequestDto);
     }
 
-    @DeleteMapping("/carts/{cartId}/items/{cartItemId}")
+    @DeleteMapping("/{cartId}/items/{cartItemId}")
     public ApiResponse<Void> deleteCartItem(
             @PathVariable UUID cartId,
             @PathVariable UUID cartItemId,

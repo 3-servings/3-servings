@@ -9,9 +9,9 @@ public record CartDetailResponseDto(
     UUID id,
     UUID storeId,
     Integer estimatedTotalPrice,
-    List<CartItemDetailDto> items
+    List<CartItemDetailResponseDto> items
 ) {
-    public CartDetailResponseDto(Cart cart, Integer estimatedTotalPrice, List<CartItemDetailDto> items) {
+    public CartDetailResponseDto(Cart cart, Integer estimatedTotalPrice, List<CartItemDetailResponseDto> items) {
         this(cart.getId(), cart.getStoreId(), estimatedTotalPrice, items);
     }
 }

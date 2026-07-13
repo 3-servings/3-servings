@@ -55,7 +55,14 @@ public enum ErrorCode {
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),
     NOT_CART_OWNER(HttpStatus.FORBIDDEN, "O002", "본인의 장바구니가 아닙니다."),
-    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O009", "장바구니에 존재하지 않는 항목이거나 다른 카트 소속입니다."),
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O003", "주문정보를 찾을 수 없습니다."),
+    NOT_ORDER_OWNER(HttpStatus.FORBIDDEN, "O004", "본인의 주문이 아닙니다."),
+    NOT_STORE_OWNER_OF_ORDER(HttpStatus.FORBIDDEN, "O005", "본인 가게의 주문이 아닙니다."),
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O009", "장바구니에 존재하지 않는 항목이거나 다른 카트에 속합니다."),
+    ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "O010", "주문 정보에 존재하지 않는 항목이거나 다른 주문 정보에 속합니다."),
+    EXPIRED_CANCEL_TIME(HttpStatus.BAD_REQUEST, "O011", "주문 취소 가능 시간이 지났습니다."),
+    ORDER_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "O014", "이미 주문이 처리되었습니다."),
+    ORDER_ITEMS_IS_EMPTY(HttpStatus.BAD_REQUEST, "O015", "주문 항목이 비어있습니다."),
 
     // System
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "서버 내부 오류가 발생했습니다."),
@@ -65,8 +72,7 @@ public enum ErrorCode {
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "R002", "이미 해당 주문에 리뷰를 작성했습니다."),
     REVIEW_NOT_OWNER(HttpStatus.FORBIDDEN, "R003", "본인이 작성한 리뷰만 수정/삭제할 수 있습니다."),
     ORDER_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "R004", "배달이 완료된 주문에만 리뷰를 작성할 수 있습니다."),
-    NOT_ORDER_OWNER(HttpStatus.FORBIDDEN, "R005", "본인의 주문에만 리뷰를 작성할 수 있습니다."),
-    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "R006", "주문을 찾을 수 없습니다."),
+    NOT_ORDER_OWNER_OF_REVIEW(HttpStatus.FORBIDDEN, "R005", "본인의 주문에만 리뷰를 작성할 수 있습니다."),
 
     // Review Comment (사장 답글)
     REVIEW_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RC001", "답글을 찾을 수 없습니다."),

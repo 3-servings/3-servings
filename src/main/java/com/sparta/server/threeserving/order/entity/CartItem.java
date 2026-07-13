@@ -21,7 +21,7 @@ public class CartItem extends BaseEntity {
     private UUID id;
 
     @JoinColumn(name = "cart_id", nullable = false)
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Cart cart;
 
     @Column(name="menu_id", nullable = false)
