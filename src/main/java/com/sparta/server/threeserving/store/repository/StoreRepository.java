@@ -16,7 +16,8 @@ import java.util.UUID;
 public interface StoreRepository extends JpaRepository<Store, UUID> {
     @Query("SELECT DISTINCT s FROM Store s " +
             "LEFT JOIN s.categoryList sc " +
-            "WHERE (:name IS NULL OR s.name LIKE CONCAT('%', :name, '%')) " +
+            "LEFT JOIN Menu m ON m.store = s " +
+            "WHERE (:name IS NULL OR s.name LIKE CONCAT('%', :name, '%') OR m.name LIKE CONCAT('%', :name, '%'))  " +
             "AND (:regionId IS NULL OR s.region.id = :regionId) " +
             "AND (:categoryId IS NULL OR sc.category.id = :categoryId)")
     Page<Store> searchStores(
