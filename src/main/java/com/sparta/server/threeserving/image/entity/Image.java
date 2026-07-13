@@ -26,8 +26,9 @@ public class Image {
     private UUID id;
 
     // "MENU", "REVIEW", "STORE" 등 대상을 구분
+    @Enumerated(EnumType.STRING)
     @Column(name = "domain_type", nullable = false, length = 20)
-    private String domainType;
+    private DomainType domainType;
 
     // 연결될 도메인의 id
     @Column(name = "target_id", nullable = false)
@@ -69,7 +70,7 @@ public class Image {
     private Long deletedBy;
 
     @Builder
-    public Image(String domainType, UUID targetId, int sequence, String originName, String storedName, String imagePath, String imageUrl, long fileSize, String contentType) {
+    public Image(DomainType domainType, UUID targetId, int sequence, String originName, String storedName, String imagePath, String imageUrl, long fileSize, String contentType) {
         this.domainType = domainType;
         this.targetId = targetId;
         this.sequence = sequence;
@@ -79,5 +80,10 @@ public class Image {
         this.imageUrl = imageUrl;
         this.fileSize = fileSize;
         this.contentType = contentType;
+    }
+
+    public void softDelete(Long userId) {
+        this.deletedAt = java.time.Instant.now();
+        this.deletedBy = userId;
     }
 }
