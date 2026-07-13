@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.util.UUID;
 
+@Setter
 @Getter
 @Entity
 @Table(name = "p_order")
