@@ -2,18 +2,14 @@ package com.sparta.server.threeserving.menu.service;
 
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
-import com.sparta.server.threeserving.menu.dto.request.MenuDisplayOrderUpdateRequest;
-import com.sparta.server.threeserving.menu.dto.request.MenuStatusUpdateRequest;
-import com.sparta.server.threeserving.menu.dto.request.MenuUpdateRequest;
+import com.sparta.server.threeserving.menu.dto.request.*;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
-import com.sparta.server.threeserving.menu.entity.Menu;
-import com.sparta.server.threeserving.menu.entity.MenuCategory;
-import com.sparta.server.threeserving.menu.entity.MenuStatus;
+import com.sparta.server.threeserving.menu.entity.*;
 import com.sparta.server.threeserving.menu.repository.MenuCategoryRepository;
 import com.sparta.server.threeserving.menu.repository.MenuRepository;
+import com.sparta.server.threeserving.menu.repository.OptionGroupRepository;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
@@ -23,10 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +29,7 @@ public class MenuService {
     private final MenuRepository menuRepository;
     private final StoreRepository storeRepository;
     private final MenuCategoryRepository menuCategoryRepository;
+    private final OptionGroupRepository optionGroupRepository;
 
     @Transactional
     public MenuResponse createMenu(UUID storeId, MenuCreateRequest request, Long userId, UserRoleEnum role) {
@@ -121,14 +115,9 @@ public class MenuService {
     }
 
     @Transactional(readOnly = true)
-    public MenuDetailResponse getMenuDetail(UUID storeId, UUID menuId) {
-        // store 존재 여부 검증
-        if (!storeRepository.existsById(storeId)) {
-            throw new CustomException(ErrorCode.STORE_NOT_FOUND);
-        }
-
+    public MenuDetailResponse getMenuDetail(UUID menuId) {
         // 메뉴 상세 정보 조회 N+1 방어
-        Menu menu = menuRepository.findMenuDetailByIdAndStoreId(menuId, storeId)
+        Menu menu = menuRepository.findMenuDetailById(menuId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
 
         return MenuDetailResponse.from(menu);
@@ -207,7 +196,7 @@ public class MenuService {
         for (Menu menu : menus) {
             // 다른 가게의 메뉴가 아닌지 검증
             if (!menu.getStore().getId().equals(storeId)) {
-                throw new CustomException(ErrorCode.ACCESS_DENIED);
+                throw new CustomException(ErrorCode.MENU_STORE_MISMATCH);
             }
 
             // Update
@@ -251,10 +240,62 @@ public class MenuService {
 
             // 해당 메뉴 카테고리에 속한 메뉴가 맞는지 검증
             if (!targetMenu.getMenuCategory().getId().equals(categoryId)) {
-                throw new CustomException(ErrorCode.MENU_CATEGORY_MISMATCH);
+                throw new CustomException(ErrorCode.MENU_MENU_CATEGORY_MISMATCH);
             }
 
             targetMenu.updateDisplayOrder(i + 1);
         }
+    }
+
+    @Transactional
+    public void assignMenuOptionGroups(UUID menuId, MenuOptionGroupAssignRequest request, Long userId, UserRoleEnum role) {
+
+        // menu 존재 여부 검증
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
+        // 사용자 권한 검증
+        if (role != UserRoleEnum.MASTER && !menu.getStore().getOwner().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        List<UUID> optionGroupIds = request.getOptionGroupIds();
+
+        // 요청이 빈 배열인 경우 모든 옵션 그룹 연결 해제, hard delete
+        if (optionGroupIds.isEmpty()) {
+            menu.assignOptionGroups(new ArrayList<>());
+            return;
+        }
+
+        // optionGroup 존재 여부 검증
+        List<OptionGroup> optionGroups = optionGroupRepository.findAllById(optionGroupIds);
+        if (optionGroups.size() != optionGroupIds.size()) {
+            throw new CustomException(ErrorCode.OPTION_GROUP_NOT_FOUND);
+        }
+
+        Map<UUID, OptionGroup> optionGroupMap = optionGroups.stream()
+                .collect(Collectors.toMap(OptionGroup::getId, og -> og));
+
+        // 새로운 매핑 리스트 생성
+        List<MenuOptionGroup> newMappings = new ArrayList<>();
+
+        for (int i = 0; i < optionGroupIds.size(); i++) {
+            UUID targetId = optionGroupIds.get(i);
+            OptionGroup targetOptionGroup = optionGroupMap.get(targetId);
+
+            // 다른 가게의 옵션 그룹을 연결하려는지 검증
+            if (!targetOptionGroup.getStore().getId().equals(menu.getStore().getId())) {
+                throw new CustomException(ErrorCode.OPTION_GROUP_STORE_MISMATCH);
+            }
+
+            newMappings.add(MenuOptionGroup.builder()
+                    .menu(menu)
+                    .optionGroup(targetOptionGroup)
+                    .displayOrder(i + 1)
+                    .build());
+        }
+
+        // 엔티티 상태 동기화 (영속성 컨텍스트가 알아서 DELETE 후 INSERT 수행)
+        menu.assignOptionGroups(newMappings);
     }
 }

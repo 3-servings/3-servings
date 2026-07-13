@@ -21,7 +21,7 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     boolean existsByStoreIdAndNameAndIdNot(UUID storeId, String name, UUID menuId);
 
     // 특정 카테고리 내에서의 displayOrder 최대값 조회
-    @Query("SELECT COALESCE(MAX(m.displayOrder), 0) FROM Menu m WHERE m.menuCategory.id = :menuCategoryId")
+    @Query("SELECT COALESCE(MAX(m.displayOrder), 0) FROM Menu m WHERE m.menuCategory.id = :menuCategoryId AND m.deletedAt IS NULL")
     int findMaxDisplayOrderByMenuCategoryId(@Param("menuCategoryId") UUID menuCategoryId);
 
     // status, 키워드 검색
@@ -34,7 +34,12 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     );
 
     // 고객용 메뉴판 조회, 판매중/품절 메뉴만 조회하며 카테고리와 함께 Fetch Join
-    @Query("SELECT m FROM Menu m JOIN FETCH m.menuCategory mc WHERE m.store.id = :storeId AND m.status IN :statuses ORDER BY mc.displayOrder ASC, m.displayOrder ASC")
+    @Query("SELECT m FROM Menu m " +
+            "JOIN FETCH m.menuCategory mc " +
+            "WHERE m.store.id = :storeId " +
+            "AND m.status IN :statuses " +
+            "AND mc.deletedAt IS NULL " +
+            "ORDER BY mc.displayOrder ASC, m.displayOrder ASC")
     List<Menu> findMenusWithCategory(
             @Param("storeId") UUID storeId,
             @Param("statuses") List<MenuStatus> statuses
@@ -45,9 +50,6 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
             "JOIN FETCH m.menuCategory " +
             "LEFT JOIN FETCH m.menuOptionGroups mog " +
             "LEFT JOIN FETCH mog.optionGroup " +
-            "WHERE m.id = :menuId AND m.store.id = :storeId")
-    Optional<Menu> findMenuDetailByIdAndStoreId(@Param("menuId") UUID menuId, @Param("storeId") UUID storeId);
-
-    // 특정 카테고리에 속한 활성화된 메뉴의 총 개수 조회
-    long countByMenuCategoryId(UUID categoryId);
+            "WHERE m.id = :menuId")
+    Optional<Menu> findMenuDetailById(@Param("menuId") UUID menuId);
 }

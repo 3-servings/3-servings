@@ -88,4 +88,9 @@ public class Menu extends BaseEntity {
     public void updateDisplayOrder(int displayOrder) {
         this.displayOrder = displayOrder;
     }
+
+    public void assignOptionGroups(List<MenuOptionGroup> newOptionGroups) {
+        this.menuOptionGroups.clear();                  // 기존 매핑 전부 물리 삭제 (orphanRemoval 작동)
+        this.menuOptionGroups.addAll(newOptionGroups);  // 새로운 순서와 매핑으로 덮어쓰기
+    }
 }

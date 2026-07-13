@@ -3,10 +3,7 @@ package com.sparta.server.threeserving.menu.controller;
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
-import com.sparta.server.threeserving.menu.dto.request.MenuCreateRequest;
-import com.sparta.server.threeserving.menu.dto.request.MenuDisplayOrderUpdateRequest;
-import com.sparta.server.threeserving.menu.dto.request.MenuStatusUpdateRequest;
-import com.sparta.server.threeserving.menu.dto.request.MenuUpdateRequest;
+import com.sparta.server.threeserving.menu.dto.request.*;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
@@ -74,12 +71,11 @@ public class MenuController {
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS, responses));
     }
 
-    @GetMapping("/stores/{storeId}/menus/{menuId}")
+    @GetMapping("/menus/{menuId}")
     public ResponseEntity<ApiResponse<MenuDetailResponse>> getMenuDetail(
-            @PathVariable UUID storeId,
             @PathVariable UUID menuId
     ) {
-        MenuDetailResponse response = menuService.getMenuDetail(storeId, menuId);
+        MenuDetailResponse response = menuService.getMenuDetail(menuId);
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS, response));
     }
@@ -123,6 +119,21 @@ public class MenuController {
     ) {
         menuService.updateMenusDisplayOrder(
                 storeId,
+                request,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole()
+        );
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATED));
+    }
+
+    @PutMapping("/menus/{menuId}/option-groups")
+    public ResponseEntity<ApiResponse<Void>> assignMenuOptionGroups(
+            @PathVariable UUID menuId,
+            @Valid @RequestBody MenuOptionGroupAssignRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        menuService.assignMenuOptionGroups(
+                menuId,
                 request,
                 userDetails.getUser().getId(),
                 userDetails.getUser().getRole()
