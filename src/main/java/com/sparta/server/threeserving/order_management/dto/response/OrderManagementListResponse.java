@@ -21,7 +21,7 @@ public class OrderManagementListResponse {
     public OrderManagementListResponse(OrderManagement orderManagement) {
         this.orderManagementId = orderManagement.getId();
         this.orderId = orderManagement.getOrders().getId();
-        this.storeId = orderManagement.getStore().getId();
+        this.storeId = orderManagement.getStoreId();
         this.orderStatusEnum = orderManagement.getOrderStatus();
     }
 }
