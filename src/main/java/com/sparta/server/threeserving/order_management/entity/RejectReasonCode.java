@@ -3,7 +3,6 @@ package com.sparta.server.threeserving.order_management.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.UUID;
 

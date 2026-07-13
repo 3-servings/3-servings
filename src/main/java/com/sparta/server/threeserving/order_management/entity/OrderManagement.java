@@ -5,7 +5,6 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
-import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 

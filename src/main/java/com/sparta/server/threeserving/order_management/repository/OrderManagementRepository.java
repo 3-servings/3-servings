@@ -3,7 +3,6 @@ package com.sparta.server.threeserving.order_management.repository;
 
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order_management.dto.response.DailySalesStatResponse;
-import com.sparta.server.threeserving.order_management.entity.DailySalesStat;
 import com.sparta.server.threeserving.order_management.entity.OrderManagement;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
@@ -11,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
