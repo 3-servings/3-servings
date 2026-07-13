@@ -1,11 +1,15 @@
 package com.sparta.server.threeserving.user.controller;
 
+import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.auth.jwt.JwtUtil;
 import com.sparta.server.threeserving.auth.jwt.TokenService;
+import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
+import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.user.dto.SignupRequest;
 import com.sparta.server.threeserving.user.dto.UserResponse;
+import com.sparta.server.threeserving.user.dto.WithdrawRequest;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import com.sparta.server.threeserving.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -61,6 +66,19 @@ public class UserController {
         tokenService.logout(request, response);
 
         return ResponseEntity.ok(ApiResponse.success(SuccessCode.SUCCESS));
+    }
+
+
+    //회원탈퇴
+    @DeleteMapping("/delete")
+    public ApiResponse<Void> withdraw(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody @Valid WithdrawRequest request){
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHENTICATED);
+        }
+        userService.withdraw(userDetails.getUser().getId(), request.password());
+        return ApiResponse.success(SuccessCode.DELETED);
     }
 
 }
