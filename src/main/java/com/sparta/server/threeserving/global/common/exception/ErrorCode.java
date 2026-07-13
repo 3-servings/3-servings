@@ -33,7 +33,14 @@ public enum ErrorCode {
     // Menu
     MENU_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴 카테고리를 찾을 수 없습니다."),
     MENU_CATEGORY_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 카테고리 이름입니다."),
-    MENU_CATEGORY_ALREADY_DELETED(HttpStatus.CONFLICT, "M003", "이미 삭제된 메뉴 카테고리입니다."),
+
+    OPTION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "M004", "옵션 그룹을 찾을 수 없습니다."),
+    OPTION_GROUP_NAME_DUPLICATED(HttpStatus.CONFLICT, "M005", "이미 존재하는 옵션 그룹 이름입니다."),
+
+    OPTION_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "M006", "옵션 아이템을 찾을 수 없습니다."),
+    INVALID_OPTION_SELECTION(HttpStatus.BAD_REQUEST, "O004", "최소/최대 선택 개수가 올바르지 않습니다."),
+    OPTION_MIN_SELECT_VIOLATION(HttpStatus.BAD_REQUEST, "M007", "필수 옵션의 판매 가능한 항목이 최소 선택 개수보다 적어질 수 없습니다."),
+
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M000", "메뉴를 찾을 수 없습니다."),
     DELETED_MENU_STATUS_CHANGE(HttpStatus.CONFLICT, "M000", "삭제된 메뉴의 상태는 변경할 수 없습니다."),
 
@@ -44,6 +51,19 @@ public enum ErrorCode {
 
     // System
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "서버 내부 오류가 발생했습니다."),
+
+    // Review
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "리뷰를 찾을 수 없습니다."),
+    REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "R002", "이미 해당 주문에 리뷰를 작성했습니다."),
+    REVIEW_NOT_OWNER(HttpStatus.FORBIDDEN, "R003", "본인이 작성한 리뷰만 수정/삭제할 수 있습니다."),
+    ORDER_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "R004", "배달이 완료된 주문에만 리뷰를 작성할 수 있습니다."),
+    NOT_ORDER_OWNER(HttpStatus.FORBIDDEN, "R005", "본인의 주문에만 리뷰를 작성할 수 있습니다."),
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "R006", "주문을 찾을 수 없습니다."),
+
+    // Review Comment (사장 답글)
+    REVIEW_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RC001", "답글을 찾을 수 없습니다."),
+    REVIEW_COMMENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "RC002", "이미 답글을 작성했습니다."),
+    NOT_STORE_OWNER(HttpStatus.FORBIDDEN, "RC003", "본인 가게의 리뷰에만 답글을 작성/수정할 수 있습니다."),
 
     // OrderManagement
     ORDER_MANAGEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "OM001", "주문 상태 정보를 찾을 수 없습니다."),
@@ -60,6 +80,7 @@ public enum ErrorCode {
     PAYMENT_ALREADY_REFUNDED(HttpStatus.CONFLICT, "P002", "이미 환불된 결제입니다."),
     REFUND_EXPIRED(HttpStatus.BAD_REQUEST, "P003", "환불 가능 시간이 만료되었습니다."),
     PAYMENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "P004", "이미 결제가 완료된 주문입니다.");
+
 
     private final HttpStatus status;
     private final String code;

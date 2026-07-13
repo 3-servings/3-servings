@@ -6,7 +6,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.UUID;
@@ -15,7 +14,6 @@ import java.util.UUID;
 @Getter
 @Table(name = "p_option_item")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE p_option_item SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class OptionItem extends BaseEntity {
 
@@ -35,14 +33,32 @@ public class OptionItem extends BaseEntity {
     @Column(nullable = false)
     private int price;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private OptionItemStatus status = OptionItemStatus.AVAILABLE;
+
+    @Column(name = "display_order", nullable = false)
+    private int displayOrder = 0;
+
     @Builder
-    public OptionItem(OptionGroup optionGroup, String name, int price) {
+    public OptionItem(OptionGroup optionGroup, String name, int price, int displayOrder) {
         this.optionGroup = optionGroup;
         this.name = name;
         this.price = price;
+        this.displayOrder = displayOrder;
     }
 
     public void assignOptionGroup(OptionGroup optionGroup) {
         this.optionGroup = optionGroup;
+    }
+
+    public void update(String name, int price, int displayOrder) {
+        this.name = name;
+        this.price = price;
+        this.displayOrder = displayOrder;
+    }
+
+    public void updateStatus(OptionItemStatus status) {
+        this.status = status;
     }
 }

@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MenuCategoryDisplayOrderUpdateRequest {
 
-    @NotNull(message = "카테고리 ID 리스트는 필수 입력 값입니다.")
-    private List<UUID> categoryIds;
+    @NotNull(message = "메뉴 카테고리 ID 리스트는 필수 입력입니다.")
+    private List<UUID> menuCategoryIds;
 
 }

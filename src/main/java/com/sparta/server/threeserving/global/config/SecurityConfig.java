@@ -1,14 +1,14 @@
 package com.sparta.server.threeserving.global.config;
 
-import com.sparta.server.threeserving.auth.cookie.CookieUtil;
+import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthenticationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtAuthorizationFilter;
 import com.sparta.server.threeserving.auth.jwt.JwtUtil;
-import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.auth.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -68,8 +68,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
 
                     // Order 예시. 실제 권한 확정 후 채워넣기
-                    // .requestMatchers("/api/carts/**").hasRole("CUSTOMER")
-                    // .requestMatchers("/api/carts/**", "/api/carts").hasRole("CUSTOMER")
+                    .requestMatchers("/api/carts/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
                     // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
                     // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
 
@@ -85,7 +84,9 @@ public class SecurityConfig {
                     .requestMatchers("/api/orders/**").permitAll()
 
                     // review
-
+                    .requestMatchers(HttpMethod.GET, "/api/reviews/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/stores/*/reviews").permitAll()
+                    .requestMatchers("/api/reviews/**").authenticated()
 
 
                     // ⚠️ 임시: 위 도메인 규칙이 채워지기 전까지 나머지는 모두 허용.
