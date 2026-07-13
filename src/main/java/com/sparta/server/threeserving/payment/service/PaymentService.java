@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.dto.request.OrderManagementCreateRequest;
 import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
 import com.sparta.server.threeserving.payment.dto.response.PaymentLogResponse;
@@ -70,8 +71,9 @@ public class PaymentService {
                 )
         );
 
-        //Todo: Payment 성공 후 OrderManagement 생성 - 주문 ID 넘겨주기
-//        orderManagementService.create(savedPayment.getOrder().getId());
+        orderManagementService.create(
+                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
+        );
 
         return PaymentResponse.from(savedPayment);
     }
