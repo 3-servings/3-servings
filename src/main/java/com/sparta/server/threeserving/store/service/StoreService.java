@@ -63,6 +63,7 @@ public class StoreService {
         return ApiResponse.success(SuccessCode.CREATED, new StoreResponse(savedStore));
     }
 
+    @Transactional(readOnly = true)
     public ApiResponse<Page<StoreResponse>> getStores(StoreSearchCondition condition, Pageable pageable, boolean isAdmin) {
         Pageable newPageable = PageRequest.of(
                 pageable.getPageNumber(),
@@ -71,10 +72,10 @@ public class StoreService {
         );
 
         Page<StoreResponse> stores = storeRepository.searchStores(
-                condition.getName(),
+                condition.getName() == null ? "" : condition.getName(),
                 condition.getRegionId(),
                 condition.getCategoryId(),
-                isAdmin,
+                !isAdmin,
                 newPageable
         ).map(StoreResponse::new);
 
@@ -126,6 +127,7 @@ public class StoreService {
         store.softDelete(userId);
     }
 
+    @Transactional(readOnly = true)
     public ApiResponse<StoreResponse> getStore(UUID storeId) {
         Store store = storeRepository.findById(storeId).orElseThrow(
                 () -> new CustomException(ErrorCode.STORE_NOT_FOUND)
