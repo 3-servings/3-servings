@@ -2,12 +2,14 @@ package com.sparta.server.threeserving.order_management.dto.response;
 
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order_management.entity.OrderManagement;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
+@AllArgsConstructor
 public class OrderManagementResponse {
 
         private UUID orderId;

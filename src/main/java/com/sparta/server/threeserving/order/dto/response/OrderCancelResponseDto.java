@@ -1,4 +1,4 @@
-package com.sparta.server.threeserving.order.dto;
+package com.sparta.server.threeserving.order.dto.response;
 
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;

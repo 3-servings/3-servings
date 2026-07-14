@@ -7,5 +7,5 @@ import java.util.UUID;
 public record OrderItemOptionRequestDto(
         @NotNull UUID optionItemId,
         @NotNull String optionName,
-        Integer additionalPrice
+        @NotNull Integer additionalPrice
 ) {}
