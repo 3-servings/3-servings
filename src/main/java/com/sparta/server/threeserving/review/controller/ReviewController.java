@@ -6,6 +6,8 @@ import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.review.dto.ReviewCreateRequest;
+import com.sparta.server.threeserving.review.dto.ReviewImagePresignRequest;
+import com.sparta.server.threeserving.review.dto.ReviewImagePresignResponse;
 import com.sparta.server.threeserving.review.dto.ReviewListResponse;
 import com.sparta.server.threeserving.review.dto.ReviewResponse;
 import com.sparta.server.threeserving.review.dto.ReviewUpdateRequest;
@@ -27,6 +29,17 @@ import java.util.UUID;
 public class ReviewController {
 
     private final ReviewService reviewService;
+
+    //[1단계] 이미지 업로드용 Presigned URL 발급 POST /api/reviews/images/presign
+    @PostMapping("/reviews/images/presign")
+    public ApiResponse<ReviewImagePresignResponse> presignImages(
+            @RequestBody @Valid ReviewImagePresignRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ){
+        requireCustomer(userDetails); // 업로드 권한 확인
+        return ApiResponse.success(SuccessCode.SUCCESS,
+                reviewService.presignReviewImages(request));
+    }
 
     //작성 POST /api/reviews
     @PostMapping("/reviews")

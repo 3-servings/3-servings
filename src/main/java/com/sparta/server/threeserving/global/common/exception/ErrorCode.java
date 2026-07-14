@@ -7,6 +7,13 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
+
+    // Image (Presigned)
+    IMAGE_PRESIGN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "IMG001", "이미지 업로드 URL 발급에 실패했습니다."),
+    INVALID_IMAGE_TYPE(HttpStatus.BAD_REQUEST,             "IMG002", "이미지 파일만 업로드할 수 있습니다."),
+    IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST,           "IMG003", "이미지는 최대 5장까지 첨부할 수 있습니다."),
+    INVALID_IMAGE_PATH(HttpStatus.BAD_REQUEST,             "IMG004", "허용되지 않은 이미지 경로입니다."),
+    IMAGE_NOT_UPLOADED(HttpStatus.BAD_REQUEST,             "IMG005", "업로드되지 않은 이미지입니다. 다시 시도해주세요."),
     // User / Auth
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
     EMAIL_DUPLICATED(HttpStatus.CONFLICT, "U002", "이미 사용 중인 이메일입니다."),
