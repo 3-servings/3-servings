@@ -25,7 +25,7 @@ public enum PaymentMethod {
                 return method;
             }
         }
-        // 만약 매칭되는 결제 수단이 없다면 예외 발생 (프로젝트 내 예외 처리 방식을 적용하세요)
+
         throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
     }
 }
