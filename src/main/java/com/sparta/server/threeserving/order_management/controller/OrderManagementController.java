@@ -1,5 +1,6 @@
 package com.sparta.server.threeserving.order_management.controller;
 
+import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order_management.dto.response.*;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -29,8 +31,17 @@ public class OrderManagementController {
     private final DailySalesStatService dailySalesStatService;
 
     @GetMapping("/stores/{storeId}/orders")
-    public ApiResponse<Page<OrderManagementListResponse>> getOrderManagementList(@PathVariable UUID storeId, @RequestParam(required = false) OrderStatusEnum status, @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
-        Page<OrderManagementListResponse> response = orderManagementService.getOrderManagementList(storeId, status, pageable);
+    public ApiResponse<Page<OrderManagementListResponse>> getOrderManagementList(
+            @PathVariable UUID storeId,
+            @RequestParam(required = false) OrderStatusEnum status,
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Page<OrderManagementListResponse> response = orderManagementService.getOrderManagementList(
+                storeId,
+                status,
+                pageable,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole());
 
         return ApiResponse.success(SUCCESS, response);
     }
