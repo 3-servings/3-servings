@@ -1,7 +1,5 @@
 package com.sparta.server.threeserving.user.repository;
 
-import com.sparta.server.threeserving.global.config.AuditorAwareImpl;
-import com.sparta.server.threeserving.global.config.JpaAuditingConfig;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,20 +8,29 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-// CI는 실제 Postgres(ci 프로필)로 테스트하고 임베디드 DB(H2)가 없으므로 교체하지 않는다
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("ci")
-@Import({JpaAuditingConfig.class, AuditorAwareImpl.class})
+@Import(UserRepositoryTest.TestAuditingConfig.class)
 public class UserRepositoryTest {
+
+    // @DataJpaTest 슬라이스는 @Component(AuditorAwareImpl)를 제외하므로,
+    // 앱의 JpaAuditingConfig(auditorAwareRef="auditorAwareImpl") 대신
+    // 이름 참조가 없는 기본 감사 설정을 테스트용으로 제공한다. (createdAt만 필요)
+    @TestConfiguration
+    @EnableJpaAuditing
+    static class TestAuditingConfig {
+    }
 
 
     @Autowired
