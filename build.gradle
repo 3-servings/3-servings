@@ -22,7 +22,6 @@ dependencies {
 
     //h2 테스트용 (로컬 API 테스트 전용 - 커밋 금지)
     //runtimeOnly 'com.h2database:h2'
-
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 

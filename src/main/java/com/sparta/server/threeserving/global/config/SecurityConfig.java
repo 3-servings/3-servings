@@ -69,6 +69,10 @@ public class SecurityConfig {
                     // ===== 인가 규칙 템플릿 =====
                     // 규칙은 위에서부터 순서대로 평가되어 먼저 매칭되는 규칙이 적용됩니다.
 
+                    // user (회원 리소스)
+                    .requestMatchers(HttpMethod.GET, "/api/users").hasAnyRole("MASTER", "MANAGER")//회원 검색: 관리자만
+                    //내 정보 조회/수정: 로그인 필요
+                    .requestMatchers("/api/users/**").authenticated()
                     // 공개 API (인증 불필요)
                     .requestMatchers("/signup").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
@@ -119,6 +123,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/orders/*/payments/**").authenticated()
 
                     // review
+                    .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reviews/*").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/stores/*/reviews").permitAll()
                     .requestMatchers("/api/reviews/**").authenticated()

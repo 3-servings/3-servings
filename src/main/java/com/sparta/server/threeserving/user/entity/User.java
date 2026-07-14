@@ -4,8 +4,6 @@ import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
-
 @Entity
 @Table(name = "p_user")
 @Getter
@@ -110,15 +108,17 @@ public class User extends BaseEntity {
             return;
         }
 
-        String suffix = "__deleted__" + UUID.randomUUID();
-
         this.status = UserStatus.DELETED;
         //삭제 시간 Auditing BaseEntity 상속 시에 주석 풀기
         //this.deletedAt = LocalDateTime.now();
 
-        this.email += suffix;
-        this.username += suffix;
-        this.nickname += suffix;
+        // unique 컬럼(email/username/nickname)을 재가입 충돌이 없도록 치환.
+        // 컬럼 길이(username 50, nickname 20)를 넘지 않도록 id 기반 짧은 값 사용.
+        String tag = "del_" + this.id;          // id 가 유니크 → 치환값도 유니크
+        this.email = tag + "@deleted.local";    // email 컬럼(255) 충분
+        this.username = tag;                    // 50 이내
+        this.nickname = tag;                    // 20 이내
+
         softDelete(this.id); // BaseEntity deletedAt/deleteBy 세팅
     }
 
