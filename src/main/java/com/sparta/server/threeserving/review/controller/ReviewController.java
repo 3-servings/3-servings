@@ -28,6 +28,8 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
+    // 이미지 프리사인 URL 발급은 공용 이미지 API(POST /api/v1/images/presigned-url, domainType=REVIEW) 사용
+
     //작성 POST /api/reviews
     @PostMapping("/reviews")
     public ApiResponse<ReviewResponse> createReview(
