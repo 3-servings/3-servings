@@ -22,6 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
 
+    Optional<User> findByProviderId(String id);
 
     // 회원 검색: 역할(선택) + 키워드(username/nickname, 선택). 탈퇴 회원 제외. 정렬/페이지는 Pageable로 주입.
     @Query("SELECT u FROM User u " +
@@ -29,6 +30,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "AND (:role IS NULL OR u.role = :role) " +
             "AND (:keyword IS NULL OR u.username LIKE %:keyword% OR u.nickname LIKE %:keyword%)")
     Page<User> search(@Param("role") UserRoleEnum role,
-                      @Param("keyword") String keyword,
-                      Pageable pageable);
+                       @Param("keyword") String keyword,
+                       Pageable pageable);
 }

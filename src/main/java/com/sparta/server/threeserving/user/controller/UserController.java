@@ -1,14 +1,22 @@
 package com.sparta.server.threeserving.user.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
+import com.sparta.server.threeserving.auth.cookie.CookieUtil;
+import com.sparta.server.threeserving.auth.jwt.JwtUtil;
+import com.sparta.server.threeserving.auth.jwt.TokenService;
+import com.sparta.server.threeserving.auth.kakao.KakaoService;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.user.dto.LoginResult;
+import com.sparta.server.threeserving.user.dto.SignupRequest;
 import com.sparta.server.threeserving.user.dto.UserResponse;
 import com.sparta.server.threeserving.user.dto.UserUpdateRequest;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import com.sparta.server.threeserving.user.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Set;
 
 @RestController
@@ -26,9 +35,11 @@ import java.util.Set;
 public class UserController {
 
     private final UserService userService;
+    private final TokenService tokenService;
+    private final KakaoService kakaoService;
 
     // 페이지 노출 건수는 10/30/50 만 허용, 그 외는 10으로 고정
-    private static final Set<Integer> ALLOWED_SIZES = Set.of(10,30,50);
+    private static final Set<Integer> ALLOWED_SIZES = Set.of(10, 30, 50);
 
     //정렬 허용 필드 생성일 순.
     private static final Set<String> ALLOWED_SORTS = Set.of("createdAt", "username", "nickname");
@@ -38,7 +49,7 @@ public class UserController {
     @GetMapping("/my")
     public ApiResponse<UserResponse> getMyInfo(
             @AuthenticationPrincipal UserDetailsImpl userDetails
-            ){
+    ) {
         Long userId = requireLogin(userDetails);
         return ApiResponse.success(SuccessCode.SUCCESS, userService.getMyInfo(userId));
     }
@@ -57,44 +68,43 @@ public class UserController {
     @GetMapping
     public ApiResponse<Page<UserResponse>> searchUsers(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestParam(required = false)UserRoleEnum role,
+            @RequestParam(required = false) UserRoleEnum role,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sort,
             @RequestParam(defaultValue = "desc") String direction
-            ){
+    ) {
         requireAdmin(userDetails);
-        Pageable pageable = resolvePageable(page,size,sort,direction);
-        return ApiResponse.success(SuccessCode.SUCCESS, userService.searchUsers(role,keyword,pageable));
+        Pageable pageable = resolvePageable(page, size, sort, direction);
+        return ApiResponse.success(SuccessCode.SUCCESS, userService.searchUsers(role, keyword, pageable));
     }
 
+    // 카카오 소셜 로그인
+    @GetMapping("/user/kakao/login")
+    public void redirectToKakao(@RequestParam(defaultValue = "CUSTOMER") String role, HttpServletResponse response) throws IOException {
+        response.sendRedirect(kakaoService.getAuthorizeUrl(role));
+    }
 
+    @GetMapping("/kakao/call-back")
+    public ApiResponse<LoginResult> kakaoCallback(@RequestParam String code,
+                                                  @RequestParam(required = false) String state,
+                                                  HttpServletResponse response) throws JsonProcessingException {
+        LoginResult result = kakaoService.login(code, state);
+        response.addHeader(JwtUtil.AUTHORIZATION_HEADER, result.getAccessToken());
+        CookieUtil.addCookie(response, "refreshToken", result.getRefreshToken(), 60 * 60 * 24 * 14);
+        return ApiResponse.success(SuccessCode.SUCCESS, result);
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private Long requireLogin(UserDetailsImpl userDetails){
+    private Long requireLogin(UserDetailsImpl userDetails) {
         if (userDetails == null) throw new CustomException(ErrorCode.UNAUTHENTICATED);
         return userDetails.getUser().getId();
     }
 
-    private void requireAdmin(UserDetailsImpl userDetails){
+    private void requireAdmin(UserDetailsImpl userDetails) {
         if (userDetails == null) throw new CustomException(ErrorCode.UNAUTHENTICATED);
         UserRoleEnum role = userDetails.getUser().getRole();
-        if (role != UserRoleEnum.MASTER && role != UserRoleEnum.MANAGER){
+        if (role != UserRoleEnum.MASTER && role != UserRoleEnum.MANAGER) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
     }
@@ -105,7 +115,4 @@ public class UserController {
         Sort.Direction dir = "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
         return PageRequest.of(Math.max(page, 0), resolvedSize, Sort.by(dir, sortProp));
     }
-
-
-
 }

@@ -113,6 +113,8 @@ public class SecurityConfig {
 
 
                     // OrderManagement
+                    .requestMatchers(HttpMethod.GET, "/api/order-management/**").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/order-management/**").hasAnyRole("OWNER", "MASTER")
 
                     // Payment
                     .requestMatchers(HttpMethod.POST, "/api/orders/*/payments").hasRole("CUSTOMER")
