@@ -25,3 +25,10 @@ jwt:
   secret: ${JWT_SECRET}
   access-expiration: 1800000     # 30분
   refresh-expiration: 1209600000 # 14일
+
+cloud:
+  aws:
+    region: ${AWS_REGION}
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+      base-url: ${CLOUD_FRONT_DOMAIN}
