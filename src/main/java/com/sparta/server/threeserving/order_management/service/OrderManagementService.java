@@ -15,7 +15,10 @@ import com.sparta.server.threeserving.order_management.entity.RejectReasonCode;
 import com.sparta.server.threeserving.order_management.repository.OrderManagementRepository;
 import com.sparta.server.threeserving.order_management.repository.OrderStatusHistoryRepository;
 import com.sparta.server.threeserving.order_management.repository.RejectReasonCodeRepository;
+import com.sparta.server.threeserving.order_management.validator.StoreAccessValidator;
 import com.sparta.server.threeserving.store.entity.Store;
+import com.sparta.server.threeserving.store.repository.StoreRepository;
+import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
@@ -25,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -38,6 +42,8 @@ public class OrderManagementService {
     private final RejectReasonCodeRepository rejectReasonCodeRepository;
     private final OrderRepository orderRepository;
     private final EntityManager entityManager;
+    private final StoreRepository storeRepository;
+    private final StoreAccessValidator storeAccessValidator;
 
 // Payment 성공 시 호출
     @Transactional
@@ -54,8 +60,11 @@ public class OrderManagementService {
         return orderManagementRepository.save(orderManagement);
     }
 
-    public Page<OrderManagementListResponse> getOrderManagementList(UUID storeId, OrderStatusEnum status, Pageable pageable) {
+    public Page<OrderManagementListResponse> getOrderManagementList(UUID storeId, OrderStatusEnum status, Pageable pageable,Long userId, UserRoleEnum role) {
 
+        if (role == UserRoleEnum.OWNER) {
+            storeAccessValidator.validateStoreAccess(userId, storeId);
+        }
         if (status == null) {
             return orderManagementRepository
                         .findByStoreId(storeId, pageable)
@@ -74,7 +83,24 @@ public class OrderManagementService {
         return new OrderManagementResponse(orderManagement);
     }
 
+    @Transactional
+    public void cancelOrderAndHistory(Orders order){
+        OrderManagement orderManagement =orderManagementRepository.findByOrders(order)
+                        .orElseThrow(() ->
+                                new CustomException(ErrorCode.ORDER_MANAGEMENT_NOT_FOUND)
+                        );
 
+        OrderStatusEnum previousStatus = orderManagement.getOrderStatus();
+        OrderStatusEnum status = OrderStatusEnum.CANCELED;
+
+        // 1. 주문 관리 상태 변경
+        orderManagement.changeStatus(status);
+
+        // 2. 주문 상태 변경, 상태 이력 저장
+        updateOrderAndHistory(orderManagement,previousStatus,status);
+
+
+    }
     @Transactional
     public void acceptOrder(UUID orderManagementId,Integer estimatedCookTime) {
 
@@ -84,7 +110,7 @@ public class OrderManagementService {
         // 1. 주문 관리 상태 변경
         orderManagement.accept(estimatedCookTime);
 
-        // 2. 주문상태 변경, 상태 이력 저장
+        // 2. 주문 상태 변경, 상태 이력 저장
         updateOrderAndHistory(orderManagement,previousStatus,OrderStatusEnum.ACCEPTED);
 
     }
@@ -105,7 +131,7 @@ public class OrderManagementService {
         // 1. 주문 관리 상태 변경
         orderManagement.reject(rejectReasonCode,memo);
 
-        // 2. 주문상태 변경, 상태 이력 저장
+        // 2. 주문 상태 변경, 상태 이력 저장
         updateOrderAndHistory(orderManagement,previousStatus,OrderStatusEnum.REJECTED);
 
     }
@@ -119,7 +145,7 @@ public class OrderManagementService {
         // 1. 주문 관리 상태 변경
         orderManagement.changeStatus(status);
 
-        // 2. 주문상태 변경, 상태 이력 저장
+        // 2. 주문 상태 변경, 상태 이력 저장
         updateOrderAndHistory(orderManagement,previousStatus,status);
 
         if (status == OrderStatusEnum.COMPLETED) {
@@ -168,6 +194,7 @@ public class OrderManagementService {
 
 
     //공통 메서드
+
     //OrderManagement 조회
     private OrderManagement getOrderManagement(UUID orderManagementId) {
 
@@ -183,9 +210,8 @@ public class OrderManagementService {
             OrderStatusEnum previousStatus,
             OrderStatusEnum currentStatus
     ) {
-
-        Orders order = orderManagement.getOrders();
-        order.changeStatus(currentStatus);
+            Orders order = orderManagement.getOrders();
+            order.changeStatus(currentStatus);
 
         orderStatusHistoryRepository.save(
                 new OrderStatusHistory(
