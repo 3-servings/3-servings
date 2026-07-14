@@ -2,7 +2,7 @@ package com.sparta.server.threeserving.review.service;
 
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.image.entity.DomainType;
+import com.sparta.server.threeserving.image.enums.DomainType;
 import com.sparta.server.threeserving.image.service.ImageService;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
