@@ -2,6 +2,7 @@ package com.sparta.server.threeserving.order_management.repository;
 
 
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
+import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order_management.dto.response.DailySalesStatResponse;
 import com.sparta.server.threeserving.order_management.dto.response.TodaySalesSummaryResponse;
 import com.sparta.server.threeserving.order_management.entity.OrderManagement;
@@ -13,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderManagementRepository extends JpaRepository<OrderManagement, UUID> {
@@ -81,6 +83,9 @@ public interface OrderManagementRepository extends JpaRepository<OrderManagement
     List<RejectReasonStatRow> findRejectReasonStatistics(
             @Param("storeId") UUID storeId
     );
+
+    Optional<OrderManagement> findByOrders(Orders orders);
+
     interface RejectReasonStatRow {
         String getRejectReasonCode();
         String getDescription();

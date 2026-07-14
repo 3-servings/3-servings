@@ -53,6 +53,9 @@ public class OrderManagement extends BaseEntity {
     @Column(name = "rejected_at")
     private OffsetDateTime rejectedAt;
 
+    @Column(name = "cancled_at")
+    private OffsetDateTime cancledAt;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Orders orders;
@@ -104,6 +107,7 @@ public class OrderManagement extends BaseEntity {
             case COOKING -> this.cookingStartedAt = OffsetDateTime.now();
             case READY -> this.readyAt = OffsetDateTime.now();
             case COMPLETED -> this.completedAt = OffsetDateTime.now();
+            case CANCELED -> this.cancledAt = OffsetDateTime.now();
         }
     }
 
