@@ -27,7 +27,7 @@ public class OrderManagementResponse {
     public OrderManagementResponse(OrderManagement orderManagement) {
 
             this.orderId = orderManagement.getOrders().getId();
-            this.storeId = orderManagement.getStoreId();
+            this.storeId = orderManagement.getStore().getId();
             this.orderManagementId = orderManagement.getId();
             this.orderStatus = orderManagement.getOrderStatus();
             this.estimatedCookTime = orderManagement.getEstimatedCookTime();
