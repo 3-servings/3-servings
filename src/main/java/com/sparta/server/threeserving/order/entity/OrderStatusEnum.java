@@ -10,7 +10,7 @@ public enum OrderStatusEnum {
     READY(Set.of(COMPLETED)),   // 조리 중
     COOKING(Set.of(READY)),     // 거절됨
     ACCEPTED(Set.of(COOKING)),  // 수락 완료, 조리 대기
-    PENDING(Set.of(ACCEPTED, REJECTED));// 신규 주문, 사장님 응답 대기
+    PENDING(Set.of(ACCEPTED, REJECTED, CANCELED));// 신규 주문, 사장님 응답 대기
 
     private final Set<OrderStatusEnum> nextStatuses;
 

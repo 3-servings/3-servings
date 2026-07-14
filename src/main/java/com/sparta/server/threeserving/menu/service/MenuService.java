@@ -2,6 +2,8 @@ package com.sparta.server.threeserving.menu.service;
 
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.image.entity.DomainType;
+import com.sparta.server.threeserving.image.service.ImageService;
 import com.sparta.server.threeserving.menu.dto.request.*;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
@@ -30,6 +32,8 @@ public class MenuService {
     private final StoreRepository storeRepository;
     private final MenuCategoryRepository menuCategoryRepository;
     private final OptionGroupRepository optionGroupRepository;
+
+    private final ImageService imageService;
 
     @Transactional
     public MenuResponse createMenu(UUID storeId, MenuCreateRequest request, Long userId, UserRoleEnum role) {
@@ -74,7 +78,10 @@ public class MenuService {
         // DB 저장
         Menu savedMenu = menuRepository.save(menu);
 
-        return MenuResponse.from(savedMenu);
+        // 이미지 저장
+        String imageUrl = imageService.saveImage(DomainType.MENU, savedMenu.getId(), request.getImage());
+
+        return MenuResponse.from(savedMenu, imageUrl);
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +94,11 @@ public class MenuService {
         // 동적 쿼리로 데이터 조회
         Page<Menu> menuPage = menuRepository.findMenusByCondition(storeId, status, keyword, pageable);
 
-        return menuPage.map(MenuResponse::from);
+        List<UUID> menuIds = menuPage.getContent().stream().map(Menu::getId).toList();
+        // 이미지 조회
+        Map<UUID, String> imageUrlMap = imageService.getImageUrlMap(DomainType.MENU, menuIds);
+
+        return menuPage.map(menu -> MenuResponse.from(menu, imageUrlMap.get(menu.getId())));
     }
 
     @Transactional(readOnly = true)
@@ -100,8 +111,12 @@ public class MenuService {
         // 고객 노출용 메뉴 상태값 필터링
         List<MenuStatus> targetStatuses = List.of(MenuStatus.AVAILABLE, MenuStatus.SOLD_OUT);
 
-        // 데이터 조회 및 그룹핑
         List<Menu> menus = menuRepository.findMenusWithCategory(storeId, targetStatuses);
+        List<UUID> menuIds = menus.stream().map(Menu::getId).toList();
+        // 이미지 조회
+        Map<UUID, String> imageUrlMap = imageService.getImageUrlMap(DomainType.MENU, menuIds);
+
+        // 데이터 그룸핑
         Map<MenuCategory, List<Menu>> groupedMenus = menus.stream()
                 .collect(Collectors.groupingBy(
                         Menu::getMenuCategory,
@@ -110,7 +125,7 @@ public class MenuService {
                 ));
 
         return groupedMenus.entrySet().stream()
-                .map(entry -> MenuBoardResponse.MenuBoardCategory.from(entry.getKey(), entry.getValue()))
+                .map(entry -> MenuBoardResponse.MenuBoardCategory.from(entry.getKey(), entry.getValue(), imageUrlMap))
                 .toList();
     }
 
@@ -120,7 +135,10 @@ public class MenuService {
         Menu menu = menuRepository.findMenuDetailById(menuId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
 
-        return MenuDetailResponse.from(menu);
+        // 이미지 조회
+        String imageUrl = imageService.getImageUrl(DomainType.MENU, menuId);
+
+        return MenuDetailResponse.from(menu, imageUrl);
     }
 
     @Transactional
@@ -158,7 +176,15 @@ public class MenuService {
                 request.getStatus()
         );
 
-        return MenuResponse.from(menu);
+        // 이미지 교체
+        String imageUrl = null;
+        if (request.getImage() != null) {
+            imageUrl = imageService.replaceImage(DomainType.MENU, menuId, request.getImage(), userId);
+        } else {
+            imageUrl = imageService.getImageUrl(DomainType.MENU, menuId);
+        }
+
+        return MenuResponse.from(menu, imageUrl);
     }
 
     @Transactional
@@ -173,6 +199,12 @@ public class MenuService {
         }
 
         menu.softDelete(userId);
+
+        // 이미지 soft delete
+        imageService.softDeleteImages(DomainType.MENU, menuId, userId);
+
+        // Menu - OptionGruop 매핑 테이블 hard delete
+        menu.getMenuOptionGroups().clear();
     }
 
     @Transactional

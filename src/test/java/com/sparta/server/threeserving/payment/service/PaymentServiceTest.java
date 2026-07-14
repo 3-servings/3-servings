@@ -52,8 +52,8 @@ class PaymentServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
-    @Mock
-    private OrderManagementService orderManagementService;
+//    @Mock
+//    private OrderManagementService orderManagementService;
 
     private Long userId;
     private UUID orderId;
@@ -95,8 +95,8 @@ class PaymentServiceTest {
         when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(orderManagementService.create(any(OrderManagementCreateRequest.class)))
-                .thenReturn(mock(OrderManagement.class));
+//        when(orderManagementService.create(any(OrderManagementCreateRequest.class)))
+//                .thenReturn(mock(OrderManagement.class));
 
         PaymentResponse response = paymentService.createPayment(userId, orderId, request);
 
@@ -106,7 +106,7 @@ class PaymentServiceTest {
 
         verify(paymentRepository).save(any(Payment.class));
         verify(paymentLogRepository).save(any(PaymentLog.class));
-        verify(orderManagementService).create(any(OrderManagementCreateRequest.class));
+//        verify(orderManagementService).create(any(OrderManagementCreateRequest.class));
     }
 
     @Test

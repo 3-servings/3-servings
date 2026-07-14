@@ -59,7 +59,20 @@ public class OrderManagementService {
         return orderManagementRepository.save(orderManagement);
     }
 
-    public Page<OrderManagementListResponse> getOrderManagementList(UUID storeId, OrderStatusEnum status, Pageable pageable,Long userId, UserRoleEnum role) {
+// Cart에서 체크아웃, 혹은 MASTER 강제 생성 시 호출
+    @Transactional
+    public OrderManagement create(Orders order, OrderStatusEnum initialStatus) {
+        Store store = entityManager.getReference(
+                Store.class,
+                order.getStoreId()
+        );
+        OrderManagement orderManagement =
+                new OrderManagement(order,store,initialStatus);
+
+        return orderManagementRepository.save(orderManagement);
+    }
+
+    public Page<OrderManagementListResponse> getOrderManagementList(UUID storeId, OrderStatusEnum status, Pageable pageable) {
 
         if (role == UserRoleEnum.OWNER) {
             storeAccessValidator.validateStoreAccess(userId, storeId);

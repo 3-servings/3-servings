@@ -100,9 +100,9 @@ public class PaymentService {
                 )
         );
 
-        orderManagementService.create(
-                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
-        );
+//        orderManagementService.create(
+//                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
+//        );
 
         return PaymentResponse.from(savedPayment);
     }
@@ -127,9 +127,9 @@ public class PaymentService {
                 )
         );
 
-        orderManagementService.create(
-                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
-        );
+//        orderManagementService.create(
+//                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
+//        );
 
         return PaymentResponse.from(savedPayment);
     }

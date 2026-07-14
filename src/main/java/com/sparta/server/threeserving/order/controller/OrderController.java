@@ -63,14 +63,14 @@ public class OrderController {
         requireCartAccessibleUserId(userDetails);
         User user = userDetails.getUser();
         return orderService.getOrderList(
-                user, storeId, userId, orderStatusEnum, size, page - 1, sortBy, isAsc);
+                user, storeId, userId, orderStatusEnum, size, page , sortBy, isAsc);
     }
 
     @PatchMapping("/{orderId}")
     public ApiResponse<OrderModifyResponseDto> modifyOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId,
-            @RequestBody OrderModifyRequestDto orderModifyRequestDto
+            @RequestBody @Valid OrderModifyRequestDto orderModifyRequestDto
     ){
         Long userId = requireCartAccessibleUserId(userDetails);
         return orderService.modifyOrderInfo(userId, orderId, orderModifyRequestDto);
