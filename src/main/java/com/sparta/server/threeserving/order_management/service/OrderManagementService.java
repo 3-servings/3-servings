@@ -72,7 +72,7 @@ public class OrderManagementService {
         return orderManagementRepository.save(orderManagement);
     }
 
-    public Page<OrderManagementListResponse> getOrderManagementList(UUID storeId, OrderStatusEnum status, Pageable pageable) {
+    public Page<OrderManagementListResponse> getOrderManagementList(UUID storeId, OrderStatusEnum status, Pageable pageable, Long userId, UserRoleEnum role) {
 
         if (role == UserRoleEnum.OWNER) {
             storeAccessValidator.validateStoreAccess(userId, storeId);
