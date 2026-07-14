@@ -70,4 +70,15 @@ public class Orders extends BaseEntity {
 
         this.orderStatus = currentStatus;
     }
+
+    public void modifyInfo(String reqMsg, String address) {
+        if(reqMsg != null)
+            this.requestMessage = reqMsg;
+        if(address != null)
+            this.deliveryAddress = address;
+    }
+
+    public void cancel() {
+        this.orderStatus = OrderStatusEnum.CANCELED;
+    }
 }

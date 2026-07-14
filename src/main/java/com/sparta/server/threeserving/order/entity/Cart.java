@@ -9,7 +9,6 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Getter
-@Setter
 @Entity
 @Table(name="p_cart")
 @NoArgsConstructor

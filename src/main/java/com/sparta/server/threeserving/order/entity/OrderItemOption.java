@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "p_order_item_option")
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class OrderItemOption {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -35,10 +37,6 @@ public class OrderItemOption {
     @Min(value = 0)
     private Integer additionalPrice;
 
-    @Column(name="quantity", nullable = false)
-    @Min(value = 1)
-    private Integer quantity;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -47,11 +45,10 @@ public class OrderItemOption {
     @Column(name = "created_by", nullable = false, updatable = false)
     private Long createdBy;
 
-    public OrderItemOption(OrderItem orderItem, UUID optionItemId, String optionName, Integer additionalPrice, Integer quantity) {
+    public OrderItemOption(OrderItem orderItem, UUID optionItemId, String optionName, Integer additionalPrice) {
         this.orderItem = orderItem;
         this.optionItemId = optionItemId;
         this.optionName = optionName;
         this.additionalPrice = additionalPrice;
-        this.quantity = quantity;
     }
 }

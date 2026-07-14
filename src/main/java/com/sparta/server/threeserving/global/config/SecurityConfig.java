@@ -18,6 +18,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -56,6 +61,7 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) //CORS 허용
             .formLogin(form -> form.disable())   //Spring Security 기본 로그인 페이지 비활성화
             .httpBasic(basic -> basic.disable()) // Basic 인증 비활성화
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -67,12 +73,36 @@ public class SecurityConfig {
                     .requestMatchers("/signup").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
 
-                    // Order 예시. 실제 권한 확정 후 채워넣기
+                    // Order
                     .requestMatchers("/api/carts/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
-                    // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
-                    // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
+
+                    .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/orders").authenticated()
+                    .requestMatchers(HttpMethod.PATCH, "/api/orders/{orderId}").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/orders/{orderId}/cancel").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/orders/{orderId}").hasAnyRole("MASTER", "MANAGER")
 
                     // Store
+                    .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.PUT, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/**").hasRole("OWNER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/stores/**").hasAnyRole("OWNER", "MASTER", "MANAGER")
+
+                    .requestMatchers(HttpMethod.GET, "/api/regions/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PUT, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/regions/**").hasAnyRole("MASTER", "MANAGER")
+
+                    .requestMatchers(HttpMethod.GET, "/api/categorys/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PUT, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
+                    // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
+                    // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
 
 
                     // Menu
@@ -81,7 +111,10 @@ public class SecurityConfig {
                     // OrderManagement
 
                     // Payment
-                    .requestMatchers("/api/orders/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/orders/*/payments").hasRole("CUSTOMER")
+                    .requestMatchers(HttpMethod.POST, "/api/orders/*/payments/confirm").hasRole("CUSTOMER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/orders/*/payments/refund").hasRole("CUSTOMER")
+                    .requestMatchers(HttpMethod.GET, "/api/orders/*/payments/**").authenticated()
 
                     // review
                     .requestMatchers(HttpMethod.GET, "/api/reviews/*").permitAll()
@@ -100,6 +133,36 @@ public class SecurityConfig {
 
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(List.of(
+                "https://threeservings.site/",
+                "http://localhost:3000" //로컬 확인용
+        ));
+
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        configuration.addExposedHeader("Authorization");
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 
 }

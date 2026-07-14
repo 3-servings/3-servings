@@ -44,6 +44,8 @@ services:
       AWS_REGION: ${AWS_REGION}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
 
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY}
+
     restart: always
 
   postgres:

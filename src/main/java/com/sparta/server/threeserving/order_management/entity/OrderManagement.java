@@ -5,6 +5,7 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
+import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,8 +24,8 @@ public class OrderManagement extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "store_id", nullable = false)
-    private UUID storeId;
+//    @Column(name = "store_id", nullable = false)
+//    private UUID storeId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
@@ -57,13 +58,17 @@ public class OrderManagement extends BaseEntity {
     private Orders orders;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reject_reason_id")
     private RejectReasonCode rejectReasonCode;
 
 
-    public OrderManagement(Orders order,  OrderStatusEnum status) {
+    public OrderManagement(Orders order, Store store, OrderStatusEnum status) {
         this.orders = order;
-        this.storeId = order.getStoreId();
+        this.store = store;
         this.orderStatus = status;
     }
 

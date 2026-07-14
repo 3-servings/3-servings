@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@SQLRestriction("deleted_at IS NULL")
 public class Store extends BaseEntity {
 
     @Id
@@ -70,6 +72,10 @@ public class Store extends BaseEntity {
     private Integer reviewCount = 0;
 
     @Builder.Default
+    @Column(name = "order_count", nullable = false)
+    private Integer orderCount = 0;
+
+    @Builder.Default
     @Column(name = "is_open", nullable = false)
     private Boolean isOpen = false;
 
@@ -99,8 +105,18 @@ public class Store extends BaseEntity {
         this.deliveryRadiusM = deliveryRadiusM;
     }
 
+    public void update(String name, String phone, String address, String detailAddress,
+                       Integer minOrderPrice, Integer deliveryFee, Integer deliveryRadiusM) {
+        this.name = name;
+        this.phone = phone;
+        this.address = address;
+        this.detailAddress = detailAddress;
+        this.minOrderPrice = minOrderPrice;
+        this.deliveryFee = deliveryFee;
+        this.deliveryRadiusM = deliveryRadiusM;
+    }
 
-    public void addCategory(Category category, Long createdBy) {
+    public void addCategory(Category category) {
         StoreCategory storeCategory = new StoreCategory(this, category);
         this.categoryList.add(storeCategory);
     }
@@ -114,13 +130,18 @@ public class Store extends BaseEntity {
         this.reviewCount = reviewCount;
     }
 
-    public void changeDeliveryFee(Integer deliveryFee){
-        this.deliveryFee = deliveryFee;
+    public void updateOrderCnt(){
+        this.orderCount++ ;
     }
 
-    public void changeMinOrderPrice(Integer minOrderPrice){
-        this.minOrderPrice = minOrderPrice;
-    }
 
+
+    public void changeRegion(Region region) {
+        this.region = region;
+    }
+    public void changeCategories(List<Category> categories) {
+        this.categoryList.clear();
+        categories.forEach(this::addCategory);
+    }
 
 }

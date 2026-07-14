@@ -3,9 +3,7 @@ package com.sparta.server.threeserving.order.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -13,7 +11,9 @@ import java.util.UUID;
 @Setter
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name="p_cart_item")
+@Builder
 public class CartItem extends BaseEntity {
 
     @Id
@@ -21,7 +21,7 @@ public class CartItem extends BaseEntity {
     private UUID id;
 
     @JoinColumn(name = "cart_id", nullable = false)
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Cart cart;
 
     @Column(name="menu_id", nullable = false)

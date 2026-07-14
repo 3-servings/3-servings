@@ -1,5 +1,6 @@
 package com.sparta.server.threeserving.menu.dto.request;
 
+import com.sparta.server.threeserving.image.dto.request.ImageRequest;
 import com.sparta.server.threeserving.menu.entity.MenuStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -29,5 +30,7 @@ public class MenuUpdateRequest {
     private Boolean isDescriptionAiGenerated;
 
     private MenuStatus status;
+
+    private ImageRequest image;
 
 }

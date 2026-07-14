@@ -7,23 +7,28 @@ import com.sparta.server.threeserving.order.repository.OrderRepository;
 import com.sparta.server.threeserving.order_management.dto.request.OrderManagementCreateRequest;
 import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.payment.dto.request.PaymentRequest;
+import com.sparta.server.threeserving.payment.dto.request.TossConfirmRequest;
 import com.sparta.server.threeserving.payment.dto.response.PaymentLogResponse;
 import com.sparta.server.threeserving.payment.dto.response.PaymentResponse;
 import com.sparta.server.threeserving.payment.dto.response.RefundSuccessResponse;
+import com.sparta.server.threeserving.payment.dto.response.TossConfirmResponse;
 import com.sparta.server.threeserving.payment.entity.Payment;
 import com.sparta.server.threeserving.payment.entity.PaymentLog;
 import com.sparta.server.threeserving.payment.enums.PaymentStatus;
 import com.sparta.server.threeserving.payment.repository.PaymentLogRepository;
 import com.sparta.server.threeserving.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +39,10 @@ public class PaymentService {
     private final PaymentLogRepository paymentLogRepository;
     private final OrderRepository orderRepository;
     private final OrderManagementService orderManagementService;
+    private final RestClient restClient;
+
+    @Value("${toss.secret-key}")
+    private String secretKey;
 
     private Orders validateOrder(Long userId, UUID orderId){
         Orders order = orderRepository.findById(orderId)
@@ -49,6 +58,53 @@ public class PaymentService {
     private Payment findPayment(UUID orderId){
         return paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    private TossConfirmResponse confirmWithToss(TossConfirmRequest request) {
+        String encodedKey = Base64.getEncoder()
+                .encodeToString((secretKey +":").getBytes(StandardCharsets.UTF_8));
+
+        Map<String, Object> body = Map.of(
+                "paymentKey", request.getPaymentKey(),
+                "orderId", request.getOrderId(),
+                "amount", request.getAmount()
+        );
+
+        return restClient.post()
+                .uri("https://api.tosspayments.com/v1/payments/confirm")
+                .header(HttpHeaders.AUTHORIZATION, "Basic "+encodedKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .retrieve()
+                .body(TossConfirmResponse.class);
+    }
+
+    public PaymentResponse confirmPayment(Long userId, UUID orderId, TossConfirmRequest request){
+        Orders orders = validateOrder(userId, orderId);
+
+        if(paymentRepository.findByOrderId(orderId).isPresent()){
+            throw new CustomException(ErrorCode.PAYMENT_ALREADY_EXISTS);
+        }
+
+        TossConfirmResponse tossResponse = confirmWithToss(request);
+
+        Payment payment = Payment.createFromToss(orders, tossResponse);
+
+        Payment savedPayment = paymentRepository.save(payment);
+
+        paymentLogRepository.save(
+                PaymentLog.create(
+                        savedPayment,
+                        PaymentStatus.SUCCESS,
+                        "결제 완료"
+                )
+        );
+
+        orderManagementService.create(
+                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
+        );
+
+        return PaymentResponse.from(savedPayment);
     }
 
     public PaymentResponse createPayment(Long userId, UUID orderId, PaymentRequest request){

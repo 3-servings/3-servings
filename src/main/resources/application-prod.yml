@@ -26,7 +26,11 @@ cloud:
     auth: iam
     s3:
       bucket: ${S3_BUCKET_NAME}
+      base-url: ${CLOUD_FRONT_DOMAIN}
 
 logging:
   level:
     root: warn
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY}

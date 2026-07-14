@@ -1,11 +1,13 @@
 package com.sparta.server.threeserving.order_management.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
+@AllArgsConstructor
 public class DailySalesStatResponse {
 
     private UUID storeId;
@@ -17,23 +19,5 @@ public class DailySalesStatResponse {
     private BigDecimal avgCookTime;
     private BigDecimal completedRate;
 
-    public DailySalesStatResponse(
-            UUID storeId,
-            Long totalOrderCount,
-            Long completedCount,
-            Long rejectedCount,
-            Long canceledCount,
-            Long totalSalesAmount,
-            BigDecimal avgCookTime,
-            BigDecimal completedRate
-    ) {
-        this.storeId = storeId;
-        this.totalOrderCount = totalOrderCount;
-        this.completedCount = completedCount;
-        this.rejectedCount = rejectedCount;
-        this.canceledCount = canceledCount;
-        this.totalSalesAmount = totalSalesAmount;
-        this.avgCookTime = avgCookTime;
-        this.completedRate = completedRate;
-    }
+
 }

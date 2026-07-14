@@ -15,6 +15,8 @@ import com.sparta.server.threeserving.order_management.entity.RejectReasonCode;
 import com.sparta.server.threeserving.order_management.repository.OrderManagementRepository;
 import com.sparta.server.threeserving.order_management.repository.OrderStatusHistoryRepository;
 import com.sparta.server.threeserving.order_management.repository.RejectReasonCodeRepository;
+import com.sparta.server.threeserving.store.entity.Store;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -29,21 +31,25 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderManagementService {
 
+// TODO: Role(MASTER/OWNER)에 따른 Store 접근 권한 체크 추가
+
     private final OrderManagementRepository orderManagementRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final RejectReasonCodeRepository rejectReasonCodeRepository;
     private final OrderRepository orderRepository;
-
+    private final EntityManager entityManager;
 
 // Payment 성공 시 호출
     @Transactional
     public OrderManagement create(OrderManagementCreateRequest request) {
-        System.out.println(request.getOrderId());
         Orders order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("주문 없음"));
-        System.out.println(order);
+        Store store = entityManager.getReference(
+                Store.class,
+                order.getStoreId()
+        );
         OrderManagement orderManagement =
-                new OrderManagement(order,OrderStatusEnum.PENDING);
+                new OrderManagement(order,store,OrderStatusEnum.PENDING);
 
         return orderManagementRepository.save(orderManagement);
     }
@@ -116,6 +122,10 @@ public class OrderManagementService {
         // 2. 주문상태 변경, 상태 이력 저장
         updateOrderAndHistory(orderManagement,previousStatus,status);
 
+        if (status == OrderStatusEnum.COMPLETED) {
+            orderManagement.getStore().updateOrderCnt();
+        }
+
     }
 
     @Transactional
@@ -137,8 +147,8 @@ public class OrderManagementService {
 
         getOrderManagement(orderManagementId);
 
-        List<OrderStatusHistory> histories =
-                orderStatusHistoryRepository.findByOrderManagementIdOrderByCreatedAtAsc(orderManagementId);
+//        List<OrderStatusHistory> histories =
+//                orderStatusHistoryRepository.findByOrderManagementIdOrderByCreatedAtAsc(orderManagementId);
 
 
         List<OrderStatusHistoryResponse.History> history =
@@ -185,6 +195,8 @@ public class OrderManagementService {
                 )
         );
     }
+
+
 }
 
 
