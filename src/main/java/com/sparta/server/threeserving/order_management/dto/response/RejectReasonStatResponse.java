@@ -11,7 +11,6 @@ import java.util.UUID;
 @Getter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class RejectReasonStatResponse {
 
     private UUID storeId;

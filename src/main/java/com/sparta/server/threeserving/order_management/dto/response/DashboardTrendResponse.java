@@ -1,7 +1,6 @@
 package com.sparta.server.threeserving.order_management.dto.response;
 
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 
 import java.math.BigDecimal;
