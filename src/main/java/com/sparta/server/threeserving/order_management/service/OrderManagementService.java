@@ -141,8 +141,8 @@ public class OrderManagementService {
 
         getOrderManagement(orderManagementId);
 
-        List<OrderStatusHistory> histories =
-                orderStatusHistoryRepository.findByOrderManagementIdOrderByCreatedAtAsc(orderManagementId);
+//        List<OrderStatusHistory> histories =
+//                orderStatusHistoryRepository.findByOrderManagementIdOrderByCreatedAtAsc(orderManagementId);
 
 
         List<OrderStatusHistoryResponse.History> history =
