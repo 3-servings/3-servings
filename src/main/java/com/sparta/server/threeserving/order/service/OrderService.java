@@ -37,6 +37,8 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderItemOptionRepository orderItemOptionRepository;
 
+    private final CartRepository cartRepository;
+
     private final StoreRepository storeRepository;
 
     private static final List<Integer> ALLOWED_SIZE = List.of(10, 30, 50);
@@ -52,9 +54,10 @@ public class OrderService {
         if(requestDto.orderItems().isEmpty()) throw new CustomException(ErrorCode.ORDER_ITEMS_IS_EMPTY);
 
         // 로직 수행
+        OrderStatusEnum status = requestDto.orderStatus() == null ? OrderStatusEnum.PENDING : requestDto.orderStatus();
         Orders order = new Orders(
                 requestDto.userId(), requestDto.storeId(), null,
-                requestDto.orderStatus(), requestDto.totalPrice(),
+                status, requestDto.totalPrice(),
                 requestDto.deliveryAddress(), requestDto.requestMessage());
         Orders savedOrder = orderRepository.save(order);
 
@@ -99,7 +102,7 @@ public class OrderService {
                 }
                 yield uncheckedOrder;
             }
-            case MANAGER, MASTER -> orderRepository.findById(orderId).orElseThrow(
+            case MANAGER, MASTER -> orderRepository.findByIdAndDeletedAtIsNull(orderId).orElseThrow(
                     () -> new CustomException(ErrorCode.ORDER_NOT_FOUND)
             );
         };
@@ -224,12 +227,12 @@ public class OrderService {
         Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
         List<OrderItem> orderItemList = orderItemRepository.findAllByOrderAndDeletedAtIsNull(order);
-        if(orderItemList.isEmpty())
-            throw new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND);
 
         // p_order_item_option 테이블엔 deleted_at 컬럼이 없어 soft delete 불가 -> 딸린 옵션은 하드 삭제
-        List<OrderItemOption> options = orderItemOptionRepository.findAllByOrderItemIn(orderItemList);
-        orderItemOptionRepository.deleteAll(options);
+        if(!orderItemList.isEmpty()) {
+            List<OrderItemOption> options = orderItemOptionRepository.findAllByOrderItemIn(orderItemList);
+            orderItemOptionRepository.deleteAll(options);
+        }
 
         for (OrderItem orderItem : orderItemList) {
             orderItem.softDelete(userId);
