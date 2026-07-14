@@ -8,16 +8,21 @@ import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
-public class DailySalesStatResponse {
+public class TodaySalesSummaryResponse {
 
     private UUID storeId;
+
     private Long totalOrderCount;
     private Long completedCount;
     private Long rejectedCount;
     private Long canceledCount;
+
     private Long totalSalesAmount;
+
     private BigDecimal avgCookTime;
+
     private BigDecimal completedRate;
 
 
 }
+
