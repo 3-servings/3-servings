@@ -38,7 +38,6 @@ public class OrderManagementService {
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final RejectReasonCodeRepository rejectReasonCodeRepository;
     private final OrderRepository orderRepository;
-    private final StoreRepository storeRepository;
     private final EntityManager entityManager;
 
 // Payment 성공 시 호출
