@@ -75,6 +75,19 @@ public class User extends BaseEntity {
                 .build();
     }
 
+    public static User createSocial(String username, String nickname, String email, String provider, String providerId, String encodeRandomPassword, UserRoleEnum role) {
+        return User.builder()
+                .username(username)
+                .nickname(nickname)
+                .email(email)
+                .password(encodeRandomPassword)
+                .loginType(LoginType.KAKAO)
+                .provider(provider)
+                .providerId(providerId)
+                .role(role)
+                .build();
+    }
+
 
     //소프트 딜리트 : 실제 삭제 X
     //레디스 사용이라 리프레시토큰 DB에 저장안함 그런고로 필드 구현 X
