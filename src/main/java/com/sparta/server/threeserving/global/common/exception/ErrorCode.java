@@ -102,6 +102,7 @@ public enum ErrorCode {
     ORDER_MANAGEMENT_STORE_MISMATCH(HttpStatus.FORBIDDEN, "OM006", "본인 매장의 주문만 조회 및 처리할 수 있습니다."),
     ESTIMATED_COOK_TIME_INVALID(HttpStatus.BAD_REQUEST, "OM007", "예상 조리 시간은 0분보다 커야 합니다."),
     REJECT_MEMO_REQUIRED(HttpStatus.BAD_REQUEST, "OM008", "주문 거절 사유를 입력해주세요."),
+    FORBIDDEN_STORE_ACCESS(HttpStatus.FORBIDDEN,"O019","해당 가게에 접근 권한이 없습니다."),
 
     //Payment
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "결제 정보를 찾을 수 없습니다."),
