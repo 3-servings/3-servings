@@ -15,6 +15,7 @@ import com.sparta.server.threeserving.order.dto.request.CheckoutRequestDto;
 import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.entity.*;
 import com.sparta.server.threeserving.order.repository.*;
+import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import jakarta.transaction.Transactional;
@@ -36,6 +37,8 @@ public class CartService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderItemOptionRepository orderItemOptionRepository;
+
+    private final OrderManagementService orderManagementService;
 
     private final StoreRepository storeRepository;
 
@@ -271,6 +274,7 @@ public class CartService {
         // logic
         // order/orderItem/orderItemOption persist
         // cart softDelete
+        // OM 객체 생성
         Orders order = new Orders(
                 userId, cart.getStoreId(), cart, OrderStatusEnum.PENDING, totalPrice,
                 requestDto.deliveryAddress(), requestDto.requestMessage()
@@ -295,6 +299,8 @@ public class CartService {
             }
         }
         orderItemOptionRepository.saveAll(orderItemOptions);
+
+        orderManagementService.create(savedOrder, OrderStatusEnum.PENDING);
 
         cart.softDelete(userId);
         for (CartItem cartItem : cartItemList) {

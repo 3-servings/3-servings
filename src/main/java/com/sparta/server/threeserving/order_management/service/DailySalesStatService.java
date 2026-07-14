@@ -4,7 +4,9 @@ import com.sparta.server.threeserving.order_management.dto.response.*;
 import com.sparta.server.threeserving.order_management.entity.DailySalesStat;
 import com.sparta.server.threeserving.order_management.repository.DailySalesStatRepository;
 import com.sparta.server.threeserving.order_management.repository.OrderManagementRepository;
+import com.sparta.server.threeserving.order_management.validator.StoreAccessValidator;
 import com.sparta.server.threeserving.store.entity.Store;
+import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ public class DailySalesStatService {
 
     private final OrderManagementRepository orderManagementRepository;
     private final DailySalesStatRepository dailySalesStatRepository;
+    private final StoreAccessValidator storeAccessValidator;
 
     @Transactional
     public void createDailySalesStat(LocalDate yesterday) {
@@ -56,7 +59,11 @@ public class DailySalesStatService {
 
     }
 
-    public DashboardTrendResponse getDashboardTrend(UUID storeId, LocalDate startDate, LocalDate endDate) {
+    public DashboardTrendResponse getDashboardTrend(UUID storeId, LocalDate startDate, LocalDate endDate,Long userId, UserRoleEnum role) {
+
+        if (role == UserRoleEnum.OWNER) {
+            storeAccessValidator.validateStoreAccess(userId, storeId);
+        }
 
         List<DashboardTrendResponse.Item> items = dailySalesStatRepository
                 .findByStoreIdAndStatDateBetweenOrderByStatDate(
@@ -85,15 +92,21 @@ public class DailySalesStatService {
 
     }
 
-    public TodaySalesSummaryResponse getTodaySummary(UUID storeId) {
+    public TodaySalesSummaryResponse getTodaySummary(UUID storeId,Long userId, UserRoleEnum role) {
 
+        if (role == UserRoleEnum.OWNER) {
+            storeAccessValidator.validateStoreAccess(userId, storeId);
+        }
         return orderManagementRepository.findTodaySummary(storeId);
 
     }
 
 
-    public RejectReasonStatResponse getRejectReasonStatistics(UUID storeId) {
+    public RejectReasonStatResponse getRejectReasonStatistics(UUID storeId,Long userId, UserRoleEnum role) {
 
+        if (role == UserRoleEnum.OWNER) {
+            storeAccessValidator.validateStoreAccess(userId, storeId);
+        }
         List<RejectReasonStatResponse.RejectReasonStatItem> items = orderManagementRepository.findRejectReasonStatistics(storeId)
                 .stream()
                 .map(row -> RejectReasonStatResponse.RejectReasonStatItem.builder()

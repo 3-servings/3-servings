@@ -4,13 +4,18 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.order.dto.response.OrderCancelResponseDto;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderModifyRequestDto;
 import com.sparta.server.threeserving.order.dto.response.*;
-import com.sparta.server.threeserving.order.entity.*;
-import com.sparta.server.threeserving.order.repository.*;
+import com.sparta.server.threeserving.order.entity.OrderItem;
+import com.sparta.server.threeserving.order.entity.OrderItemOption;
+import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
+import com.sparta.server.threeserving.order.entity.Orders;
+import com.sparta.server.threeserving.order.repository.OrderItemOptionRepository;
+import com.sparta.server.threeserving.order.repository.OrderItemRepository;
+import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
@@ -37,7 +42,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderItemOptionRepository orderItemOptionRepository;
 
-    private final CartRepository cartRepository;
+    private final OrderManagementService orderManagementService;
 
     private final StoreRepository storeRepository;
 
@@ -84,6 +89,8 @@ public class OrderService {
             orderItemOptionList.addAll(options);
         }
         orderItemOptionRepository.saveAll(orderItemOptionList);
+
+        orderManagementService.create(savedOrder, status);
 
         return ApiResponse.success(SuccessCode.CREATED, new OrderCreateResponseDto(savedOrder));
     }
@@ -217,7 +224,8 @@ public class OrderService {
             throw new CustomException(ErrorCode.EXPIRED_CANCEL_TIME);
         }
 
-        order.cancel();
+        order.changeStatus(OrderStatusEnum.CANCELED);
+
         return ApiResponse.success(SuccessCode.SUCCESS, new OrderCancelResponseDto(order));
     }
 
