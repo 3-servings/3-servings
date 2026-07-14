@@ -2,6 +2,8 @@ package com.sparta.server.threeserving.review.service;
 
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.image.entity.DomainType;
+import com.sparta.server.threeserving.image.service.ImageService;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.OrderRepository;
@@ -21,8 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -34,22 +36,9 @@ public class ReviewService {
     private final StoreRepository storeRepository;   // 가게 연관 세팅 + 평점 재계산
     private final ReviewCommentRepository reviewCommentRepository;
     private final OrderRepository orderRepository;
-    private final ImageService imageService;
-    private final S3PresignService s3PresignService;
+    private final ImageService imageService;   // 팀 공용 이미지 도메인 (image.service.ImageService)
 
-
-    // Presigned URL 발급 (리뷰 이미지 업로드 URL)
-    public ReviewImagePresignResponse presignReviewImages(ReviewImagePresignRequest request) {
-        List<ReviewImagePresignResponse.Item> items = new java.util.ArrayList<>();
-        int seq = 1;
-        for (ReviewImagePresignRequest.FileMeta f : request.files()) {
-            S3PresignService.PresignedItem p =
-                    s3PresignService.createPutPresign(ImageService.REVIEW.toLowerCase(), f.originName(), f.contentType());
-            items.add(new ReviewImagePresignResponse.Item(p.key(), p.uploadUrl(), p.publicUrl(), seq++));
-        }
-        return new ReviewImagePresignResponse(items);
-    }
-
+    // 프리사인 URL 발급은 공용 이미지 도메인의 POST /api/v1/images/presigned-url (DomainType=REVIEW) 사용
 
     // 작성: COMPLETED 주문 + 본인 주문만
     @Transactional
@@ -73,7 +62,7 @@ public class ReviewService {
         Review review = Review.create(order, loginUser, store, request.star(), request.content());
         reviewRepository.save(review);
 
-        List<String> imageUrls = imageService.saveReviewImages(review.getId(), request.images());
+        List<String> imageUrls = imageService.saveImages(DomainType.REVIEW, review.getId(), request.images());
         recalculateStoreRating(store);
 
         log.info("리뷰 작성 완료 : reviewId={}, userId={}, storeId={}, star={}, imageCount={}",
@@ -85,7 +74,8 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public ReviewResponse getReview(UUID reviewId) {
         Review review = findActiveReview(reviewId);
-        List<String> imageUrls = imageService.getImageUrls(reviewId);
+        String imageUrl = imageService.getImageUrl(DomainType.REVIEW, reviewId);   // 대표 이미지
+        List<String> imageUrls = imageUrl == null ? List.of() : List.of(imageUrl);
         ReviewCommentResponse ownerReply = reviewCommentRepository
                 .findByReview_IdAndDeletedAtIsNull(reviewId)
                 .map(ReviewCommentResponse::new)
@@ -94,15 +84,13 @@ public class ReviewService {
         return new ReviewResponse(review, imageUrls, ownerReply);
     }
 
-
     //목록 가게 단위 (feat: 리뷰 조회 기능 구현)
     @Transactional(readOnly = true)
-    public Page<ReviewListResponse> getStoreReviews(UUID storeId, Pageable pageable){
-        return reviewRepository.findByStore_IdAndDeletedAtIsNullOrderByCreatedAtDesc(storeId, pageable)
-                .map(r -> {
-                    List<String> urls = imageService.getImageUrls(r.getId());
-                    return new ReviewListResponse(r, urls.isEmpty() ? null : urls.get(0));
-                });
+    public Page<ReviewListResponse> getStoreReviews(UUID storeId, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByStore_IdAndDeletedAtIsNullOrderByCreatedAtDesc(storeId, pageable);
+        List<UUID> reviewIds = reviews.getContent().stream().map(Review::getId).toList();
+        Map<UUID, String> thumbnails = imageService.getImageUrlMap(DomainType.REVIEW, reviewIds); // N+1 방지
+        return reviews.map(r -> new ReviewListResponse(r, thumbnails.get(r.getId())));
     }
 
     // 수정: 본인만
@@ -116,10 +104,11 @@ public class ReviewService {
 
         List<String> imageUrls;
         if (request.images() != null && !request.images().isEmpty()) {
-            imageService.deleteImages(reviewId);
-            imageUrls = imageService.saveReviewImages(reviewId, request.images());
+            // 기존 soft-delete 후 재저장
+            imageUrls = imageService.replaceImages(DomainType.REVIEW, reviewId, request.images(), loginUser.getId());
         } else {
-            imageUrls = imageService.getImageUrls(reviewId);
+            String url = imageService.getImageUrl(DomainType.REVIEW, reviewId);
+            imageUrls = url == null ? List.of() : List.of(url);
         }
 
         recalculateStoreRating(review.getStore());
@@ -135,12 +124,12 @@ public class ReviewService {
             throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
         }
         review.softDelete(loginUser.getId());
-        imageService.deleteImages(reviewId);
+        imageService.softDeleteImages(DomainType.REVIEW, reviewId, loginUser.getId());
         recalculateStoreRating(review.getStore());
         log.info("리뷰 삭제 완료 : reviewId={}, userId={}", reviewId, loginUser.getId());
     }
 
-    private Review findActiveReview(UUID reviewId){
+    private Review findActiveReview(UUID reviewId) {
         return reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
     }

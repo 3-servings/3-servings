@@ -1,5 +1,6 @@
 package com.sparta.server.threeserving.review.dto;
 
+import com.sparta.server.threeserving.image.dto.request.ImageRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -16,8 +17,8 @@ public record ReviewUpdateRequest (
 
         String content,
 
-        // 이미지 교체용 (넘어오면 기존 삭제 후 재저장, 없으면 유지)
+        // 이미지 교체용(공용 이미지 도메인 ImageRequest). 넘어오면 기존 삭제 후 재저장, 없으면 유지
         @Size(max = 3, message = "이미지는 최대 3장입니다.")
-        List<@Valid ReviewImageMeta> images
+        List<@Valid ImageRequest> images
 ){
 }
