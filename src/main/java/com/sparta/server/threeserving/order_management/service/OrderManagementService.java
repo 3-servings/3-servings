@@ -16,7 +16,6 @@ import com.sparta.server.threeserving.order_management.repository.OrderManagemen
 import com.sparta.server.threeserving.order_management.repository.OrderStatusHistoryRepository;
 import com.sparta.server.threeserving.order_management.repository.RejectReasonCodeRepository;
 import com.sparta.server.threeserving.store.entity.Store;
-import com.sparta.server.threeserving.store.repository.StoreRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
