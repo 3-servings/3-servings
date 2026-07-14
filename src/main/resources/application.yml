@@ -25,3 +25,8 @@ jwt:
   secret: ${JWT_SECRET}
   access-expiration: 1800000     # 30분
   refresh-expiration: 1209600000 # 14일
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  rest-api-key: ${KAKAO_REST_API_KEY}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
