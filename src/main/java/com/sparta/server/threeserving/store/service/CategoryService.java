@@ -100,7 +100,7 @@ public class CategoryService {
                 PageService.resolvePageSize(pageable.getPageSize()),
                 pageable.getSort());
 
-        Page<CategoryResponse> categories = categoryRepository.searchCategories(isActive, name, newPageable).map(CategoryResponse::new);
+        Page<CategoryResponse> categories = categoryRepository.searchCategories(isActive, name == null ? "": name, newPageable).map(CategoryResponse::new);
         return ApiResponse.success(SuccessCode.SUCCESS, categories);
     }
 
