@@ -1,6 +1,8 @@
 package com.sparta.server.threeserving.order.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
+import com.sparta.server.threeserving.global.common.exception.ErrorCode;
+import com.sparta.server.threeserving.global.exception.CustomException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
@@ -66,9 +68,9 @@ public class Orders extends BaseEntity {
         this.requestMessage = requestMessage;
     }
   
-    public void changeStatus(OrderStatusEnum currentStatus) {
-
-        this.orderStatus = currentStatus;
+    public void changeStatus(OrderStatusEnum nextStatus) {
+        validateStatusTransition(nextStatus);
+        this.orderStatus = nextStatus;
     }
 
     public void modifyInfo(String reqMsg, String address) {
@@ -78,7 +80,9 @@ public class Orders extends BaseEntity {
             this.deliveryAddress = address;
     }
 
-    public void cancel() {
-        this.orderStatus = OrderStatusEnum.CANCELED;
+    private void validateStatusTransition(OrderStatusEnum status) {
+        if (!this.orderStatus.canTransitionTo(status)) {
+            throw new CustomException(ErrorCode.ORDER_STATUS_TRANSITION_INVALID);
+        }
     }
 }

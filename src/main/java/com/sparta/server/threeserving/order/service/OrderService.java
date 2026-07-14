@@ -4,13 +4,18 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.order.dto.OrderCancelResponseDto;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderModifyRequestDto;
 import com.sparta.server.threeserving.order.dto.response.*;
-import com.sparta.server.threeserving.order.entity.*;
-import com.sparta.server.threeserving.order.repository.*;
+import com.sparta.server.threeserving.order.entity.OrderItem;
+import com.sparta.server.threeserving.order.entity.OrderItemOption;
+import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
+import com.sparta.server.threeserving.order.entity.Orders;
+import com.sparta.server.threeserving.order.repository.OrderItemOptionRepository;
+import com.sparta.server.threeserving.order.repository.OrderItemRepository;
+import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
@@ -33,13 +38,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
-    private final CartItemOptionRepository cartItemOptionRepository;
-
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderItemOptionRepository orderItemOptionRepository;
+
+    private final OrderManagementService orderManagementService;
 
     private final StoreRepository storeRepository;
 
@@ -56,9 +59,10 @@ public class OrderService {
         if(requestDto.orderItems().isEmpty()) throw new CustomException(ErrorCode.ORDER_ITEMS_IS_EMPTY);
 
         // 로직 수행
+        OrderStatusEnum status = requestDto.orderStatus() == null ? OrderStatusEnum.PENDING : requestDto.orderStatus();
         Orders order = new Orders(
                 requestDto.userId(), requestDto.storeId(), null,
-                requestDto.orderStatus(), requestDto.totalPrice(),
+                status, requestDto.totalPrice(),
                 requestDto.deliveryAddress(), requestDto.requestMessage());
         Orders savedOrder = orderRepository.save(order);
 
@@ -79,12 +83,14 @@ public class OrderService {
             List<OrderItemOption> options = dto.options().stream()
                     .map(optDto -> new OrderItemOption(
                             savedItem, optDto.optionItemId(), optDto.optionName(),
-                            optDto.additionalPrice(), 1))
+                            optDto.additionalPrice()))
                     .toList();
 
             orderItemOptionList.addAll(options);
         }
         orderItemOptionRepository.saveAll(orderItemOptionList);
+
+        orderManagementService.create(savedOrder, status);
 
         return ApiResponse.success(SuccessCode.CREATED, new OrderCreateResponseDto(savedOrder));
     }
@@ -103,7 +109,7 @@ public class OrderService {
                 }
                 yield uncheckedOrder;
             }
-            case MANAGER, MASTER -> orderRepository.findById(orderId).orElseThrow(
+            case MANAGER, MASTER -> orderRepository.findByIdAndDeletedAtIsNull(orderId).orElseThrow(
                     () -> new CustomException(ErrorCode.ORDER_NOT_FOUND)
             );
         };
@@ -218,7 +224,8 @@ public class OrderService {
             throw new CustomException(ErrorCode.EXPIRED_CANCEL_TIME);
         }
 
-        order.cancel();
+        order.changeStatus(OrderStatusEnum.CANCELED);
+
         return ApiResponse.success(SuccessCode.SUCCESS, new OrderCancelResponseDto(order));
     }
 
@@ -228,12 +235,12 @@ public class OrderService {
         Orders order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
         List<OrderItem> orderItemList = orderItemRepository.findAllByOrderAndDeletedAtIsNull(order);
-        if(orderItemList.isEmpty())
-            throw new CustomException(ErrorCode.ORDER_ITEM_NOT_FOUND);
 
         // p_order_item_option 테이블엔 deleted_at 컬럼이 없어 soft delete 불가 -> 딸린 옵션은 하드 삭제
-        List<OrderItemOption> options = orderItemOptionRepository.findAllByOrderItemIn(orderItemList);
-        orderItemOptionRepository.deleteAll(options);
+        if(!orderItemList.isEmpty()) {
+            List<OrderItemOption> options = orderItemOptionRepository.findAllByOrderItemIn(orderItemList);
+            orderItemOptionRepository.deleteAll(options);
+        }
 
         for (OrderItem orderItem : orderItemList) {
             orderItem.softDelete(userId);

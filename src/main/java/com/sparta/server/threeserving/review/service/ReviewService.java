@@ -2,6 +2,8 @@ package com.sparta.server.threeserving.review.service;
 
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.image.entity.DomainType;
+import com.sparta.server.threeserving.image.service.ImageService;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.OrderRepository;
@@ -21,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -32,21 +36,23 @@ public class ReviewService {
     private final StoreRepository storeRepository;   // 가게 연관 세팅 + 평점 재계산
     private final ReviewCommentRepository reviewCommentRepository;
     private final OrderRepository orderRepository;
+    private final ImageService imageService;   // 팀 공용 이미지 도메인 (image.service.ImageService)
 
+    // 프리사인 URL 발급은 공용 이미지 도메인의 POST /api/v1/images/presigned-url (DomainType=REVIEW) 사용
 
-    //작성 COMPLETED 주문 or 본인 주문에만 (feat: 리뷰 작성기능 구현)
+    // 작성: COMPLETED 주문 + 본인 주문만
     @Transactional
-    public ReviewResponse createReview(User loginUser, ReviewCreateRequest request){
+    public ReviewResponse createReview(User loginUser, ReviewCreateRequest request) {
         Orders order = orderRepository.findById(request.orderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
-        if (!order.getUserId().equals(loginUser.getId())){
+        if (!order.getUserId().equals(loginUser.getId())) {
             throw new CustomException(ErrorCode.NOT_ORDER_OWNER);
         }
-        if (order.getOrderStatus() != OrderStatusEnum.COMPLETED){
+        if (order.getOrderStatus() != OrderStatusEnum.COMPLETED) {
             throw new CustomException(ErrorCode.ORDER_NOT_COMPLETED);
         }
-        if (reviewRepository.existsByOrder_IdAndDeletedAtIsNull(order.getId())){
+        if (reviewRepository.existsByOrder_IdAndDeletedAtIsNull(order.getId())) {
             throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
 
@@ -54,75 +60,85 @@ public class ReviewService {
                 .orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
         Review review = Review.create(order, loginUser, store, request.star(), request.content());
-
         reviewRepository.save(review);
 
+        List<String> imageUrls = imageService.saveImages(DomainType.REVIEW, review.getId(), request.images());
         recalculateStoreRating(store);
-        return new ReviewResponse(review);
+
+        log.info("리뷰 작성 완료 : reviewId={}, userId={}, storeId={}, star={}, imageCount={}",
+                review.getId(), loginUser.getId(), store.getId(), review.getStar(), imageUrls.size());
+        return new ReviewResponse(review, imageUrls);
     }
 
-    //상세 조회 사장 답글까지 포함(feat: 리뷰 조회 기능 구현)
+    // 상세 조회 (사장 답글 포함)
     @Transactional(readOnly = true)
-    public ReviewResponse getReview(UUID reviewId){
+    public ReviewResponse getReview(UUID reviewId) {
         Review review = findActiveReview(reviewId);
+        String imageUrl = imageService.getImageUrl(DomainType.REVIEW, reviewId);   // 대표 이미지
+        List<String> imageUrls = imageUrl == null ? List.of() : List.of(imageUrl);
         ReviewCommentResponse ownerReply = reviewCommentRepository
                 .findByReview_IdAndDeletedAtIsNull(reviewId)
                 .map(ReviewCommentResponse::new)
                 .orElse(null);
-        return new ReviewResponse(review, ownerReply);
+        log.info("리뷰 상세 조회 : reviewId={}", reviewId);
+        return new ReviewResponse(review, imageUrls, ownerReply);
     }
+
     //목록 가게 단위 (feat: 리뷰 조회 기능 구현)
     @Transactional(readOnly = true)
-    public Page<ReviewListResponse> getStoreReviews(UUID storeId, Pageable pageable){
-        return reviewRepository.findByStore_IdAndDeletedAtIsNullOrderByCreatedAtDesc(storeId, pageable)
-                .map(ReviewListResponse::new);
+    public Page<ReviewListResponse> getStoreReviews(UUID storeId, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByStore_IdAndDeletedAtIsNullOrderByCreatedAtDesc(storeId, pageable);
+        List<UUID> reviewIds = reviews.getContent().stream().map(Review::getId).toList();
+        Map<UUID, String> thumbnails = imageService.getImageUrlMap(DomainType.REVIEW, reviewIds); // N+1 방지
+        return reviews.map(r -> new ReviewListResponse(r, thumbnails.get(r.getId())));
     }
 
-    //수정 본인만 (feat: 리뷰 수정 기능 구현)
+    // 수정: 본인만
     @Transactional
-    public ReviewResponse updateReview(
-            User loginUser,
-            UUID reviewId,
-            ReviewUpdateRequest request
-    ){
-      Review review = findActiveReview(reviewId);
-      if (!review.isOwner(loginUser.getId())){
-          throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
-      }
-      review.update(request.star(), request.content());
-      recalculateStoreRating(review.getStore());
-      return new ReviewResponse(review);
-    }
-
-    //삭제 본인만, soft-delete (feat: 리뷰삭제 기능 구현)
-    @Transactional
-    public void deleteReview(User loginUser, UUID reviewId){
+    public ReviewResponse updateReview(User loginUser, UUID reviewId, ReviewUpdateRequest request) {
         Review review = findActiveReview(reviewId);
-        if (!review.isOwner(loginUser.getId())){
+        if (!review.isOwner(loginUser.getId())) {
+            throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
+        }
+        review.update(request.star(), request.content());
+
+        List<String> imageUrls;
+        if (request.images() != null && !request.images().isEmpty()) {
+            // 기존 soft-delete 후 재저장
+            imageUrls = imageService.replaceImages(DomainType.REVIEW, reviewId, request.images(), loginUser.getId());
+        } else {
+            String url = imageService.getImageUrl(DomainType.REVIEW, reviewId);
+            imageUrls = url == null ? List.of() : List.of(url);
+        }
+
+        recalculateStoreRating(review.getStore());
+        log.info("리뷰 수정 완료 : reviewId={}, userId={}", reviewId, loginUser.getId());
+        return new ReviewResponse(review, imageUrls);
+    }
+
+    // 삭제: 본인만, soft-delete
+    @Transactional
+    public void deleteReview(User loginUser, UUID reviewId) {
+        Review review = findActiveReview(reviewId);
+        if (!review.isOwner(loginUser.getId())) {
             throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
         }
         review.softDelete(loginUser.getId());
+        imageService.softDeleteImages(DomainType.REVIEW, reviewId, loginUser.getId());
         recalculateStoreRating(review.getStore());
+        log.info("리뷰 삭제 완료 : reviewId={}, userId={}", reviewId, loginUser.getId());
     }
 
-    private Review findActiveReview(UUID reviewId){
+    private Review findActiveReview(UUID reviewId) {
         return reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
     }
 
-    private void recalculateStoreRating(Store store){
+    private void recalculateStoreRating(Store store) {
         double avg = reviewRepository.findAverageStarByStoreId(store.getId());
         long count = reviewRepository.countByStore_IdAndDeletedAtIsNull(store.getId());
         BigDecimal averageRating = BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP);
         store.updateRating(averageRating, (int) count);
     }
-
-
-
-
-
-
-
-
 
 }

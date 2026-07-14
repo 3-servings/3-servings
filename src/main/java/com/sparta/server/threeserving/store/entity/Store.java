@@ -130,8 +130,8 @@ public class Store extends BaseEntity {
         this.reviewCount = reviewCount;
     }
 
-    public void updateOrderCnt(Integer orderCount){
-        this.orderCount = orderCount;
+    public void updateOrderCnt(){
+        this.orderCount++ ;
     }
 
 

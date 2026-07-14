@@ -2,12 +2,12 @@ package com.sparta.server.threeserving.order_management.controller;
 
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
+import com.sparta.server.threeserving.order_management.dto.response.*;
 import com.sparta.server.threeserving.order_management.dto.request.OrderAcceptRequest;
 import com.sparta.server.threeserving.order_management.dto.request.OrderRejectRequest;
 import com.sparta.server.threeserving.order_management.dto.request.OrderStatusUpdateRequest;
 import com.sparta.server.threeserving.order_management.dto.request.UpdateCookingTimeRequest;
-import com.sparta.server.threeserving.order_management.dto.response.OrderManagementListResponse;
-import com.sparta.server.threeserving.order_management.dto.response.OrderManagementResponse;
+import com.sparta.server.threeserving.order_management.service.DailySalesStatService;
 import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import static com.sparta.server.threeserving.global.common.response.SuccessCode.SUCCESS;
@@ -25,60 +26,77 @@ import static com.sparta.server.threeserving.global.common.response.SuccessCode.
 @RequiredArgsConstructor
 public class OrderManagementController {
     private final OrderManagementService orderManagementService;
+    private final DailySalesStatService dailySalesStatService;
 
-    //신규/전체 주문 목록 조회
     @GetMapping("/stores/{storeId}/orders")
-    public ApiResponse<Page<OrderManagementListResponse>> getOrderManagementList(
-            @PathVariable UUID storeId,
-            @RequestParam(required = false) OrderStatusEnum status,
-            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable
-    ) {
+    public ApiResponse<Page<OrderManagementListResponse>> getOrderManagementList(@PathVariable UUID storeId, @RequestParam(required = false) OrderStatusEnum status, @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         Page<OrderManagementListResponse> response = orderManagementService.getOrderManagementList(storeId, status, pageable);
 
-         return ApiResponse.success(SUCCESS,response);
+        return ApiResponse.success(SUCCESS, response);
     }
 
-
-    //주문 상세 조회
     @GetMapping("/orders/{orderManagementId}")
-    public ApiResponse<OrderManagementResponse> getOrderManagementDetail(
-            @PathVariable UUID orderManagementId
-    ) {
+    public ApiResponse<OrderManagementResponse> getOrderManagementDetail(@PathVariable UUID orderManagementId) {
         OrderManagementResponse response = orderManagementService.getOrderManagementDetail(orderManagementId);
 
-        return ApiResponse.success(SUCCESS,response);
+        return ApiResponse.success(SUCCESS, response);
     }
 
     @PatchMapping("/orders/{orderManagementId}/accept")
-    public ApiResponse<Void> acceptOrder( @PathVariable UUID orderManagementId,@RequestBody @Valid OrderAcceptRequest request) {
+    public ApiResponse<Void> acceptOrder(@PathVariable UUID orderManagementId, @RequestBody @Valid OrderAcceptRequest request) {
 
-        orderManagementService.acceptOrder(orderManagementId,request.getEstimatedCookTime());
+        orderManagementService.acceptOrder(orderManagementId, request.getEstimatedCookTime());
 
         return ApiResponse.success(SUCCESS, null);
     }
 
     @PatchMapping("/orders/{orderManagementId}/reject")
-    public ApiResponse<Void> rejectOrder( @PathVariable UUID orderManagementId,@RequestBody @Valid OrderRejectRequest request) {
+    public ApiResponse<Void> rejectOrder(@PathVariable UUID orderManagementId, @RequestBody @Valid OrderRejectRequest request) {
 
-        orderManagementService.rejectOrder(orderManagementId,request.getRejectReasonCodeId(),request.getMemo());
+        orderManagementService.rejectOrder(orderManagementId, request.getRejectReasonCodeId(), request.getMemo());
 
         return ApiResponse.success(SUCCESS, null);
     }
 
     @PatchMapping("/orders/{orderManagementId}/status")
-    public ApiResponse<Void> updateStatus(@PathVariable UUID orderManagementId,@RequestBody @Valid OrderStatusUpdateRequest request) {
+    public ApiResponse<Void> updateStatus(@PathVariable UUID orderManagementId, @RequestBody @Valid OrderStatusUpdateRequest request) {
 
-        orderManagementService.updateStatus(orderManagementId,request.getStatus());
+        orderManagementService.updateStatus(orderManagementId, request.getStatus());
 
-        return ApiResponse.success(SUCCESS,null);
+        return ApiResponse.success(SUCCESS, null);
     }
 
 
     @PatchMapping("/orders/{orderManagementId}/cook-time")
-    public ApiResponse<Void> updateCookingTime(@PathVariable UUID orderManagementId,@RequestBody @Valid UpdateCookingTimeRequest request) {
+    public ApiResponse<Void> updateCookingTime(@PathVariable UUID orderManagementId, @RequestBody @Valid UpdateCookingTimeRequest request) {
 
-        orderManagementService.updateCookingTime(orderManagementId,request.getEstimatedCookTime());
+        orderManagementService.updateCookingTime(orderManagementId, request.getEstimatedCookTime());
 
-        return ApiResponse.success(SUCCESS,null);
+        return ApiResponse.success(SUCCESS, null);
+    }
+
+    @GetMapping("/orders/{orderManagementId}/history")
+    public ApiResponse<OrderStatusHistoryResponse> getOrderStatusHistory(@PathVariable UUID orderManagementId) {
+        OrderStatusHistoryResponse response = orderManagementService.getOrderStatusHistory(orderManagementId);
+
+        return ApiResponse.success(SUCCESS, response);
+    }
+
+    @GetMapping("/stores/{storeId}/dashboard/summary")
+    public ApiResponse<TodaySalesSummaryResponse> getDashboardSummary(@PathVariable UUID storeId) {
+        TodaySalesSummaryResponse response = dailySalesStatService.getTodaySummary(storeId);
+        return ApiResponse.success(SUCCESS, response);
+    }
+
+    @GetMapping("/stores/{storeId}/dashboard/trend")
+    public ApiResponse<DashboardTrendResponse> getDashboardTrend(@PathVariable UUID storeId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+        DashboardTrendResponse response = dailySalesStatService.getDashboardTrend(storeId, startDate, endDate);
+        return ApiResponse.success(SUCCESS, response);
+    }
+
+    @GetMapping("/stores/{storeId}/dashboard/reject-reasons")
+    public ApiResponse<RejectReasonStatResponse> getRejectReasonStatistics(@PathVariable UUID storeId) {
+        RejectReasonStatResponse response = dailySalesStatService.getRejectReasonStatistics(storeId);
+        return ApiResponse.success(SUCCESS, response);
     }
 }

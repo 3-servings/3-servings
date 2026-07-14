@@ -4,7 +4,7 @@ import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.order.dto.OrderCancelResponseDto;
+import com.sparta.server.threeserving.order.dto.response.OrderCancelResponseDto;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.OrderModifyRequestDto;
 import com.sparta.server.threeserving.order.dto.response.OrderCreateResponseDto;
@@ -63,14 +63,14 @@ public class OrderController {
         requireCartAccessibleUserId(userDetails);
         User user = userDetails.getUser();
         return orderService.getOrderList(
-                user, storeId, userId, orderStatusEnum, size, page - 1, sortBy, isAsc);
+                user, storeId, userId, orderStatusEnum, size, page , sortBy, isAsc);
     }
 
     @PatchMapping("/{orderId}")
     public ApiResponse<OrderModifyResponseDto> modifyOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId,
-            @RequestBody OrderModifyRequestDto orderModifyRequestDto
+            @RequestBody @Valid OrderModifyRequestDto orderModifyRequestDto
     ){
         Long userId = requireCartAccessibleUserId(userDetails);
         return orderService.modifyOrderInfo(userId, orderId, orderModifyRequestDto);

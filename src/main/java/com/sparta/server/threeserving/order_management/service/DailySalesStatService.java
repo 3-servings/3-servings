@@ -1,11 +1,10 @@
 package com.sparta.server.threeserving.order_management.service;
 
-import com.sparta.server.threeserving.order_management.dto.response.DailySalesStatResponse;
+import com.sparta.server.threeserving.order_management.dto.response.*;
 import com.sparta.server.threeserving.order_management.entity.DailySalesStat;
 import com.sparta.server.threeserving.order_management.repository.DailySalesStatRepository;
 import com.sparta.server.threeserving.order_management.repository.OrderManagementRepository;
 import com.sparta.server.threeserving.store.entity.Store;
-import com.sparta.server.threeserving.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +14,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 
 
 @Slf4j
@@ -24,7 +24,6 @@ public class DailySalesStatService {
 
     private final OrderManagementRepository orderManagementRepository;
     private final DailySalesStatRepository dailySalesStatRepository;
-    private  final StoreRepository storeRepository;
 
     @Transactional
     public void createDailySalesStat(LocalDate yesterday) {
@@ -55,5 +54,58 @@ public class DailySalesStatService {
         dailySalesStatRepository.saveAll(stats);
 
 
+    }
+
+    public DashboardTrendResponse getDashboardTrend(UUID storeId, LocalDate startDate, LocalDate endDate) {
+
+        List<DashboardTrendResponse.Item> items = dailySalesStatRepository
+                .findByStoreIdAndStatDateBetweenOrderByStatDate(
+                        storeId,
+                        startDate,
+                        endDate
+                )
+                .stream()
+                .map(stat -> DashboardTrendResponse.Item.builder()
+                        .statDate(stat.getStatDate())
+                        .totalOrderCount(stat.getTotalOrderCount())
+                        .completedCount(stat.getCompletedCount())
+                        .rejectedCount(stat.getRejectedCount())
+                        .canceledCount(stat.getCanceledCount())
+                        .totalSalesAmount(stat.getTotalSalesAmount())
+                        .avgCookTime(stat.getAvgCookTime())
+                        .acceptRate(stat.getCompletedRate())
+                        .build())
+                .toList();
+
+        return DashboardTrendResponse.builder()
+                .storeId(storeId)
+                .items(items)
+                .build();
+
+
+    }
+
+    public TodaySalesSummaryResponse getTodaySummary(UUID storeId) {
+
+        return orderManagementRepository.findTodaySummary(storeId);
+
+    }
+
+
+    public RejectReasonStatResponse getRejectReasonStatistics(UUID storeId) {
+
+        List<RejectReasonStatResponse.RejectReasonStatItem> items = orderManagementRepository.findRejectReasonStatistics(storeId)
+                .stream()
+                .map(row -> RejectReasonStatResponse.RejectReasonStatItem.builder()
+                        .rejectReasonCode(row.getRejectReasonCode())
+                        .description(row.getDescription())
+                        .count(row.getCount())
+                        .build())
+                .toList();
+
+        return RejectReasonStatResponse.builder()
+                .storeId(storeId)
+                .items(items)
+                .build();
     }
 }
