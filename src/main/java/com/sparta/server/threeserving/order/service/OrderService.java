@@ -224,6 +224,7 @@ public class OrderService {
             throw new CustomException(ErrorCode.EXPIRED_CANCEL_TIME);
         }
 
+        // order 상태 cancel, OM 상태 변경 및 history
         order.changeStatus(OrderStatusEnum.CANCELED);
 
         return ApiResponse.success(SuccessCode.SUCCESS, new OrderCancelResponseDto(order));
