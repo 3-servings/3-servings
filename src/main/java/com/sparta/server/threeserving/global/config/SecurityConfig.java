@@ -76,7 +76,7 @@ public class SecurityConfig {
                     // Order
                     .requestMatchers("/api/carts/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
 
-                    .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("MASTER", "MANAGER")
+                    .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
                     .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
                     .requestMatchers(HttpMethod.PATCH, "/api/orders/**").hasAnyRole("CUSTOMER", "MASTER", "MANAGER")
                     .requestMatchers(HttpMethod.DELETE, "/api/orders/{orderId}").hasAnyRole("MASTER", "MANAGER")
@@ -153,6 +153,7 @@ public class SecurityConfig {
 
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+        configuration.addExposedHeader("Authorization");
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

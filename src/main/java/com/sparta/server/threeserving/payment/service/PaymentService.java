@@ -72,7 +72,7 @@ public class PaymentService {
 
         return restClient.post()
                 .uri("https://api.tosspayments.com/v1/payments/confirm")
-                .header(HttpHeaders.AUTHORIZATION, "Basic"+encodedKey)
+                .header(HttpHeaders.AUTHORIZATION, "Basic "+encodedKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .retrieve()
