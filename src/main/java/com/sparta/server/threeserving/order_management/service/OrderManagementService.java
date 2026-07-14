@@ -15,6 +15,7 @@ import com.sparta.server.threeserving.order_management.entity.RejectReasonCode;
 import com.sparta.server.threeserving.order_management.repository.OrderManagementRepository;
 import com.sparta.server.threeserving.order_management.repository.OrderStatusHistoryRepository;
 import com.sparta.server.threeserving.order_management.repository.RejectReasonCodeRepository;
+import com.sparta.server.threeserving.store.repository.StoreRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +30,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderManagementService {
 
+// TODO: Role(MASTER/OWNER)에 따른 Store 접근 권한 체크 추가
+
     private final OrderManagementRepository orderManagementRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final RejectReasonCodeRepository rejectReasonCodeRepository;
     private final OrderRepository orderRepository;
+    private final StoreRepository storeRepository;
 
 
 // Payment 성공 시 호출
@@ -185,6 +189,8 @@ public class OrderManagementService {
                 )
         );
     }
+
+
 }
 
 
