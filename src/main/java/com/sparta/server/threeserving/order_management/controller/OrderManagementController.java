@@ -94,20 +94,39 @@ public class OrderManagementController {
     }
 
     @GetMapping("/stores/{storeId}/dashboard/summary")
-    public ApiResponse<TodaySalesSummaryResponse> getDashboardSummary(@PathVariable UUID storeId) {
-        TodaySalesSummaryResponse response = dailySalesStatService.getTodaySummary(storeId);
+    public ApiResponse<TodaySalesSummaryResponse> getDashboardSummary(
+            @PathVariable UUID storeId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        TodaySalesSummaryResponse response = dailySalesStatService.getTodaySummary(
+                storeId,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole());
         return ApiResponse.success(SUCCESS, response);
     }
 
     @GetMapping("/stores/{storeId}/dashboard/trend")
-    public ApiResponse<DashboardTrendResponse> getDashboardTrend(@PathVariable UUID storeId, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
-        DashboardTrendResponse response = dailySalesStatService.getDashboardTrend(storeId, startDate, endDate);
+    public ApiResponse<DashboardTrendResponse> getDashboardTrend(
+            @PathVariable UUID storeId,
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        DashboardTrendResponse response = dailySalesStatService.getDashboardTrend(
+                storeId,
+                startDate,
+                endDate,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole());
         return ApiResponse.success(SUCCESS, response);
     }
 
     @GetMapping("/stores/{storeId}/dashboard/reject-reasons")
-    public ApiResponse<RejectReasonStatResponse> getRejectReasonStatistics(@PathVariable UUID storeId) {
-        RejectReasonStatResponse response = dailySalesStatService.getRejectReasonStatistics(storeId);
+    public ApiResponse<RejectReasonStatResponse> getRejectReasonStatistics(
+            @PathVariable UUID storeId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        RejectReasonStatResponse response = dailySalesStatService.getRejectReasonStatistics(
+                storeId,
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole());
         return ApiResponse.success(SUCCESS, response);
     }
 }
