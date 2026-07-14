@@ -15,6 +15,7 @@ import com.sparta.server.threeserving.order.dto.request.CheckoutRequestDto;
 import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.entity.*;
 import com.sparta.server.threeserving.order.repository.*;
+import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import jakarta.transaction.Transactional;
@@ -36,6 +37,8 @@ public class CartService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderItemOptionRepository orderItemOptionRepository;
+
+    private final OrderManagementService orderManagementService;
 
     private final StoreRepository storeRepository;
 
@@ -60,10 +63,10 @@ public class CartService {
         return ApiResponse.success(successCode, responseDto);
     }
 
-    public ApiResponse<List<CartListResponseDto>> getCartList(Long userId) {
+    public List<CartListResponseDto> getCartList(Long userId) {
         List<Cart> cartList = cartRepository.findAllByUserIdAndDeletedAtIsNull(userId);
         if (cartList.isEmpty()) {
-            return ApiResponse.success(SuccessCode.SUCCESS, List.of());
+            return List.of();
         }
 
         List<UUID> storeIds = cartList.stream().map(Cart::getStoreId).distinct().toList();
@@ -83,16 +86,16 @@ public class CartService {
                 ))
                 .toList();
 
-        return ApiResponse.success(SuccessCode.SUCCESS, result);
+        return result;
     }
 
-    public ApiResponse<CartDetailResponseDto> getCartDetail(Long userId, UUID cartId) {
+    public CartDetailResponseDto getCartDetail(Long userId, UUID cartId) {
         Cart cart = validateCartOwner(userId, cartId);
 
         // 카트에 담긴 항목(메뉴) 전체
         List<CartItem> cartItems = cartItemRepository.findAllByCart_IdAndDeletedAtIsNull(cartId);
         if (cartItems.isEmpty()) {
-            return ApiResponse.success(SuccessCode.SUCCESS, new CartDetailResponseDto(cart, 0, List.of()));
+            return new CartDetailResponseDto(cart, 0, List.of());
         }
 
         List<CartLineItem> cartLineItem = getCartLineItems(cartItems);
@@ -115,8 +118,7 @@ public class CartService {
             );
         }
 
-        CartDetailResponseDto responseDto = new CartDetailResponseDto(cart, estimatedTotalPrice, totalItemList);
-        return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
+        return new CartDetailResponseDto(cart, estimatedTotalPrice, totalItemList);
     }
 
     @NonNull
@@ -153,7 +155,7 @@ public class CartService {
     }
 
     @Transactional
-    public ApiResponse<CartAddItemResponseDto> addMenuToCart(Long userId, UUID cartId, CartAddItemRequestDto cartAddItemRequestDto) {
+    public CartAddItemResponseDto addMenuToCart(Long userId, UUID cartId, CartAddItemRequestDto cartAddItemRequestDto) {
         Cart cart = validateCartOwner(userId, cartId);
 
         // Menu id로 Menu 존재/soldout/store 일치 확인
@@ -179,9 +181,8 @@ public class CartService {
                 .toList();
         cartItemOptionRepository.saveAll(cartItemOptions);
 
-        CartAddItemResponseDto responseDto = new CartAddItemResponseDto(
+        return new CartAddItemResponseDto(
                 cartItem.getId(), cart.getId(), menuId, cartItem.getQuantity());
-        return ApiResponse.success(SuccessCode.CREATED, responseDto);
     }
 
     // 메뉴에 연결된 옵션 그룹별로 선택 개수가 minSelect~maxSelect 범위인지 확인.
@@ -217,13 +218,12 @@ public class CartService {
     }
 
     @Transactional
-    public ApiResponse<CartUpdateItemAmountResponseDto> updateCartItemAmount(Long userId, UUID cartId, UUID cartItemId, CartUpdateItemAmountRequestDto cartUpdateItemAmountRequestDto) {
+    public CartUpdateItemAmountResponseDto updateCartItemAmount(Long userId, UUID cartId, UUID cartItemId, CartUpdateItemAmountRequestDto cartUpdateItemAmountRequestDto) {
         validateCartOwner(userId, cartId);
         CartItem cartItem = cartItemRepository.findByIdAndCart_IdAndDeletedAtIsNull(cartItemId, cartId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
         cartItem.setQuantity(cartUpdateItemAmountRequestDto.quantity());
-        CartUpdateItemAmountResponseDto responseDto = new CartUpdateItemAmountResponseDto(cartItem.getId(), cartItem.getQuantity());
-        return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
+        return new CartUpdateItemAmountResponseDto(cartItem.getId(), cartItem.getQuantity());
     }
 
     @Transactional
@@ -251,7 +251,7 @@ public class CartService {
     }
 
     @Transactional
-    public ApiResponse<CheckoutResponseDto> checkout(Long userId, UUID cartId, CheckoutRequestDto requestDto) {
+    public CheckoutResponseDto checkout(Long userId, UUID cartId, CheckoutRequestDto requestDto) {
         // validation
         // userId - 카트 주인 확인, delete 상태 확인
         // cart item 최소 하나 이상
@@ -271,6 +271,7 @@ public class CartService {
         // logic
         // order/orderItem/orderItemOption persist
         // cart softDelete
+        // OM 객체 생성
         Orders order = new Orders(
                 userId, cart.getStoreId(), cart, OrderStatusEnum.PENDING, totalPrice,
                 requestDto.deliveryAddress(), requestDto.requestMessage()
@@ -296,6 +297,8 @@ public class CartService {
         }
         orderItemOptionRepository.saveAll(orderItemOptions);
 
+        orderManagementService.create(savedOrder, OrderStatusEnum.PENDING);
+
         cart.softDelete(userId);
         for (CartItem cartItem : cartItemList) {
             cartItem.softDelete(userId);
@@ -305,7 +308,6 @@ public class CartService {
         );
         cartItemOptionRepository.deleteAll(cartItemOptionList);
 
-        return ApiResponse.success(SuccessCode.SUCCESS,
-                new CheckoutResponseDto(savedOrder, requestDto.deliveryAddress(), requestDto.requestMessage()));
+        return new CheckoutResponseDto(savedOrder, requestDto.deliveryAddress(), requestDto.requestMessage());
     }
 }
