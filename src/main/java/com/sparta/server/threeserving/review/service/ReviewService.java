@@ -129,7 +129,19 @@ public class ReviewService {
         log.info("리뷰 삭제 완료 : reviewId={}, userId={}", reviewId, loginUser.getId());
     }
 
-    private Review findActiveReview(UUID reviewId) {
+    // 검색: 쿼리스트링 storeId/minStar/keyword + 정렬/페이지
+    @Transactional(readOnly = true)
+    public Page<ReviewListResponse> searchReviews(UUID storeId, Integer minStar, String keyword, Pageable pageable) {
+        String kw = (keyword == null || keyword.isBlank()) ? null : keyword;
+        log.info("리뷰 검색 : storeId={}, minStar={}, keyword={}, page={}, size={}",
+                storeId, minStar, kw, pageable.getPageNumber(), pageable.getPageSize());
+        Page<Review> reviews = reviewRepository.search(storeId, minStar, kw, pageable);
+        List<UUID> reviewIds = reviews.getContent().stream().map(Review::getId).toList();
+        Map<UUID, String> thumbnails = imageService.getImageUrlMap(DomainType.REVIEW, reviewIds);
+        return reviews.map(r -> new ReviewListResponse(r, thumbnails.get(r.getId())));
+    }
+
+    private Review findActiveReview(UUID reviewId){
         return reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
     }
