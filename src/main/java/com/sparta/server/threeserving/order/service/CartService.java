@@ -131,8 +131,8 @@ public class CartService {
         Map<UUID, Menu> menuById = menuRepository.findAllById(menuIds).stream()
                 .collect(Collectors.toMap(Menu::getId, Function.identity()));
 
-        // 항목별 옵션을 한 번에 배치 조회 후 cartItemId 기준으로 묶기
-        List<CartItemOption> cartItemOptions = cartItemOptionRepository.findAllByCartItemIn(cartItemList);
+        // 항목별 옵션을 한 번에 배치 조회 후 cartItemId 기준으로 묶기 (soft delete된 옵션은 제외)
+        List<CartItemOption> cartItemOptions = cartItemOptionRepository.findAllByCartItemInAndDeletedAtIsNull(cartItemList);
         Map<UUID, List<CartItemOption>> optionsByCartItemId = cartItemOptions.stream()
                 .collect(Collectors.groupingBy(option -> option.getCartItem().getId()));
 
@@ -235,9 +235,9 @@ public class CartService {
         CartItem cartItem = cartItemRepository.findByIdAndCart_IdAndDeletedAtIsNull(cartItemId, cartId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
 
-        // p_cart_item_option 테이블엔 deleted_at 컬럼이 없어 soft delete 불가 -> 딸린 옵션은 하드 삭제
-        List<CartItemOption> options = cartItemOptionRepository.findAllByCartItemIn(List.of(cartItem));
-        cartItemOptionRepository.deleteAll(options);
+        // 딸린 옵션도 함께 soft delete
+        List<CartItemOption> options = cartItemOptionRepository.findAllByCartItem(cartItem);
+        options.forEach(option -> option.softDelete(userId));
 
         cartItem.softDelete(userId);
         return ApiResponse.success(SuccessCode.DELETED);
@@ -309,7 +309,7 @@ public class CartService {
         List<CartItemOption> cartItemOptionList = cartItemOptionRepository.findAllByCartItemIn(
                 lineItemList.stream().map(CartLineItem::cartItem).toList()
         );
-        cartItemOptionRepository.deleteAll(cartItemOptionList);
+        cartItemOptionList.forEach(option -> option.softDelete(userId));
 
         return new CheckoutResponseDto(savedOrder, requestDto.deliveryAddress(), requestDto.requestMessage());
     }

@@ -37,8 +37,19 @@ public class CartItemOption {
     @Column(name = "created_by", nullable = false, updatable = false)
     private Long createdBy;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
     public CartItemOption(CartItem cartItem, UUID optionItemId) {
         this.cartItem = cartItem;
         this.optionItemId = optionItemId;
+    }
+
+    public void softDelete(Long userId) {
+        this.deletedAt = Instant.now();
+        this.deletedBy = userId;
     }
 }
