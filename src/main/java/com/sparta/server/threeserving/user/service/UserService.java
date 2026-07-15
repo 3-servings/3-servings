@@ -3,6 +3,7 @@ package com.sparta.server.threeserving.user.service;
 import com.sparta.server.threeserving.auth.redis.RedisService;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.global.logging.MdcUtil;
 import com.sparta.server.threeserving.user.dto.SignupRequest;
 import com.sparta.server.threeserving.user.dto.UserResponse;
 import com.sparta.server.threeserving.user.dto.UserUpdateRequest;
@@ -54,6 +55,9 @@ public class UserService {
         } catch (DataIntegrityViolationException e) {
             throw new CustomException(ErrorCode.DUPLICATED_RESOURCE);
         }
+
+        // 가입 시점엔 인증 컨텍스트가 없음
+        MdcUtil.putUser(user.getId(), user.getUsername());
 
         log.info("회원가입 완료 : id={}, username={}, role={}",
                 user.getId(),

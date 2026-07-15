@@ -18,8 +18,10 @@ logging:
   level:
     root: info
   pattern:
-    # %X{traceId:-} : MDC의 traceId, 없으면 빈칸 Spring Boot 표준 user추가 되면 이것도 중간에 넣기 ->  [%X{userId}]
-    console: "%d{HH:mm:ss.SSS} [%X{traceId:-________}] %-5level %logger{15} - %msg%n"
+    # %X{키:-기본값} : MDC 값, 없으면 기본값. 비로그인 요청과 기동 로그는 anon 으로 찍힌다.
+    # MDC 주입 위치: traceId -> RequestLoggingFilter
+    #                userId/username -> JwtAuthorizationFilter(인증 요청), JwtAuthenticationFilter(로그인), UserService.signup(회원가입)
+    console: "%d{HH:mm:ss.SSS} [%X{traceId:-________}] [uid:%X{userId:-anon}] [user:%X{username:-anon}] %-5level %logger{0} - %msg%n"
 
 jwt:
   secret: ${JWT_SECRET}

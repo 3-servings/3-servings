@@ -1,5 +1,6 @@
 package com.sparta.server.threeserving.global.filter;
 
+import com.sparta.server.threeserving.global.logging.MdcUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,6 @@ import java.util.UUID;
 public class RequestLoggingFilter extends OncePerRequestFilter {
 
 
-    private static final String TRACE_ID = "traceId";
     private static final String TRACE_HEADER = "X-Request-Id";
 
     @Override
@@ -36,7 +36,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         if (!StringUtils.hasText(traceId)){
             traceId = UUID.randomUUID().toString().substring(0, 8);
         }
-        MDC.put(TRACE_ID,traceId);
+        MdcUtil.putTraceId(traceId);
         res.setHeader(TRACE_HEADER, traceId);
 
         try {

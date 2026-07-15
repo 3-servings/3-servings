@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.auth.cookie.CookieUtil;
 import com.sparta.server.threeserving.auth.redis.RedisService;
+import com.sparta.server.threeserving.global.logging.MdcUtil;
 import com.sparta.server.threeserving.user.dto.LoginRequestDto;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.servlet.FilterChain;
@@ -58,6 +59,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         Long userId = userDetails.getUser().getId();
         String username = userDetails.getUsername();
         UserRoleEnum role = userDetails.getUser().getRole();
+
+        MdcUtil.putUser(userId, username);
         String accessToken = jwtUtil.createAccessToken(username, role);
         String refreshToken = jwtUtil.createRefreshToken(userId, role);
 
