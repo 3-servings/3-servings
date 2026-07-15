@@ -1,7 +1,10 @@
 package com.sparta.server.threeserving.user.repository;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,9 +31,18 @@ public class UserRepositoryTest {
     // @DataJpaTest 슬라이스는 @Component(AuditorAwareImpl)를 제외하므로,
     // 앱의 JpaAuditingConfig(auditorAwareRef="auditorAwareImpl") 대신
     // 이름 참조가 없는 기본 감사 설정을 테스트용으로 제공한다. (createdAt만 필요)
+
+    // 이 내부 설정 클래스에 QueryDSL 설정을 함께 넣어줍니다.
     @TestConfiguration
     @EnableJpaAuditing
     static class TestAuditingConfig {
+        @PersistenceContext
+        private EntityManager entityManager;
+
+        @Bean
+        public JPAQueryFactory jpaQueryFactory() {
+            return new JPAQueryFactory(entityManager);
+        }
     }
 
 
