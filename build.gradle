@@ -18,11 +18,14 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    set('springAiVersion', "1.1.0")
+}
+
 dependencies {
 
     //h2 테스트용 (로컬 API 테스트 전용 - 커밋 금지)
     //runtimeOnly 'com.h2database:h2'
-
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
@@ -31,7 +34,8 @@ dependencies {
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
 
-
+    // Spring AI Google GenAI 스타터
+    implementation 'org.springframework.ai:spring-ai-starter-model-google-genai'
 
     // json
     implementation 'org.json:json:20230227'
@@ -50,6 +54,12 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 tasks.named('test') {

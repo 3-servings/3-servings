@@ -2,13 +2,14 @@ package com.sparta.server.threeserving.menu.service;
 
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
-import com.sparta.server.threeserving.image.entity.DomainType;
+import com.sparta.server.threeserving.image.enums.DomainType;
 import com.sparta.server.threeserving.image.service.ImageService;
 import com.sparta.server.threeserving.menu.dto.request.*;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
 import com.sparta.server.threeserving.menu.entity.*;
+import com.sparta.server.threeserving.menu.enums.MenuStatus;
 import com.sparta.server.threeserving.menu.repository.MenuCategoryRepository;
 import com.sparta.server.threeserving.menu.repository.MenuRepository;
 import com.sparta.server.threeserving.menu.repository.OptionGroupRepository;

@@ -1,6 +1,6 @@
 package com.sparta.server.threeserving.image.repository;
 
-import com.sparta.server.threeserving.image.entity.DomainType;
+import com.sparta.server.threeserving.image.enums.DomainType;
 import com.sparta.server.threeserving.image.entity.Image;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -25,7 +25,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/{orderId}/payments/confirm")
+    @PostMapping("/{orderId}/payments/toss/confirm")
     public ResponseEntity<ApiResponse<PaymentResponse>> confirmPayment(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID orderId,
@@ -58,6 +58,7 @@ public class PaymentController {
                 ApiResponse.success(SuccessCode.CREATED, response)
         );
     }
+
     @PatchMapping("/{orderId}/payments/refund")
     public ResponseEntity<ApiResponse<RefundSuccessResponse>> refund(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -69,6 +70,22 @@ public class PaymentController {
                 ApiResponse.success(SuccessCode.UPDATED, response)
         );
     }
+
+    @PatchMapping("/{orderId}/payments/toss/refund")
+    public ResponseEntity<ApiResponse<RefundSuccessResponse>> refundWithToss(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID orderId
+    ) {
+        RefundSuccessResponse response = paymentService.refundWithToss(
+                userDetails.getUser().getId(),
+                orderId
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(SuccessCode.UPDATED, response)
+        );
+    }
+
     @GetMapping("/{orderId}/payments")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPayment(
             @AuthenticationPrincipal UserDetailsImpl userDetails,

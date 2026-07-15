@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -27,4 +28,21 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     long countByStore_IdAndDeletedAtIsNull(UUID storeId);
 
+    // 검색: storeId(선택) + 최소 별점(선택) + 내용 키워드(선택). 정렬/페이지는 Pageable로 주입.
+    // 닉네임 N+1 방지를 위해 user 페치.
+    @EntityGraph(attributePaths = "user")
+    @Query("""
+    SELECT r
+    FROM Review r
+    WHERE r.deletedAt IS NULL
+      AND (:storeId IS NULL OR r.store.id = :storeId)
+      AND (:minStar IS NULL OR r.star >= :minStar)
+      AND (:keyword IS NULL OR r.content LIKE CONCAT('%', :keyword, '%'))
+""")
+    Page<Review> search(
+            @Param("storeId") UUID storeId,
+            @Param("minStar") Integer minStar,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
 }

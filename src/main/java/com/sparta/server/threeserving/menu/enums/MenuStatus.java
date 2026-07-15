@@ -1,11 +1,11 @@
-package com.sparta.server.threeserving.menu.entity;
+package com.sparta.server.threeserving.menu.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum OptionItemStatus {
+public enum MenuStatus {
 
     AVAILABLE("판매 중"),
     SOLD_OUT("품절"),

@@ -15,10 +15,13 @@ import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -28,7 +31,26 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
+    private static final Set<Integer> ALLOWED_SIZES = Set.of(10, 30, 50);
+    private static final Set<String> ALLOWED_SORTS = Set.of("createdAt", "star");
+
     // 이미지 프리사인 URL 발급은 공용 이미지 API(POST /api/v1/images/presigned-url, domainType=REVIEW) 사용
+
+    // 검색 GET /api/reviews?storeId=&minStar=&keyword=&page=&size=&sort=&direction=
+    @GetMapping("/reviews")
+    public ApiResponse<Page<ReviewListResponse>> searchReviews(
+            @RequestParam(required = false) UUID storeId,
+            @RequestParam(required = false) Integer minStar,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String direction
+    ){
+        Pageable pageable = resolvePageable(page, size, sort, direction);
+        return ApiResponse.success(SuccessCode.SUCCESS,
+                reviewService.searchReviews(storeId, minStar, keyword, pageable));
+    }
 
     //작성 POST /api/reviews
     @PostMapping("/reviews")
@@ -48,11 +70,16 @@ public class ReviewController {
         return ApiResponse.success(SuccessCode.SUCCESS, reviewService.getReview(reviewId));
     }
 
-    //가게 목록 /api/store/{storeId}/reviews
+    //가게 목록 /api/store/{storeId}/reviews  경로변수
     @GetMapping("/stores/{storeId}/reviews")
     public ApiResponse<Page<ReviewListResponse>> getStoreReviews(
-            @PathVariable UUID storeId, Pageable pageable
+            @PathVariable UUID storeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String direction
     ){
+        Pageable pageable = resolvePageable(page, size, sort, direction);
         return ApiResponse.success(SuccessCode.SUCCESS,
                 reviewService.getStoreReviews(storeId, pageable));
 
@@ -93,15 +120,11 @@ public class ReviewController {
         return userDetails.getUser();
     }
 
-
-
-
-
-
-
-
-
-
-
-
+    // 10/30/50 외 size는 10 고정, 정렬은 기본 생성일순
+    private Pageable resolvePageable(int page, int size, String sort, String direction){
+        int resolvedSize = ALLOWED_SIZES.contains(size) ? size : 10;
+        String sortProp = ALLOWED_SORTS.contains(sort) ? sort : "createdAt";
+        Sort.Direction dir = "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        return PageRequest.of(Math.max(page, 0), resolvedSize, Sort.by(dir, sortProp));
+    }
 }
