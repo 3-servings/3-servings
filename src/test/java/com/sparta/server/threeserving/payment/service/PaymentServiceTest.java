@@ -65,10 +65,11 @@ class PaymentServiceTest {
         userId = 1L;
         orderId = UUID.randomUUID();
 
-        order = new Orders();
-        order.setId(orderId);
-        order.setUserId(userId);
-        order.setTotalPrice(10000);
+        order = Orders.builder()
+                .id(orderId)
+                .userId(userId)
+                .totalPrice(10000)
+                .build();
 
         payment = Payment.builder()
                 .order(order)
@@ -140,10 +141,14 @@ class PaymentServiceTest {
     void createPaymentAccessDenied(){
         PaymentRequest request = new PaymentRequest(PaymentMethod.CARD);
 
-        order.setUserId(2L);
+        Orders anotherOrder = Orders.builder()
+                .id(orderId)
+                .userId(2L)
+                .totalPrice(10000)
+                .build();
 
         when(orderRepository.findById(orderId))
-                .thenReturn(Optional.of(order));
+                .thenReturn(Optional.of(anotherOrder));
 
         CustomException exception = assertThrows(
                 CustomException.class,

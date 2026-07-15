@@ -3,12 +3,12 @@ package com.sparta.server.threeserving.order.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.UUID;
 
 @Getter
-@Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,11 +29,16 @@ public class CartItem extends BaseEntity {
 
     @Column(name="quantity", nullable = false)
     @Min(value = 1)
-    private Integer quantity;
+    @Builder.Default
+    private Integer quantity = 1;
 
     public CartItem(Cart cart, UUID menuId, Integer quantity) {
         this.cart = cart;
         this.menuId = menuId;
+        this.quantity = quantity;
+    }
+
+    public void setQuantity(@NotNull @Min(1) Integer quantity) {
         this.quantity = quantity;
     }
 }

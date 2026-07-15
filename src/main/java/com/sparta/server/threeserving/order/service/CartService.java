@@ -18,10 +18,10 @@ import com.sparta.server.threeserving.order.repository.*;
 import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.function.Function;
@@ -52,7 +52,7 @@ public class CartService {
     public ApiResponse<CartResponseDto> createOrFindCart(Long userId, UUID storeId) {
         storeRepository.findById(storeId).orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
-        // 해당 가게 활성 카드 확인
+        // 해당 가게 활성 카트 확인
         Optional<Cart> existingCart = cartRepository.findByUserIdAndStoreIdAndDeletedAtIsNull(userId, storeId);
         boolean isExist = existingCart.isPresent();
         Cart cart = existingCart.orElseGet(() -> new Cart(userId, storeId));
@@ -78,15 +78,14 @@ public class CartService {
                 .stream().collect(
                         Collectors.toMap(CartItemRepository.CartItemCountProjection::getCartId,
                                 CartItemRepository.CartItemCountProjection::getCount));
-        List<CartListResponseDto> result = cartList.stream()
+
+        return cartList.stream()
                 .map(cart -> new CartListResponseDto(
                         cart,
                         storeById.get(cart.getStoreId()).getName(),
                         itemCountByCartId.getOrDefault(cart.getId(), 0L)
                 ))
                 .toList();
-
-        return result;
     }
 
     public CartDetailResponseDto getCartDetail(Long userId, UUID cartId) {
@@ -116,6 +115,9 @@ public class CartService {
                             ).toList()
                     )
             );
+
+            int optionPriceSum = lineItem.options().stream().mapToInt(OptionItem::getPrice).sum();
+            estimatedTotalPrice += (lineItem.menu().getPrice() + optionPriceSum) * lineItem.cartItem().getQuantity();
         }
 
         return new CartDetailResponseDto(cart, estimatedTotalPrice, totalItemList);

@@ -20,7 +20,7 @@ import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import com.sparta.server.threeserving.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -226,6 +227,7 @@ public class OrderService {
 
         // order 상태 cancel, OM 상태 변경 및 history
         order.changeStatus(OrderStatusEnum.CANCELED);
+        orderManagementService.cancelOrderAndHistory(order);
 
         return ApiResponse.success(SuccessCode.SUCCESS, new OrderCancelResponseDto(order));
     }
