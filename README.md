@@ -41,7 +41,7 @@ Spring Boot 기반 음식 주문 관리 플랫폼
 |:----:|------|
 | 나상우 | 회원(Auth), 가게 |
 | 남건우 | 회원(Auth), 리뷰 |
-| 김동현 | 메뉴 |
+| 👑[팀장] 김동현 | 메뉴 |
 | 김준서 | 주문 |
 | 주원영 | 주문 관리 |
 | 이은빈 | 결제, 인프라 |
@@ -77,6 +77,10 @@ Docker Compose를 기반으로 애플리케이션을 컨테이너화하고 AWS E
 ## 🗄 ERD
 
 🔗 [ERD Cloud](https://www.erdcloud.com/d/m7CQPnZPCsg9htrRu)
+
+## 📄 API Documentation
+
+🔗 [API 명세서](https://app.notion.com/p/API-Documentation-39eae307a7908060bc1feae79ac5b082?source=copy_link)
 
 ## 🚀 Quick Start
 
