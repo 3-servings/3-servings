@@ -5,7 +5,7 @@ import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.dto.request.OptionItemStatusUpdateRequest;
 import com.sparta.server.threeserving.menu.entity.OptionGroup;
 import com.sparta.server.threeserving.menu.entity.OptionItem;
-import com.sparta.server.threeserving.menu.entity.OptionItemStatus;
+import com.sparta.server.threeserving.menu.enums.OptionItemStatus;
 import com.sparta.server.threeserving.menu.repository.OptionItemRepository;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;

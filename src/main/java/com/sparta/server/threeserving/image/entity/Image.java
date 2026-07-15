@@ -1,5 +1,6 @@
 package com.sparta.server.threeserving.image.entity;
 
+import com.sparta.server.threeserving.image.enums.DomainType;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;

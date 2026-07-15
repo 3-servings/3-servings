@@ -2,7 +2,7 @@ package com.sparta.server.threeserving.menu.dto.response;
 
 import com.sparta.server.threeserving.menu.entity.OptionGroup;
 import com.sparta.server.threeserving.menu.entity.OptionItem;
-import com.sparta.server.threeserving.menu.entity.OptionItemStatus;
+import com.sparta.server.threeserving.menu.enums.OptionItemStatus;
 import lombok.Builder;
 import lombok.Getter;
 

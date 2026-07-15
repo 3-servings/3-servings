@@ -1,6 +1,6 @@
 package com.sparta.server.threeserving.menu.dto.request;
 
-import com.sparta.server.threeserving.menu.entity.MenuStatus;
+import com.sparta.server.threeserving.menu.enums.MenuStatus;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;

@@ -2,7 +2,7 @@ package com.sparta.server.threeserving.menu.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sparta.server.threeserving.menu.entity.Menu;
-import com.sparta.server.threeserving.menu.entity.MenuStatus;
+import com.sparta.server.threeserving.menu.enums.MenuStatus;
 import lombok.Builder;
 import lombok.Getter;
 

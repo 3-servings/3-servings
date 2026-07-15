@@ -5,6 +5,7 @@ import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.entity.*;
+import com.sparta.server.threeserving.menu.enums.MenuStatus;
 import com.sparta.server.threeserving.menu.repository.MenuOptionGroupRepository;
 import com.sparta.server.threeserving.menu.repository.MenuRepository;
 import com.sparta.server.threeserving.menu.repository.OptionItemRepository;

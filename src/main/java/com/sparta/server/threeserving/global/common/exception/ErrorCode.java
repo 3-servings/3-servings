@@ -61,6 +61,10 @@ public enum ErrorCode {
     MENU_MENU_CATEGORY_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 메뉴는 요청한 카테고리에 속해 있지 않습니다."),
     OPTION_GROUP_STORE_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 옵션 그룹은 요청한 가게에 속해 있지 않습니다."),
 
+    AI_RESPONSE_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_001", "AI 응답을 처리하는 중 오류가 발생했습니다."),
+    AI_GENERATION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "AI_002", "AI 메뉴 설명 생성에 실패했습니다. 잠시 후 다시 시도해주세요."),
+    AI_EMPTY_RESPONSE(HttpStatus.INTERNAL_SERVER_ERROR, "AI_003", "AI 모델이 빈 응답을 반환했습니다."),
+
     // Order/Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "장바구니를 찾을 수 없습니다."),
     NOT_CART_OWNER(HttpStatus.FORBIDDEN, "O002", "본인의 장바구니가 아닙니다."),
