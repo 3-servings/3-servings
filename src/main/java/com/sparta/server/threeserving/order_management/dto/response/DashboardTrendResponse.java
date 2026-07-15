@@ -25,8 +25,8 @@ public class DashboardTrendResponse {
         private Long rejectedCount;
         private Long canceledCount;
         private Long totalSalesAmount;
-        private BigDecimal avgCookTime;
-        private BigDecimal acceptRate;
+        private Double avgCookTime;
+        private Double acceptRate;
 
     }
 }

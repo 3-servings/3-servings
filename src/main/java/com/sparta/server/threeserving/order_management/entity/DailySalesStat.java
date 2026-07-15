@@ -39,10 +39,10 @@ public class DailySalesStat extends BaseEntity {
     private Long totalSalesAmount;
 
     @Column(name = "avg_cook_time")
-    private BigDecimal avgCookTime;
+    private Double avgCookTime;
 
     @Column(name = "completed_rate")
-    private BigDecimal completedRate;
+    private Double completedRate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)

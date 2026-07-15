@@ -16,8 +16,8 @@ public class DailySalesStatResponse {
     private Long rejectedCount;
     private Long canceledCount;
     private Long totalSalesAmount;
-    private BigDecimal avgCookTime;
-    private BigDecimal completedRate;
+    private Double avgCookTime;
+    private Double completedRate;
 
 
 }

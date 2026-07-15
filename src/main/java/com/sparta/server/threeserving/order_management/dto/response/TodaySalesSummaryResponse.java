@@ -11,18 +11,17 @@ import java.util.UUID;
 public class TodaySalesSummaryResponse {
 
     private UUID storeId;
-
     private Long totalOrderCount;
+    private Long pendingCount;
+    private Long acceptedCount;
+    private Long cookingCount;
+    private Long readyCount;
     private Long completedCount;
     private Long rejectedCount;
     private Long canceledCount;
-
     private Long totalSalesAmount;
-
-    private BigDecimal avgCookTime;
-
-    private BigDecimal completedRate;
+    private Double avgCookTime;
+    private Double completedRate;
 
 
 }
-
