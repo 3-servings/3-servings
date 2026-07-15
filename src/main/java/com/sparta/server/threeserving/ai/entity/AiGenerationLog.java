@@ -1,5 +1,6 @@
-package com.sparta.server.threeserving.ai.domain.entity;
+package com.sparta.server.threeserving.ai.entity;
 
+import com.sparta.server.threeserving.ai.enums.AiGenerationStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,6 +27,9 @@ public class AiGenerationLog {
     @Column(name = "store_id", nullable = false, updatable = false, columnDefinition = "uuid")
     private UUID storeId;
 
+    @Column(name = "menu_id", nullable = true, updatable = false, columnDefinition = "uuid")
+    private UUID menuId;
+
     // 로그의 독립성을 위해 연관관계 적용 x
     @Column(name = "image_id", nullable = true, updatable = false, columnDefinition = "uuid")
     private UUID imageId;
@@ -40,17 +44,22 @@ public class AiGenerationLog {
     @Column(name = "ai_response", nullable = true, updatable = false, columnDefinition = "TEXT")
     private String aiResponse;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, updatable = false, length = 20)
+    private AiGenerationStatus status;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Builder
-    public AiGenerationLog(UUID storeId, UUID imageId, String rawPrompt, String aiRequest, String aiResponse) {
+    public AiGenerationLog(UUID storeId, UUID menuId, UUID imageId, String rawPrompt, String aiRequest, String aiResponse, AiGenerationStatus status) {
         this.storeId = storeId;
+        this.menuId = menuId;
         this.imageId = imageId;
         this.rawPrompt = rawPrompt;
         this.aiRequest = aiRequest;
         this.aiResponse = aiResponse;
+        this.status = status;
     }
 }
-

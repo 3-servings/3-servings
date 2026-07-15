@@ -2,7 +2,7 @@ package com.sparta.server.threeserving.auth.jwt;
 
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
-import com.sparta.server.threeserving.global.logging.MdcUtil;
+import com.sparta.server.threeserving.global.exception.CustomException;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -35,17 +35,19 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         String tokenValue = jwtUtil.getJwtFromHeader(req);
 
-        if (StringUtils.hasText(tokenValue) && jwtUtil.validateToken(tokenValue)) {
-            Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
-            try {
-                setAuthentication(info.getSubject());
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                // 인증 실패 시에도 체인은 계속 진행 (permitAll 엔드포인트는 통과, 인증 필요 엔드포인트는 Security가 차단)
-            }
+        if (StringUtils.hasText(tokenValue)) {
+           try{
+               Claims info = jwtUtil.resolveClaims(tokenValue);
+               setAuthentication(info.getSubject());
+           }catch (CustomException e){
+               log.error(e.getMessage());
+               req.setAttribute("exception", e.getErrorCode());
+           }catch (Exception e){
+               log.error(e.getMessage());
+           }
         }
 
-        filterChain.doFilter(req, res);
+        filterChain.doFilter(req, res); // 인증 실패 시에도 체인은 계속 진행 (permitAll 엔드포인트는 통과, 인증 필요 엔드포인트는 Security가 차단)
     }
 
     // 인증 처리

@@ -1,5 +1,8 @@
 package com.sparta.server.threeserving.auth.jwt;
 
+import com.sparta.server.threeserving.global.common.exception.ErrorCode;
+import com.sparta.server.threeserving.global.exception.CustomException;
+import io.jsonwebtoken.security.SecurityException;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -101,5 +104,17 @@ public class JwtUtil {
     // 토큰에서 사용자 정보 가져오기
     public Claims getUserInfoFromToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+    }
+
+
+    // 필터 전용
+    public Claims resolveClaims(String token){
+        try{
+            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        }catch (ExpiredJwtException e){
+            throw new CustomException(ErrorCode.EXPIRED_TOKEN);
+        }catch (SecurityException | MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e){
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
     }
 }

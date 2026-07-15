@@ -1,7 +1,7 @@
 package com.sparta.server.threeserving.menu.dto.request;
 
 import com.sparta.server.threeserving.image.dto.request.ImageRequest;
-import com.sparta.server.threeserving.menu.entity.MenuStatus;
+import com.sparta.server.threeserving.menu.enums.MenuStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

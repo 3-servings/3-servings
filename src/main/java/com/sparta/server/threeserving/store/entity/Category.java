@@ -3,10 +3,12 @@ package com.sparta.server.threeserving.store.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.UUID;
 
+@BatchSize(size = 20)
 @Getter
 @Table(name = "p_category")
 @Entity

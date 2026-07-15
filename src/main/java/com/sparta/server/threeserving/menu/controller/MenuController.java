@@ -7,7 +7,7 @@ import com.sparta.server.threeserving.menu.dto.request.*;
 import com.sparta.server.threeserving.menu.dto.response.MenuBoardResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuDetailResponse;
 import com.sparta.server.threeserving.menu.dto.response.MenuResponse;
-import com.sparta.server.threeserving.menu.entity.MenuStatus;
+import com.sparta.server.threeserving.menu.enums.MenuStatus;
 import com.sparta.server.threeserving.menu.service.MenuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class MenuController {
 

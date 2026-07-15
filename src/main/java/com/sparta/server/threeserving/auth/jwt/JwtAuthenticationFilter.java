@@ -5,12 +5,16 @@ import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.auth.cookie.CookieUtil;
 import com.sparta.server.threeserving.auth.redis.RedisService;
 import com.sparta.server.threeserving.global.logging.MdcUtil;
+import com.sparta.server.threeserving.global.common.exception.ErrorCode;
+import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.user.dto.LoginRequestDto;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -48,7 +52,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             );
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw new RuntimeException(e.getMessage());
+            throw new AuthenticationServiceException(e.getMessage());
         }
     }
 
@@ -73,7 +77,20 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
-        response.setStatus(401);
+        ErrorCode errorCode = (failed instanceof AuthenticationServiceException)
+                ? ErrorCode.INVALID_INPUT_VALUE
+                : ErrorCode.INVALID_ID_PASSWORD;
+
+
+        response.setStatus(errorCode.getStatus().value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        try{
+            response.getWriter().write(new ObjectMapper().writeValueAsString(ApiResponse.fail(errorCode)));
+        }catch (IOException e){
+            log.error(e.getMessage());
+        }
+
     }
 
 }
