@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,4 +27,8 @@ public interface OptionGroupRepository extends JpaRepository<OptionGroup, UUID> 
     @EntityGraph(attributePaths = {"store", "store.owner"})
     @Query("SELECT o FROM OptionGroup o WHERE o.id = :id")
     Optional<OptionGroup> findByIdWithStoreAndOwner(@Param("id") UUID id);
+
+    @EntityGraph(attributePaths = {"store"})
+    @Query("SELECT o FROM OptionGroup o WHERE o.id IN :ids")
+    List<OptionGroup> findAllByIdInWithStore(@Param("ids") Iterable<UUID> ids);
 }
