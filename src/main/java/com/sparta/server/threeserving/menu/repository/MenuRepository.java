@@ -20,6 +20,8 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     // 수정 시 중복 확인용
     boolean existsByStoreIdAndNameAndIdNot(UUID storeId, String name, UUID menuId);
 
+    boolean existsByMenuCategoryIdAndDeletedAtIsNull(UUID menuCategoryId);
+
     // 특정 카테고리 내에서의 displayOrder 최대값 조회
     @Query("SELECT COALESCE(MAX(m.displayOrder), 0) FROM Menu m WHERE m.menuCategory.id = :menuCategoryId AND m.deletedAt IS NULL")
     int findMaxDisplayOrderByMenuCategoryId(@Param("menuCategoryId") UUID menuCategoryId);

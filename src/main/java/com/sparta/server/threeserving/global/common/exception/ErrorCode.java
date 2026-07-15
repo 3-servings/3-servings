@@ -48,6 +48,7 @@ public enum ErrorCode {
     // Menu
     MENU_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴 카테고리를 찾을 수 없습니다."),
     MENU_CATEGORY_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 카테고리 이름입니다."),
+    MENU_CATEGORY_HAS_MENUS(HttpStatus.CONFLICT, "M008", "해당 카테고리에 등록된 메뉴가 존재합니다. 메뉴를 비우거나 이동한 후 다시 시도해주세요."),
 
     OPTION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "M004", "옵션 그룹을 찾을 수 없습니다."),
     OPTION_GROUP_NAME_DUPLICATED(HttpStatus.CONFLICT, "M005", "이미 존재하는 옵션 그룹 이름입니다."),

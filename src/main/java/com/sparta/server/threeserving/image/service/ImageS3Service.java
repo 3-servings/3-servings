@@ -70,8 +70,8 @@ public class ImageS3Service {
             // 임시 URL 발급
             PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
             String presignedUrl = presignedRequest.url().toString();
-
             log.info("S3 Presigned URL generated - Domain: {}, Path: {}", request.getDomainType(), imagePath);
+
             return ImagePresignedUrlResponse.of(presignedUrl, storedName, imagePath, finalImageUrl);
 
         } catch (Exception e) {
