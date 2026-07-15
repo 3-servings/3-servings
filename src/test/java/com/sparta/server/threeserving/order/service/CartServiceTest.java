@@ -5,6 +5,7 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.menu.entity.Menu;
 import com.sparta.server.threeserving.menu.repository.MenuOptionGroupRepository;
 import com.sparta.server.threeserving.menu.repository.MenuRepository;
 import com.sparta.server.threeserving.menu.repository.OptionGroupRepository;
@@ -16,6 +17,8 @@ import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.entity.*;
 import com.sparta.server.threeserving.order.repository.*;
 import com.sparta.server.threeserving.order_management.service.OrderManagementService;
+import com.sparta.server.threeserving.store.entity.Store;
+import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import org.junit.jupiter.api.*;
@@ -55,20 +58,11 @@ public class CartServiceTest {
     private OrderRepository orderRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
-    @Autowired
-    private OrderItemOptionRepository orderItemOptionRepository;
-
-    @Autowired
-    private OrderManagementService orderManagementService;
 
     @Autowired
     private MenuRepository menuRepository;
     @Autowired
-    private OptionItemRepository optionItemRepository;
-    @Autowired
-    private OptionGroupRepository optionGroupRepository;
-    @Autowired
-    private MenuOptionGroupRepository menuOptionGroupRepository;
+    private StoreRepository storeRepository;
 
     // sql/cart-service-test-data.sql 에서 심어둔 고정 id들
     private static final Long OWNER_ID = 900001L;
@@ -81,6 +75,8 @@ public class CartServiceTest {
     private static final UUID OPTION_ITEM_NORMAL_ID = UUID.fromString("a1000000-0000-0000-0000-000000000006"); // 보통, 0원
     private static final UUID OPTION_ITEM_EXTRA_ID = UUID.fromString("a1000000-0000-0000-0000-000000000007");  // 곱빼기, 1000원
     private static final UUID NO_OPTION_MENU_ID = UUID.fromString("a1000000-0000-0000-0000-000000000009");     // 군만두, 3000원, 옵션그룹 없음
+    private static final UUID SOLD_OUT_MENU_ID = UUID.fromString("a1000000-0000-0000-0000-00000000000a");      // 품절메뉴, STORE_ID 소속, SOLD_OUT
+    private static final UUID OTHER_STORE_MENU_ID = UUID.fromString("a2000000-0000-0000-0000-000000000003");   // 다른가게메뉴, 다른 가게 소속
 
     // JPA Auditing(@CreatedBy)이 SecurityContext에서 현재 유저를 읽는데, 서비스 메서드를 직접 호출하는
     // 이 테스트는 JwtAuthorizationFilter를 안 거쳐서 SecurityContext가 비어있음 -> created_by NOT NULL 위반 발생.
@@ -101,7 +97,7 @@ public class CartServiceTest {
     }
 
     @Test
-    @DisplayName("카트 생성 - 처음엔 새로 만들고(CREATED), 두 번째는 기존 카트를 반환한다(SUCCESS)")
+    @DisplayName("카트 생성 - 처음엔 새거 (CREATED), 두 번째는 기존 카트(SUCCESS)")
     void createCart(){
         // when - 처음 호출: 활성 카트가 없으므로 새로 생성됨
         ApiResponse<CartResponseDto> response = cartService.createOrFindCart(CUSTOMER_ID, STORE_ID);
@@ -138,7 +134,7 @@ public class CartServiceTest {
         }
 
         @Test
-        @DisplayName("옵션 없는 메뉴를 담으면 메뉴 가격 * 수량으로 총액이 계산된다")
+        @DisplayName("옵션 없는 메뉴 - 총액: 메뉴 가격 * 수량")
         void addMenuWithoutOptions() {
             // given
             CartAddItemRequestDto requestDto = new CartAddItemRequestDto(NO_OPTION_MENU_ID, 2, List.of());
@@ -155,7 +151,7 @@ public class CartServiceTest {
         }
 
         @Test
-        @DisplayName("옵션을 담으면 옵션 가격까지 합산된 총액과 응답 DTO가 검증된다")
+        @DisplayName("옵션 가격 합산 총액")
         void addMenuWithOptions() {
             // given
             CartAddItemRequestDto requestDto = new CartAddItemRequestDto(MENU_ID, 1, List.of(OPTION_ITEM_EXTRA_ID));
@@ -188,6 +184,30 @@ public class CartServiceTest {
             CustomException exception = assertThrows(CustomException.class,
                     () -> cartService.addMenuToCart(CUSTOMER_ID, cartId, requestDto));
             assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CART_OPTION_GROUP_SELECTION_INVALID);
+        }
+
+        @Test
+        @DisplayName("품절된 메뉴")
+        void addSoldOutMenuFails() {
+            // given
+            CartAddItemRequestDto requestDto = new CartAddItemRequestDto(SOLD_OUT_MENU_ID, 1, List.of());
+
+            // when & then
+            CustomException exception = assertThrows(CustomException.class,
+                    () -> cartService.addMenuToCart(CUSTOMER_ID, cartId, requestDto));
+            assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ADD_UNAVAILABLE_MENU_TO_CART);
+        }
+
+        @Test
+        @DisplayName("다른 가게의 메뉴")
+        void addMenuFromOtherStoreFails() {
+            // given - cartId는 STORE_ID 소속 카트인데, 다른 가게 메뉴를 담으려 함
+            CartAddItemRequestDto requestDto = new CartAddItemRequestDto(OTHER_STORE_MENU_ID, 1, List.of());
+
+            // when & then
+            CustomException exception = assertThrows(CustomException.class,
+                    () -> cartService.addMenuToCart(CUSTOMER_ID, cartId, requestDto));
+            assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ADD_MENU_OF_OTHER_STORE_TO_CART);
         }
 
         @Test
@@ -289,6 +309,52 @@ public class CartServiceTest {
             CustomException exception = assertThrows(CustomException.class,
                     () -> cartService.checkout(CUSTOMER_ID, cartId, requestDto));
             assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ORDER_ITEMS_IS_EMPTY);
+        }
+
+        @Test
+        @DisplayName("담은 뒤 가게/메뉴 정보가 바뀌어도 카트 조회와 체크아웃 스냅샷은 최신 값 반영")
+        void checkoutSnapshotsLatestStoreAndMenuInfo() {
+            // given - 원래 이름/가격(자장면, 5000원)으로 담아둠
+            // 자장면은 '곱빼기 여부' 옵션 그룹이 필수(min=1)라 옵션 없이는 못 담음 -> 0원짜리 '보통' 옵션으로 채움
+            cartService.addMenuToCart(CUSTOMER_ID, cartId,
+                    new CartAddItemRequestDto(MENU_ID, 1, List.of(OPTION_ITEM_NORMAL_ID)));
+            cartService.addMenuToCart(CUSTOMER_ID, cartId,
+                    new CartAddItemRequestDto(MENU_ID, 1, List.of(OPTION_ITEM_NORMAL_ID)));
+
+            // Cart는 Menu/Store를 FK로 안 물고 id로만 참조하므로, 담긴 뒤 원본이 바뀌어도
+            // 카트 자체엔 아무 스냅샷도 없음 -> 조회할 때마다 항상 "현재" 값을 봐야 함
+            Store store = storeRepository.findById(STORE_ID).orElseThrow();
+            store.update("신장개업 가게", store.getPhone(), store.getAddress(), store.getDetailAddress(),
+                    store.getMinOrderPrice(), store.getDeliveryFee(), store.getDeliveryRadiusM());
+            storeRepository.save(store);
+
+            Menu menu = menuRepository.findById(MENU_ID).orElseThrow();
+            menu.update(menu.getMenuCategory(), "자장면(리뉴얼)", 6000, menu.getDescription(),
+                    menu.isDescriptionAiGenerated(), menu.getStatus());
+            menuRepository.save(menu);
+
+            // when & then 1 - 체크아웃 전 카트 목록/상세 조회는 바뀐 가게명/메뉴명/가격을 그대로 반영해야 함
+            List<CartListResponseDto> cartList = cartService.getCartList(CUSTOMER_ID);
+            assertThat(cartList).anySatisfy(c -> assertThat(c.storeName()).isEqualTo("신장개업 가게"));
+
+            CartDetailResponseDto detailBeforeCheckout = cartService.getCartDetail(CUSTOMER_ID, cartId);
+            assertThat(detailBeforeCheckout.estimatedTotalPrice()).isEqualTo(6000 * 2);
+            assertThat(detailBeforeCheckout.items().getFirst().menuName()).isEqualTo("자장면(리뉴얼)");
+
+            // when - 체크아웃 시점에도 담을 때(5000원)가 아니라 지금(6000원) 기준으로 스냅샷돼야 함
+            CheckoutResponseDto response = cartService.checkout(
+                    CUSTOMER_ID, cartId, new CheckoutRequestDto("서울시 종로구 세종대로 172", null));
+
+            // then 2 - Order/OrderItem 스냅샷도 최신 값 기준
+            Orders savedOrder = orderRepository.findById(response.id()).orElseThrow();
+            assertThat(savedOrder.getTotalPrice()).isEqualTo(6000 * 2);
+
+            List<OrderItem> orderItems = orderItemRepository.findAllByOrderAndDeletedAtIsNull(savedOrder);
+            assertThat(orderItems).hasSize(2);
+            assertThat(orderItems).allSatisfy(item -> {
+                assertThat(item.getMenuName()).isEqualTo("자장면(리뉴얼)"); // 담을 때의 "자장면"이 아님
+                assertThat(item.getPrice()).isEqualTo(6000); // 담을 때의 5000원이 아님
+            });
         }
     }
 }

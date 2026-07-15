@@ -3,11 +3,16 @@
 DELETE FROM p_menu_option_group WHERE id = 'a1000000-0000-0000-0000-000000000008';
 DELETE FROM p_option_item WHERE id IN ('a1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000007');
 DELETE FROM p_option_group WHERE id = 'a1000000-0000-0000-0000-000000000005';
-DELETE FROM p_menu WHERE id IN ('a1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009');
+DELETE FROM p_menu WHERE id IN ('a1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009', 'a1000000-0000-0000-0000-00000000000a');
 DELETE FROM p_menu_category WHERE id = 'a1000000-0000-0000-0000-000000000003';
 DELETE FROM p_store WHERE id = 'a1000000-0000-0000-0000-000000000002';
 DELETE FROM p_region WHERE id = 'a1000000-0000-0000-0000-000000000001';
 DELETE FROM p_user WHERE id IN (900001, 900002);
+
+-- 다른 가게 검증용
+DELETE FROM p_menu WHERE id = 'a2000000-0000-0000-0000-000000000003';
+DELETE FROM p_menu_category WHERE id = 'a2000000-0000-0000-0000-000000000002';
+DELETE FROM p_store WHERE id = 'a2000000-0000-0000-0000-000000000001';
 
 -- User: 가게 사장(900001) / 손님(900002)
 INSERT INTO p_user (id, username, nickname, email, password, role, login_type, status, created_by, updated_by, created_at, updated_at)
@@ -54,6 +59,41 @@ INSERT INTO p_menu (
 VALUES (
     'a1000000-0000-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000002',
     '군만두', 3000, NULL, false, 'AVAILABLE', 1, 900001, 900001, now(), now()
+);
+
+-- Menu (품절 메뉴) - SOLD_OUT 검증용, 옵션그룹 없어도 됨
+INSERT INTO p_menu (
+    id, menu_category_id, store_id, name, price, description,
+    is_description_ai_generated, status, display_order, created_by, updated_by, created_at, updated_at
+)
+VALUES (
+    'a1000000-0000-0000-0000-00000000000a', 'a1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000002',
+    '품절메뉴', 4000, NULL, false, 'SOLD_OUT', 2, 900001, 900001, now(), now()
+);
+
+-- 다른 가게 (다른 가게 메뉴 검증용) - 가게만 다름
+INSERT INTO p_store (
+    id, region_id, owner_id, name, phone, address, detail_address,
+    latitude, longitude, min_order_price, delivery_fee, delivery_radius_m,
+    is_open, average_rating, review_count, created_by, updated_by, created_at, updated_at, order_count
+)
+VALUES (
+    'a2000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 900001,
+    '다른가게', '010-1111-1111', '서울시 다른구', NULL,
+    NULL, NULL, 10000, 3000, NULL,
+    true, 0.0, 0, 900001, 900001, now(), now(), 0
+);
+
+INSERT INTO p_menu_category (id, store_id, name, display_order, created_by, updated_by, created_at, updated_at)
+VALUES ('a2000000-0000-0000-0000-000000000002', 'a2000000-0000-0000-0000-000000000001', '다른가게메뉴판', 0, 900001, 900001, now(), now());
+
+INSERT INTO p_menu (
+    id, menu_category_id, store_id, name, price, description,
+    is_description_ai_generated, status, display_order, created_by, updated_by, created_at, updated_at
+)
+VALUES (
+    'a2000000-0000-0000-0000-000000000003', 'a2000000-0000-0000-0000-000000000002', 'a2000000-0000-0000-0000-000000000001',
+    '다른가게메뉴', 7000, NULL, false, 'AVAILABLE', 0, 900001, 900001, now(), now()
 );
 
 -- OptionGroup (곱빼기 여부 - 필수 1개 선택: min_select=1, max_select=1)

@@ -3,6 +3,7 @@ package com.sparta.server.threeserving.order.controller;
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
+import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.dto.response.OrderCancelResponseDto;
 import com.sparta.server.threeserving.order.dto.request.OrderCreateRequestDto;
@@ -36,7 +37,7 @@ public class OrderController {
     ){
         if(userDetails == null)
             throw new CustomException(ErrorCode.INVALID_TOKEN);
-        return orderService.createOrder(orderCreateRequestDto);
+        return ApiResponse.success(SuccessCode.CREATED, orderService.createOrder(orderCreateRequestDto));
     }
 
     @GetMapping("/{orderId}")
@@ -46,7 +47,7 @@ public class OrderController {
     ) {
         Long userId = requireCartAccessibleUserId(userDetails);
         UserRoleEnum userRoleEnum = userDetails.getUser().getRole();
-        return orderService.getOrderDetail(userId, userRoleEnum, orderId);
+        return ApiResponse.success(SuccessCode.SUCCESS, orderService.getOrderDetail(userId, userRoleEnum, orderId));
     }
 
     @GetMapping("")
@@ -62,8 +63,8 @@ public class OrderController {
     ){
         requireCartAccessibleUserId(userDetails);
         User user = userDetails.getUser();
-        return orderService.getOrderList(
-                user, storeId, userId, orderStatusEnum, size, page , sortBy, isAsc);
+        return ApiResponse.success(SuccessCode.SUCCESS, orderService.getOrderList(
+                user, storeId, userId, orderStatusEnum, size, page , sortBy, isAsc));
     }
 
     @PatchMapping("/{orderId}")
@@ -73,7 +74,8 @@ public class OrderController {
             @RequestBody @Valid OrderModifyRequestDto orderModifyRequestDto
     ){
         Long userId = requireCartAccessibleUserId(userDetails);
-        return orderService.modifyOrderInfo(userId, orderId, orderModifyRequestDto);
+        return ApiResponse.success(SuccessCode.SUCCESS,
+                orderService.modifyOrderInfo(userId, orderId, orderModifyRequestDto));
     }
 
     @PatchMapping("/{orderId}/cancel")
@@ -82,7 +84,7 @@ public class OrderController {
             @PathVariable UUID orderId
     ){
         Long userId = requireCartAccessibleUserId(userDetails);
-        return orderService.cancelOrder(userId, orderId);
+        return ApiResponse.success(SuccessCode.SUCCESS, orderService.cancelOrder(userId, orderId));
     }
 
     @DeleteMapping("/{orderId}")
