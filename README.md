@@ -55,10 +55,10 @@ Spring Boot 기반 음식 주문 관리 플랫폼
 
 <img src="docs/infra_architecture.png" width="900">
 
-Docker Compose를 기반으로 애플리케이션을 컨테이너화하고 AWS EC2 환경에 배포했습니다.
+Docker Compose를 기반으로 애플리케이션을 컨테이너화하고 AWS EC2 환경에 배포했습니다. <br><br>
 
-✔️ Docker Compose를 통해 Spring Boot, PostgreSQL, Redis를 컨테이너로 구성
-✔️ Nginx Reverse Proxy를 적용하여 외부 요청을 처리
+✔️ Docker Compose를 통해 Spring Boot, PostgreSQL, Redis를 컨테이너로 구성<br>
+✔️ Nginx Reverse Proxy를 적용하여 외부 요청을 처리<br>
 ✔️ GitHub Actions 기반 CI/CD를 구축하여 자동 배포
 ## 🗄 ERD
 
