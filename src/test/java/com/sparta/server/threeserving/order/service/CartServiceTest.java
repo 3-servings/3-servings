@@ -39,7 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag("CartService")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@ActiveProfiles("local")
+// 로컬에서 cart_service-test-data.sql파일을 사용한 테스트에서만 작동함.
+@ActiveProfiles("ci")
 @Transactional
 @Sql(scripts = "classpath:sql/cart-service-test-data.sql")
 public class CartServiceTest {
