@@ -54,34 +54,63 @@ public class OrderManagementController {
     }
 
     @PatchMapping("/orders/{orderManagementId}/accept")
-    public ApiResponse<Void> acceptOrder(@PathVariable UUID orderManagementId, @RequestBody @Valid OrderAcceptRequest request) {
+    public ApiResponse<Void> acceptOrder(
+            @PathVariable UUID orderManagementId,
+            @RequestBody @Valid OrderAcceptRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-        orderManagementService.acceptOrder(orderManagementId, request.getEstimatedCookTime());
+        orderManagementService.acceptOrder(
+                orderManagementId,
+                request.getEstimatedCookTime(),
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole());
 
         return ApiResponse.success(SUCCESS, null);
     }
 
     @PatchMapping("/orders/{orderManagementId}/reject")
-    public ApiResponse<Void> rejectOrder(@PathVariable UUID orderManagementId, @RequestBody @Valid OrderRejectRequest request) {
+    public ApiResponse<Void> rejectOrder(
+            @PathVariable UUID orderManagementId,
+            @RequestBody @Valid OrderRejectRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-        orderManagementService.rejectOrder(orderManagementId, request.getRejectReasonCodeId(), request.getMemo());
+        orderManagementService.rejectOrder(
+                orderManagementId,
+                request.getRejectReasonCodeId(),
+                request.getMemo(),
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole());
 
         return ApiResponse.success(SUCCESS, null);
     }
 
     @PatchMapping("/orders/{orderManagementId}/status")
-    public ApiResponse<Void> updateStatus(@PathVariable UUID orderManagementId, @RequestBody @Valid OrderStatusUpdateRequest request) {
+    public ApiResponse<Void> updateStatus(
+            @PathVariable UUID orderManagementId,
+            @RequestBody @Valid OrderStatusUpdateRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-        orderManagementService.updateStatus(orderManagementId, request.getStatus());
+        orderManagementService.updateStatus(
+                orderManagementId,
+                request.getStatus(),
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole());
 
         return ApiResponse.success(SUCCESS, null);
     }
 
 
     @PatchMapping("/orders/{orderManagementId}/cook-time")
-    public ApiResponse<Void> updateCookingTime(@PathVariable UUID orderManagementId, @RequestBody @Valid UpdateCookingTimeRequest request) {
+    public ApiResponse<Void> updateCookingTime(
+            @PathVariable UUID orderManagementId,
+            @RequestBody @Valid UpdateCookingTimeRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-        orderManagementService.updateCookingTime(orderManagementId, request.getEstimatedCookTime());
+        orderManagementService.updateCookingTime(
+                orderManagementId,
+                request.getEstimatedCookTime(),
+                userDetails.getUser().getId(),
+                userDetails.getUser().getRole());
 
         return ApiResponse.success(SUCCESS, null);
     }

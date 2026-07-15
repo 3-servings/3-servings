@@ -23,7 +23,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @PostMapping("/")
+    @PostMapping
     public ApiResponse<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request){
         return categoryService.createCategory(request);
     }
@@ -48,7 +48,7 @@ public class CategoryController {
         return categoryService.getCategory(categoryId);
     }
 
-    @GetMapping("/")
+    @GetMapping
     public ApiResponse<Page<CategoryResponse>> searchCategories(
             @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "true") Boolean isActive,
