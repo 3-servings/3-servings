@@ -3,7 +3,6 @@ package com.sparta.server.threeserving.order_management.dto.response;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
