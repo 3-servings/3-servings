@@ -67,7 +67,7 @@ public class OptionGroupServiceTest {
         existingGroup.addOptionItem(mustard);
 
         // Mocking
-        given(optionGroupRepository.findById(groupId)).willReturn(Optional.of(existingGroup));
+        given(optionGroupRepository.findByIdWithStoreAndOwner(groupId)).willReturn(Optional.of(existingGroup));
         given(optionGroupRepository.existsByStoreIdAndNameAndIdNot(store.getId(), "소스 선택 (수정)", groupId))
                 .willReturn(false);
 
@@ -135,7 +135,7 @@ public class OptionGroupServiceTest {
         OptionGroupCreateRequest request =
                 new OptionGroupCreateRequest("소스 선택", 0, 1, List.of(itemReq));
 
-        given(storeRepository.findById(storeId)).willReturn(Optional.of(store));
+        given(storeRepository.findByIdWithOwner(storeId)).willReturn(Optional.of(store));
 
         // [When & Then]
         CustomException exception = assertThrows(CustomException.class, () -> {

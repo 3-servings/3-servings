@@ -1,11 +1,13 @@
 package com.sparta.server.threeserving.menu.repository;
 
 import com.sparta.server.threeserving.menu.entity.MenuCategory;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface MenuCategoryRepository extends JpaRepository<MenuCategory, UUID> {
@@ -21,4 +23,12 @@ public interface MenuCategoryRepository extends JpaRepository<MenuCategory, UUID
 
     @Query("SELECT COALESCE(MAX(m.displayOrder), 0) FROM MenuCategory m WHERE m.store.id = :storeId AND m.deletedAt IS NULL")
     int findMaxDisplayOrder(@Param("storeId") UUID storeId);
+
+    @EntityGraph(attributePaths = {"store", "store.owner"})
+    @Query("SELECT m FROM MenuCategory m WHERE m.id = :id")
+    Optional<MenuCategory> findByIdWithStoreAndOwner(@Param("id") UUID id);
+
+    @EntityGraph(attributePaths = {"store"})
+    @Query("SELECT m FROM MenuCategory m WHERE m.id IN :ids")
+    List<MenuCategory> findAllByIdInWithStore(@Param("ids") List<UUID> ids);
 }

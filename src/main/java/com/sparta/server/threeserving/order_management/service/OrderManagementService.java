@@ -32,7 +32,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderManagementService {
 
-// TODO: Role(MASTER/OWNER)에 따른 Store 접근 권한 체크 추가
 
     private final OrderManagementRepository orderManagementRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;

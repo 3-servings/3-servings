@@ -45,9 +45,11 @@ public enum ErrorCode {
     REGION_NOT_FOUND(HttpStatus.NOT_FOUND,"S002" , "지역을 찾을 수 없습니다."),
     REGION_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "S003", "이미 삭제된 지역입니다."),
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S004", "카테고리를 찾을 수 없습니다."),
+
     // Menu
     MENU_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴 카테고리를 찾을 수 없습니다."),
     MENU_CATEGORY_NAME_DUPLICATED(HttpStatus.CONFLICT, "M002", "이미 존재하는 메뉴 카테고리 이름입니다."),
+    MENU_CATEGORY_HAS_MENUS(HttpStatus.CONFLICT, "M008", "해당 카테고리에 등록된 메뉴가 존재합니다. 메뉴를 비우거나 이동한 후 다시 시도해주세요."),
 
     OPTION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "M004", "옵션 그룹을 찾을 수 없습니다."),
     OPTION_GROUP_NAME_DUPLICATED(HttpStatus.CONFLICT, "M005", "이미 존재하는 옵션 그룹 이름입니다."),
@@ -62,6 +64,13 @@ public enum ErrorCode {
     MENU_MENU_CATEGORY_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 메뉴는 요청한 카테고리에 속해 있지 않습니다."),
     OPTION_GROUP_STORE_MISMATCH(HttpStatus.BAD_REQUEST, "M002", "해당 옵션 그룹은 요청한 가게에 속해 있지 않습니다."),
 
+    // Image
+    INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "I001", "파일 확장자가 존재하지 않습니다."),
+    UNSUPPORTED_FILE_FORMAT(HttpStatus.BAD_REQUEST, "I002", "지원하지 않는 이미지 형식입니다. (jpg, jpeg, png, webp만 허용)"),
+    IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "I003", "이미지를 찾을 수 없습니다."),
+    IMAGE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "I004", "이미지 처리(URL 발급) 중 오류가 발생했습니다."),
+
+    // AI
     AI_RESPONSE_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_001", "AI 응답을 처리하는 중 오류가 발생했습니다."),
     AI_GENERATION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "AI_002", "AI 메뉴 설명 생성에 실패했습니다. 잠시 후 다시 시도해주세요."),
     AI_EMPTY_RESPONSE(HttpStatus.INTERNAL_SERVER_ERROR, "AI_003", "AI 모델이 빈 응답을 반환했습니다."),

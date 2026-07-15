@@ -76,9 +76,10 @@ public class SecurityConfig {
                     // user (회원 리소스)
                     .requestMatchers(HttpMethod.GET, "/api/users").hasAnyRole("MASTER", "MANAGER")//회원 검색: 관리자만
                     //내 정보 조회/수정: 로그인 필요
+                    .requestMatchers("/api/users/user/kakao/login", "/api/users/kakao/call-back").permitAll()
                     .requestMatchers("/api/users/**").authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/auth/delete").authenticated()
                     // 공개 API (인증 불필요)
-                    .requestMatchers("/signup").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
 
                     // Order
@@ -109,12 +110,36 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.PUT, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
                     .requestMatchers(HttpMethod.PATCH, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
                     .requestMatchers(HttpMethod.DELETE, "/api/categorys/**").hasAnyRole("MASTER", "MANAGER")
-                    // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
-                    // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
 
 
                     // Menu
+                    .requestMatchers(HttpMethod.POST, "/api/stores/{storeId}/menu-categories").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.GET, "/api/stores/{storeId}/menu-categories").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/api/menu-categories/{menuCategoryId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/menu-categories/display-order").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/menu-categories/{menuCategoryId}").hasAnyRole("OWNER", "MASTER")
 
+                    .requestMatchers(HttpMethod.POST, "/api/stores/{storeId}/option-groups").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.GET, "/api/stores/{storeId}/option-groups").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/api/option-groups/{optionGroupId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/option-groups/{optionGroupId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PUT, "/api/menus/{menuId}/option-groups").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/option-items/status").hasAnyRole("OWNER", "MASTER")
+
+                    .requestMatchers(HttpMethod.POST, "/api/stores/{storeId}/menus").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.GET, "/api/stores/{storeId}/menus").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/stores/{storeId}/menu-board").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/menus/{menuId}").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/api/menus/{menuId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/menus/{menuId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/menus/status").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/menus/display-order").hasAnyRole("OWNER", "MASTER")
+
+                    // Image
+                    .requestMatchers("/api/images/presigned-url").hasAnyRole("OWNER", "MASTER")
+
+                    // Ai
+                    .requestMatchers(HttpMethod.POST, "/api/ai/description").hasAnyRole("OWNER", "MASTER")
 
                     // OrderManagement
                     .requestMatchers(HttpMethod.GET, "/api/order-management/**").hasAnyRole("OWNER", "MASTER")
@@ -122,8 +147,9 @@ public class SecurityConfig {
 
                     // Payment
                     .requestMatchers(HttpMethod.POST, "/api/orders/*/payments").hasRole("CUSTOMER")
-                    .requestMatchers(HttpMethod.POST, "/api/orders/*/payments/confirm").hasRole("CUSTOMER")
+                    .requestMatchers(HttpMethod.POST, "/api/orders/*/payments/toss/confirm").hasRole("CUSTOMER")
                     .requestMatchers(HttpMethod.PATCH, "/api/orders/*/payments/refund").hasRole("CUSTOMER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/orders/*/payments/toss/refund").hasRole("CUSTOMER")
                     .requestMatchers(HttpMethod.GET, "/api/orders/*/payments/**").authenticated()
 
                     // review
@@ -132,10 +158,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/stores/*/reviews").permitAll()
                     .requestMatchers("/api/reviews/**").authenticated()
 
-
-                    // ⚠️ 임시: 위 도메인 규칙이 채워지기 전까지 나머지는 모두 허용.
                     // 팀 합의 후 permitAll() -> authenticated()로 변경
-                    .anyRequest().permitAll()
+                    .anyRequest().authenticated()
         );
 
         // 필터 관리

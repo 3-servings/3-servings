@@ -17,6 +17,7 @@ public class RejectReasonStatResponse {
 
     @Getter
     @Builder
+    @AllArgsConstructor
     public static class RejectReasonStatItem {
         private String rejectReasonCode;
         private String description;

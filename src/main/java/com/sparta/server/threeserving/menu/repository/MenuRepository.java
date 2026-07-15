@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.menu.entity.Menu;
 import com.sparta.server.threeserving.menu.enums.MenuStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +20,8 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
 
     // 수정 시 중복 확인용
     boolean existsByStoreIdAndNameAndIdNot(UUID storeId, String name, UUID menuId);
+
+    boolean existsByMenuCategoryIdAndDeletedAtIsNull(UUID menuCategoryId);
 
     // 특정 카테고리 내에서의 displayOrder 최대값 조회
     @Query("SELECT COALESCE(MAX(m.displayOrder), 0) FROM Menu m WHERE m.menuCategory.id = :menuCategoryId AND m.deletedAt IS NULL")
@@ -52,4 +55,16 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
             "LEFT JOIN FETCH mog.optionGroup " +
             "WHERE m.id = :menuId")
     Optional<Menu> findMenuDetailById(@Param("menuId") UUID menuId);
+
+    @EntityGraph(attributePaths = {"store", "store.owner"})
+    @Query("SELECT m FROM Menu m WHERE m.id = :id")
+    Optional<Menu> findByIdWithStoreAndOwner(@Param("id") UUID id);
+
+    @EntityGraph(attributePaths = {"store"})
+    @Query("SELECT m FROM Menu m WHERE m.id IN :ids")
+    List<Menu> findAllByIdInWithStore(@Param("ids") Iterable<UUID> ids);
+
+    @EntityGraph(attributePaths = {"store", "menuCategory"})
+    @Query("SELECT m FROM Menu m WHERE m.id IN :ids")
+    List<Menu> findAllByIdInWithStoreAndCategory(@Param("ids") Iterable<UUID> ids);
 }
