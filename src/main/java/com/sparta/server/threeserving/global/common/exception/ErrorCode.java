@@ -30,6 +30,8 @@ public enum ErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "만료된 토큰입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A003", "재발급이 불가능합니다. 다시 로그인해주세요."),
     KAKAO_AUTH_FAILED(HttpStatus.BAD_GATEWAY, "A004", "카카오 인증에 실패했습니다."),
+    WITHDRAW_ACCOUNT(HttpStatus.UNAUTHORIZED, "A005", "탈퇴한 계정입니다."),
+    BLOCKED_ACCOUNT(HttpStatus.UNAUTHORIZED, "A006", "이용이 제한된 계정입니다."),
 
     // Common
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "잘못된 입력값입니다."),

@@ -73,7 +73,11 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/users").hasAnyRole("MASTER", "MANAGER")//회원 검색: 관리자만
                     //내 정보 조회/수정: 로그인 필요
                     .requestMatchers("/api/users/**").authenticated()
+                    // 로그아웃/회원탈퇴: 로그인 필요.
+                    .requestMatchers(HttpMethod.POST, "/api/auth/logout").authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/auth/delete").authenticated()
                     // 공개 API (인증 불필요)
+                    // 회원가입 / 로그인 / 재발급(액세스 만료 상태로 호출되므로 인증 불가)
                     .requestMatchers("/signup").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
 
