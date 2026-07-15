@@ -4,7 +4,6 @@ import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
-import com.sparta.server.threeserving.order.repository.OrderRepository;
 import com.sparta.server.threeserving.order_management.dto.response.OrderManagementListResponse;
 import com.sparta.server.threeserving.order_management.dto.response.OrderManagementResponse;
 import com.sparta.server.threeserving.order_management.dto.response.OrderStatusHistoryResponse;
@@ -16,7 +15,6 @@ import com.sparta.server.threeserving.order_management.repository.OrderStatusHis
 import com.sparta.server.threeserving.order_management.repository.RejectReasonCodeRepository;
 import com.sparta.server.threeserving.order_management.validator.StoreAccessValidator;
 import com.sparta.server.threeserving.store.entity.Store;
-import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
