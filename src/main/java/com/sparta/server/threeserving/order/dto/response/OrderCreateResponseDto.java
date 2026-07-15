@@ -15,13 +15,15 @@ public record OrderCreateResponseDto(
     Integer totalPrice,
     String deliveryAddress,
     Instant created_at,
-    Long created_by
+    Long created_by,
+    UUID orderManagementId
 ) {
-    public OrderCreateResponseDto(Orders orders){
+    public OrderCreateResponseDto(Orders orders, UUID orderManagementId){
         this(
-                orders.getId(), 
+                orders.getId(),
                 (orders.getCart() == null) ? null : orders.getCart().getId(),
                 orders.getStoreId(), orders.getUserId(),
-                orders.getOrderStatus(), orders.getTotalPrice(), orders.getDeliveryAddress(), orders.getCreatedAt(), orders.getCreatedBy());
+                orders.getOrderStatus(), orders.getTotalPrice(), orders.getDeliveryAddress(), orders.getCreatedAt(), orders.getCreatedBy(),
+                orderManagementId);
     }
 }

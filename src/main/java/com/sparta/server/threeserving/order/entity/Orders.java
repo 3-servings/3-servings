@@ -71,7 +71,7 @@ public class Orders extends BaseEntity {
         this.deliveryAddress = deliveryAddress;
         this.requestMessage = requestMessage;
     }
-  
+
     public void changeStatus(OrderStatusEnum nextStatus) {
         validateStatusTransition(nextStatus);
         this.orderStatus = nextStatus;

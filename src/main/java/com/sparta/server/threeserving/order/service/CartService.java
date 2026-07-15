@@ -300,7 +300,7 @@ public class CartService {
         }
         orderItemOptionRepository.saveAll(orderItemOptions);
 
-        orderManagementService.create(savedOrder, OrderStatusEnum.PENDING);
+        UUID orderManagementId = orderManagementService.create(savedOrder, OrderStatusEnum.PENDING).getId();
 
         cart.softDelete(userId);
         for (CartItem cartItem : cartItemList) {
@@ -311,6 +311,6 @@ public class CartService {
         );
         cartItemOptionList.forEach(option -> option.softDelete(userId));
 
-        return new CheckoutResponseDto(savedOrder, requestDto.deliveryAddress(), requestDto.requestMessage());
+        return new CheckoutResponseDto(savedOrder, orderManagementId, requestDto.deliveryAddress(), requestDto.requestMessage());
     }
 }
