@@ -1,8 +1,10 @@
 package com.sparta.server.threeserving.store.dto.request;
 
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,10 +24,13 @@ public class RegisterStore {
     String detailAddress;
     @NotNull
     UUID regionId;
-    @NotNull
+    @NotEmpty
     List<UUID> categoryIds;
+    @PositiveOrZero
     int minOrderPrice;
+    @PositiveOrZero
     int deliveryFee;
+    @PositiveOrZero
     int delivery_radius_m;
 
 }
