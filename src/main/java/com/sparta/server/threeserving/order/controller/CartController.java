@@ -3,10 +3,12 @@ package com.sparta.server.threeserving.order.controller;
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.exception.ErrorCode;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
+import com.sparta.server.threeserving.global.common.response.SuccessCode;
 import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.dto.request.CartAddItemRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartCreateRequestDto;
 import com.sparta.server.threeserving.order.dto.request.CartUpdateItemAmountRequestDto;
+import com.sparta.server.threeserving.order.dto.request.CheckoutRequestDto;
 import com.sparta.server.threeserving.order.dto.response.*;
 import com.sparta.server.threeserving.order.service.CartService;
 import jakarta.validation.Valid;
@@ -37,7 +39,8 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
         Long userId = requireCartAccessibleUserId(userDetails);
-        return cartService.getCartList(userId);
+        List<CartListResponseDto> response = cartService.getCartList(userId);
+        return ApiResponse.success(SuccessCode.SUCCESS, response);
     }
 
     @GetMapping("/{cartId}")
@@ -46,7 +49,8 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
         Long userId = requireCartAccessibleUserId(userDetails);
-        return cartService.getCartDetail(userId, cartId);
+        CartDetailResponseDto responseDto = cartService.getCartDetail(userId, cartId);
+        return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
     }
 
 
@@ -57,9 +61,9 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
             ){
         Long userId = requireCartAccessibleUserId(userDetails);
-        return cartService.addMenuToCart(userId, cartId, cartAddItemRequestDto);
+        CartAddItemResponseDto response = cartService.addMenuToCart(userId, cartId, cartAddItemRequestDto);
+        return ApiResponse.success(SuccessCode.CREATED, response);
     }
-
 
     @PatchMapping("/{cartId}/items/{cartItemId}")
     public ApiResponse<CartUpdateItemAmountResponseDto> updateCartItemAmount(
@@ -69,7 +73,7 @@ public class CartController {
             @AuthenticationPrincipal UserDetailsImpl userDetails
             ) {
         Long userId = requireCartAccessibleUserId(userDetails);
-        return cartService.updateCartItemAmount(userId, cartId, cartItemId, cartUpdateItemAmountRequestDto);
+        return ApiResponse.success(SuccessCode.SUCCESS, cartService.updateCartItemAmount(userId, cartId, cartItemId, cartUpdateItemAmountRequestDto));
     }
 
     @DeleteMapping("/{cartId}/items/{cartItemId}")
@@ -82,8 +86,18 @@ public class CartController {
         return cartService.deleteCartItem(userId, cartId, cartItemId);
     }
 
+    @PostMapping("/{cartId}/checkout")
+    public ApiResponse<CheckoutResponseDto> checkout(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID cartId,
+            @RequestBody @Valid CheckoutRequestDto requestDto
+            ){
+        Long userId = requireCartAccessibleUserId(userDetails);
+        return ApiResponse.success(SuccessCode.SUCCESS, cartService.checkout(userId, cartId, requestDto));
+    }
+
     private Long requireCartAccessibleUserId(UserDetailsImpl userDetails) {
-        if(userDetails == null){
+        if (userDetails == null) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
         return userDetails.getUser().getId();

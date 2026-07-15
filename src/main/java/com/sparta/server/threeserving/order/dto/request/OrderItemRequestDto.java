@@ -11,5 +11,5 @@ public record OrderItemRequestDto (
         @NotNull String menuName,
         @NotNull Integer price,
         @NotNull Integer quantity,
-        List<OrderItemOptionRequestDto> options
+        @NotNull List<OrderItemOptionRequestDto> options
 ) {}

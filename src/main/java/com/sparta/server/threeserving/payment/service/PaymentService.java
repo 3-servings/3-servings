@@ -23,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 import java.nio.charset.StandardCharsets;
@@ -32,7 +33,6 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
@@ -70,26 +70,62 @@ public class PaymentService {
                 "amount", request.getAmount()
         );
 
-        return restClient.post()
-                .uri("https://api.tosspayments.com/v1/payments/confirm")
-                .header(HttpHeaders.AUTHORIZATION, "Basic"+encodedKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(body)
-                .retrieve()
-                .body(TossConfirmResponse.class);
+        try{
+            return restClient.post()
+                    .uri("https://api.tosspayments.com/v1/payments/confirm")
+                    .header(HttpHeaders.AUTHORIZATION, "Basic "+encodedKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(TossConfirmResponse.class);
+        } catch (ResourceAccessException e){
+
+            throw new CustomException(ErrorCode.PAYMENT_TIMEOUT);
+        }
     }
 
-    public PaymentResponse confirmPayment(Long userId, UUID orderId, TossConfirmRequest request){
-        Orders orders = validateOrder(userId, orderId);
+    private void cancelWithToss(String paymentKey){
+        String encodedKey = Base64.getEncoder()
+                .encodeToString((secretKey+":").getBytes(StandardCharsets.UTF_8));
 
-        if(paymentRepository.findByOrderId(orderId).isPresent()){
-            throw new CustomException(ErrorCode.PAYMENT_ALREADY_EXISTS);
+        try{
+            restClient.post()
+                    .uri("https://api.tosspayments.com/v1/payments/{paymentKey}/cancel",
+                            paymentKey)
+                    .header(HttpHeaders.AUTHORIZATION,
+                            "Basic "+encodedKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of(
+                            "cancelReason", "사용자 요청"
+                    ))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (ResourceAccessException e){
+            throw new CustomException(ErrorCode.PAYMENT_TIMEOUT);
+        }
+    }
+
+    private void validatePaymentAmount(Orders order, Long amount) {
+        if(!Objects.equals(order.getTotalPrice().longValue(), amount)){
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_AMOUNT);
+        }
+    }
+
+    private void validateRefundable(Payment payment) {
+        if(payment.getStatus() == PaymentStatus.REFUNDED){
+            throw new CustomException(ErrorCode.PAYMENT_ALREADY_REFUNDED);
         }
 
-        TossConfirmResponse tossResponse = confirmWithToss(request);
+        if(Duration.between(payment.getApprovedAt(), Instant.now()).toMinutes() >= 5){
+            throw new CustomException(ErrorCode.REFUND_EXPIRED);
+        }
+    }
 
-        Payment payment = Payment.createFromToss(orders, tossResponse);
-
+    private PaymentResponse saveConfirmPayment(
+            Orders order,
+            TossConfirmResponse response
+    ) {
+        Payment payment = Payment.createFromToss(order, response);
         Payment savedPayment = paymentRepository.save(payment);
 
         paymentLogRepository.save(
@@ -100,15 +136,67 @@ public class PaymentService {
                 )
         );
 
-        orderManagementService.create(
-                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
-        );
-
         return PaymentResponse.from(savedPayment);
     }
 
-    public PaymentResponse createPayment(Long userId, UUID orderId, PaymentRequest request){
+    public PaymentResponse confirmPayment(Long userId, UUID orderId, TossConfirmRequest request){
+        Orders orders = validateOrder(userId, orderId);
 
+        validatePaymentAmount(orders, request.getAmount());
+
+        if(paymentRepository.findByOrderId(orderId).isPresent()){
+            throw new CustomException(ErrorCode.PAYMENT_ALREADY_EXISTS);
+        }
+
+        //외부 API 호출
+        TossConfirmResponse tossResponse = confirmWithToss(request);
+
+        try{
+            return saveConfirmPayment(orders, tossResponse);
+
+        } catch (Exception e){
+            //DB 실패 시 토스 취소(보상 트랜잭션)
+            cancelWithToss(tossResponse.getPaymentKey());
+
+            throw e;
+        }
+
+    }
+
+    @Transactional
+    public RefundSuccessResponse refundWithToss(Long userId, UUID orderId){
+
+        validateOrder(userId, orderId);
+        Payment payment = findPayment(orderId);
+
+        validateRefundable(payment);
+
+        paymentLogRepository.save(
+                PaymentLog.create(
+                        payment,
+                        PaymentStatus.REFUND_REQUESTED,
+                        "환불 요청"
+                )
+        );
+
+        cancelWithToss(payment.getTransactionId());
+
+        payment.refund();
+
+        paymentLogRepository.save(
+                PaymentLog.create(
+                        payment,
+                        PaymentStatus.REFUNDED,
+                        "환불 완료"
+                )
+        );
+
+        return RefundSuccessResponse.from(payment);
+
+    }
+
+    @Transactional
+    public PaymentResponse createPayment(Long userId, UUID orderId, PaymentRequest request){
         Orders order = validateOrder(userId, orderId);
 
         if(paymentRepository.findByOrderId(orderId).isPresent()){
@@ -127,25 +215,20 @@ public class PaymentService {
                 )
         );
 
-        orderManagementService.create(
-                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
-        );
+//        orderManagementService.create(
+//                new OrderManagementCreateRequest(savedPayment.getOrder().getId())
+//        );
 
         return PaymentResponse.from(savedPayment);
     }
 
+    @Transactional
     public RefundSuccessResponse refund (Long userId, UUID orderId){
 
         validateOrder(userId, orderId);
         Payment payment = findPayment(orderId);
 
-        if(payment.getStatus() == PaymentStatus.REFUNDED){
-            throw new CustomException(ErrorCode.PAYMENT_ALREADY_REFUNDED);
-        }
-
-        if(Duration.between(payment.getApprovedAt(), Instant.now()).toMinutes() >= 5){
-            throw new CustomException(ErrorCode.REFUND_EXPIRED);
-        }
+        validateRefundable(payment);
 
         paymentLogRepository.save(
                 PaymentLog.create(

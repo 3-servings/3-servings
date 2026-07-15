@@ -68,7 +68,7 @@ public class Payment extends BaseEntity {
     public static Payment createFromToss(Orders order, TossConfirmResponse response){
         return Payment.builder()
                 .order(order)
-                .paymentMethod(PaymentMethod.valueOf(response.getMethod()))
+                .paymentMethod(PaymentMethod.from(response.getMethod()))
                 .amount(response.getTotalAmount())
                 .transactionId(response.getPaymentKey())
                 .status(PaymentStatus.SUCCESS)

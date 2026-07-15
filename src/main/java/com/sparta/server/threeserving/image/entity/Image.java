@@ -1,10 +1,10 @@
-package com.sparta.server.threeserving.image.domain.entity;
+package com.sparta.server.threeserving.image.entity;
 
+import com.sparta.server.threeserving.image.enums.DomainType;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -17,8 +17,7 @@ import java.util.UUID;
 @Getter
 @Table(name = "p_image")
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class) // ✨ Auditing 기능 활성화
-@SQLDelete(sql = "UPDATE p_image SET deleted_at = NOW() WHERE id = ?")
+@EntityListeners(AuditingEntityListener.class)
 @SQLRestriction("deleted_at IS NULL")
 public class Image {
 
@@ -28,8 +27,9 @@ public class Image {
     private UUID id;
 
     // "MENU", "REVIEW", "STORE" 등 대상을 구분
+    @Enumerated(EnumType.STRING)
     @Column(name = "domain_type", nullable = false, length = 20)
-    private String domainType;
+    private DomainType domainType;
 
     // 연결될 도메인의 id
     @Column(name = "target_id", nullable = false)
@@ -71,7 +71,7 @@ public class Image {
     private Long deletedBy;
 
     @Builder
-    public Image(String domainType, UUID targetId, int sequence, String originName, String storedName, String imagePath, String imageUrl, long fileSize, String contentType) {
+    public Image(DomainType domainType, UUID targetId, int sequence, String originName, String storedName, String imagePath, String imageUrl, long fileSize, String contentType) {
         this.domainType = domainType;
         this.targetId = targetId;
         this.sequence = sequence;
@@ -81,5 +81,10 @@ public class Image {
         this.imageUrl = imageUrl;
         this.fileSize = fileSize;
         this.contentType = contentType;
+    }
+
+    public void softDelete(Long userId) {
+        this.deletedAt = java.time.Instant.now();
+        this.deletedBy = userId;
     }
 }

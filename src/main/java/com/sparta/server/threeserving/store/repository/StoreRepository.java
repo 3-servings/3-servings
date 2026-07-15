@@ -4,7 +4,7 @@ import com.sparta.server.threeserving.store.entity.Store;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import com.sparta.server.threeserving.user.entity.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,16 +15,28 @@ import java.util.UUID;
 
 public interface StoreRepository extends JpaRepository<Store, UUID> {
     @Query("SELECT DISTINCT s FROM Store s " +
+            "JOIN FETCH s.owner " +
+            "JOIN FETCH s.region " +
             "LEFT JOIN s.categoryList sc " +
             "LEFT JOIN Menu m ON m.store = s " +
-            "WHERE (:name IS NULL OR s.name LIKE CONCAT('%', :name, '%') OR m.name LIKE CONCAT('%', :name, '%'))  " +
+            "WHERE (:name = '' OR s.name LIKE CONCAT('%', :name, '%') OR m.name LIKE CONCAT('%', :name, '%'))  " +
+            "AND (:onlyServiceArea = false OR s.region.isServiceArea = true) " +
             "AND (:regionId IS NULL OR s.region.id = :regionId) " +
             "AND (:categoryId IS NULL OR sc.category.id = :categoryId)")
     Page<Store> searchStores(
             @Param("name") String name,
             @Param("regionId") UUID regionId,
             @Param("categoryId") UUID categoryId,
+            @Param("onlyServiceArea") boolean onlyServiceArea,
             Pageable pageable
     );
+
+    @Query("SELECT s.id FROM Store s WHERE s.owner.id = :ownerId")
     List<UUID> findStoreIdsByOwnerId(Long ownerId);
+
+    boolean existsByIdAndOwnerId(UUID storeId, Long userId);
+
+    @EntityGraph(attributePaths = {"owner"})
+    @Query("SELECT s FROM Store s WHERE s.id = :id")
+    Optional<Store> findByIdWithOwner(@Param("id") UUID id);
 }

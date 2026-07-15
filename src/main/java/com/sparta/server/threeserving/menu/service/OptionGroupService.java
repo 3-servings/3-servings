@@ -12,6 +12,7 @@ import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OptionGroupService {
@@ -35,20 +37,26 @@ public class OptionGroupService {
         // minSelect, maxSelect 유효성 검증
         int itemSize = request.getOptionItems().size();
         if (request.getMinSelect() > request.getMaxSelect() || request.getMinSelect() > itemSize || request.getMaxSelect() > itemSize) {
+            log.warn("Invalid option selection (Create) - StoreId: {}, Min: {}, Max: {}, ItemSize: {}", storeId, request.getMinSelect(), request.getMaxSelect(), itemSize);
             throw new CustomException(ErrorCode.INVALID_OPTION_SELECTION);
         }
 
         // store 존재 여부 검증
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+        Store store = storeRepository.findByIdWithOwner(storeId)
+                .orElseThrow(() -> {
+                    log.warn("Store not found - StoreId: {}", storeId);
+                    return new CustomException(ErrorCode.STORE_NOT_FOUND);
+                });
 
         // 사용자 권한 검증
         if (role != UserRoleEnum.MASTER && !store.getOwner().getId().equals(userId)) {
+            log.warn("Access Denied (Create) - UserId: {}, StoreId: {}", userId, storeId);
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         // optionGroup 이름 중복 검증
         if (optionGroupRepository.existsByStoreIdAndName(storeId, request.getName())) {
+            log.warn("Option Group name duplicated - StoreId: {}, Name: {}", storeId, request.getName());
             throw new CustomException(ErrorCode.OPTION_GROUP_NAME_DUPLICATED);
         }
 
@@ -75,6 +83,7 @@ public class OptionGroupService {
 
         // DB 저장, Cascade 설정으로 item도 함께 저장
         OptionGroup savedOptionGroup = optionGroupRepository.save(optionGroup);
+        log.info("Option Group created - StoreId: {}, GroupId: {}, Name: {}", storeId, savedOptionGroup.getId(), savedOptionGroup.getName());
 
         return OptionGroupResponse.from(savedOptionGroup);
     }
@@ -83,6 +92,7 @@ public class OptionGroupService {
     public Page<OptionGroupResponse> getOptionGroups(UUID storeId, String keyword, Pageable pageable) {
         // store 존재 여부 검증
         if (!storeRepository.existsById(storeId)) {
+            log.warn("Store not found - StoreId: {}", storeId);
             throw new CustomException(ErrorCode.STORE_NOT_FOUND);
         }
 
@@ -104,24 +114,31 @@ public class OptionGroupService {
         // minSelect, maxSelect 유효성 검증
         int itemSize = request.getOptionItems().size();
         if (request.getMinSelect() > request.getMaxSelect() || request.getMinSelect() > itemSize || request.getMaxSelect() > itemSize) {
+            log.warn("Invalid option selection (Update) - GroupId: {}, Min: {}, Max: {}, ItemSize: {}", optionGroupId, request.getMinSelect(), request.getMaxSelect(), itemSize);
             throw new CustomException(ErrorCode.INVALID_OPTION_SELECTION);
         }
 
         // optionGroup 존재 여부 검증
-        OptionGroup optionGroup = optionGroupRepository.findById(optionGroupId)
-                .orElseThrow(() -> new CustomException(ErrorCode.OPTION_GROUP_NOT_FOUND));
+        OptionGroup optionGroup = optionGroupRepository.findByIdWithStoreAndOwner(optionGroupId)
+                .orElseThrow(() -> {
+                    log.warn("Option Group not found - GroupId: {}", optionGroupId);
+                    return new CustomException(ErrorCode.OPTION_GROUP_NOT_FOUND);
+                });
 
         // 사용자 권한 검증
         if (role != UserRoleEnum.MASTER && !optionGroup.getStore().getOwner().getId().equals(userId)) {
+            log.warn("Access Denied (Update) - UserId: {}, GroupId: {}", userId, optionGroupId);
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         // optionGroup 이름 중복 검사 (본인 제외)
         if (optionGroupRepository.existsByStoreIdAndNameAndIdNot(optionGroup.getStore().getId(), request.getName(), optionGroupId)) {
+            log.warn("Option Group name duplicated - StoreId: {}, GroupId: {}, RequestName: {}", optionGroup.getStore().getId(), optionGroupId, request.getName());
             throw new CustomException(ErrorCode.OPTION_GROUP_NAME_DUPLICATED);
         }
 
         // optionGroup Update
+        String oldName = optionGroup.getName();
         optionGroup.update(request.getName(), request.getMinSelect(), request.getMaxSelect());
 
         // optionItem Delta Update
@@ -141,9 +158,12 @@ public class OptionGroupService {
             if (optionItemReq.getId() != null) {
                 // id가 있으므로 기존 아이템 -> 수정
                 OptionItem existingOptionItem = optionGroup.getOptionItemList().stream()
-                        .filter(item -> item.getId().equals(optionItemReq.getId()))       // 같은
-                        .findFirst()                                                                //
-                        .orElseThrow(() -> new CustomException(ErrorCode.OPTION_ITEM_NOT_FOUND));   // 없는 아이템 수정 시도시 에러
+                        .filter(item -> item.getId().equals(optionItemReq.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> {
+                            log.warn("Option Item not found during update - GroupId: {}, ItemId: {}", optionGroupId, optionItemReq.getId());
+                            return new CustomException(ErrorCode.OPTION_ITEM_NOT_FOUND);
+                        });
 
                 existingOptionItem.update(optionItemReq.getName(), optionItemReq.getPrice(), displayOrder++);
             } else {
@@ -158,20 +178,27 @@ public class OptionGroupService {
             }
         }
 
+        log.info("Option Group updated - GroupId: {}, OldName: {}, NewName: {}, FinalItemCount: {}", optionGroupId, oldName, request.getName(), optionGroup.getOptionItemList().size());
+
         return OptionGroupResponse.from(optionGroup);
     }
 
     @Transactional
     public void deleteOptionGroup(UUID optionGroupId, Long userId, UserRoleEnum role) {
         // optionGroup 존재 여부 검증
-        OptionGroup optionGroup = optionGroupRepository.findById(optionGroupId)
-                .orElseThrow(() -> new CustomException(ErrorCode.OPTION_GROUP_NOT_FOUND));
+        OptionGroup optionGroup = optionGroupRepository.findByIdWithStoreAndOwner(optionGroupId)
+                .orElseThrow(() -> {
+                    log.warn("Option Group not found - GroupId: {}", optionGroupId);
+                    return new CustomException(ErrorCode.OPTION_GROUP_NOT_FOUND);
+                });
 
         // 권한 검증
         if (role != UserRoleEnum.MASTER && !optionGroup.getStore().getOwner().getId().equals(userId)) {
+            log.warn("Access Denied (Delete) - UserId: {}, GroupId: {}", userId, optionGroupId);
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         optionGroup.softDelete(userId);
+        log.info("Option Group deleted - GroupId: {}, DeletedByUserId: {}", optionGroupId, userId);
     }
 }

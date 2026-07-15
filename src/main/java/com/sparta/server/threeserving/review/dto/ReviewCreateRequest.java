@@ -1,9 +1,13 @@
 package com.sparta.server.threeserving.review.dto;
 
+import com.sparta.server.threeserving.image.dto.request.ImageRequest;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
+import java.util.List;
 import java.util.UUID;
 
 public record ReviewCreateRequest(
@@ -15,5 +19,9 @@ public record ReviewCreateRequest(
         @Max(value = 5, message = "별점은 5점 이하여야 합니다.")
         Integer star,
 
-        String content
+        String content,
+
+        // 업로드 완료된 이미지 메타(공용 이미지 도메인 ImageRequest). 없으면 빈 배열/null
+        @Size(max = 3, message = "이미지는 최대 3장입니다.")
+        List<@Valid ImageRequest> images
 ){}

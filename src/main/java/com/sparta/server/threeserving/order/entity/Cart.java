@@ -2,17 +2,16 @@ package com.sparta.server.threeserving.order.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
 @Getter
-@Setter
 @Entity
 @Table(name="p_cart")
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Cart extends BaseEntity {
 
     @Id

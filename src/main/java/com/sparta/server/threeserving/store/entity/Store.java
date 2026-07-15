@@ -4,6 +4,7 @@ import com.sparta.server.threeserving.global.common.BaseEntity;
 import com.sparta.server.threeserving.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ public class Store extends BaseEntity {
     @JoinColumn(name = "region_id", nullable = false)
     private Region region;
 
+    @BatchSize(size = 20)
     @Builder.Default
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StoreCategory> categoryList = new ArrayList<>();
@@ -130,8 +132,8 @@ public class Store extends BaseEntity {
         this.reviewCount = reviewCount;
     }
 
-    public void updateOrderCnt(Integer orderCount){
-        this.orderCount = orderCount;
+    public void updateOrderCnt(){
+        this.orderCount++ ;
     }
 
 

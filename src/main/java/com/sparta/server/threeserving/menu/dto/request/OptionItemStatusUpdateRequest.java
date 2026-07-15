@@ -1,6 +1,6 @@
 package com.sparta.server.threeserving.menu.dto.request;
 
-import com.sparta.server.threeserving.menu.entity.OptionItemStatus;
+import com.sparta.server.threeserving.menu.enums.OptionItemStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

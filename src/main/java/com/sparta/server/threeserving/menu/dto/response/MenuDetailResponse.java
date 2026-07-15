@@ -2,6 +2,8 @@ package com.sparta.server.threeserving.menu.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sparta.server.threeserving.menu.entity.*;
+import com.sparta.server.threeserving.menu.enums.MenuStatus;
+import com.sparta.server.threeserving.menu.enums.OptionItemStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,7 +23,7 @@ public class MenuDetailResponse {
     private Boolean isDescriptionAiGenerated;
     private MenuStatus status;
     private int displayOrder;
-    // private String imageUrl;
+    private String imageUrl;
 
     // 메뉴 카테고리 정보
     private UUID categoryId;
@@ -30,7 +32,7 @@ public class MenuDetailResponse {
     // 옵션 그룹 리스트
     private List<OptionGroupDetail> optionGroups;
 
-    public static MenuDetailResponse from(Menu menu) {
+    public static MenuDetailResponse from(Menu menu, String imageUrl) {
         return MenuDetailResponse.builder()
                 .id(menu.getId())
                 .name(menu.getName())
@@ -39,6 +41,7 @@ public class MenuDetailResponse {
                 .isDescriptionAiGenerated(menu.isDescriptionAiGenerated())
                 .status(menu.getStatus())
                 .displayOrder(menu.getDisplayOrder())
+                .imageUrl(imageUrl)
                 .categoryId(menu.getMenuCategory().getId())
                 .categoryName(menu.getMenuCategory().getName())
                 // 중간 매핑 테이블(MenuOptionGroup)을 거쳐 실제 OptionGroup 데이터만 추출

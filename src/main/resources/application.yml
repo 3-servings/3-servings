@@ -11,6 +11,18 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-3.1-flash-lite
+            temperature: 0.4
+            max-tokens: 300
+    retry:
+      max-attempts: 1 # 원래 요청 1번 + 실패 시 재시도 0번 = 총 1번
+
 server:
   port: 19096
 
@@ -25,3 +37,15 @@ jwt:
   secret: ${JWT_SECRET}
   access-expiration: 1800000     # 30분
   refresh-expiration: 1209600000 # 14일
+
+cloud:
+  aws:
+    region: ${AWS_REGION}
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+      base-url: ${CLOUD_FRONT_DOMAIN}
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  rest-api-key: ${KAKAO_REST_API_KEY}
+  redirect-uri: ${KAKAO_REDIRECT_URI}

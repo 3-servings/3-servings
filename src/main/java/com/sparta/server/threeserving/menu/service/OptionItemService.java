@@ -5,12 +5,13 @@ import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.menu.dto.request.OptionItemStatusUpdateRequest;
 import com.sparta.server.threeserving.menu.entity.OptionGroup;
 import com.sparta.server.threeserving.menu.entity.OptionItem;
-import com.sparta.server.threeserving.menu.entity.OptionItemStatus;
+import com.sparta.server.threeserving.menu.enums.OptionItemStatus;
 import com.sparta.server.threeserving.menu.repository.OptionItemRepository;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OptionItemService {
@@ -29,8 +31,11 @@ public class OptionItemService {
     @Transactional
     public void updateOptionItemsStatus(UUID storeId, OptionItemStatusUpdateRequest request, Long userId, UserRoleEnum role) {
         // store 존재 여부 검증
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> {
+                    log.warn("Store not found - StoreId: {}", storeId);
+                    return new CustomException(ErrorCode.STORE_NOT_FOUND);
+                });
 
         Map<UUID, OptionItemStatus> statusUpdateMap = request.getItemStatusUpdates().stream()
                 .collect(Collectors.toMap(
@@ -44,6 +49,7 @@ public class OptionItemService {
 
         // optionItem 존재 여부 검증
         if (optionItems.size() != statusUpdateMap.size()) {
+            log.warn("Option Item count mismatch - Expected: {}, Found: {}", statusUpdateMap.size(), optionItems.size());
             throw new CustomException(ErrorCode.OPTION_ITEM_NOT_FOUND);
         }
 
@@ -58,6 +64,7 @@ public class OptionItemService {
 
             // 사용자 권한 검증
             if (role != UserRoleEnum.MASTER && !group.getStore().getOwner().getId().equals(userId)) {
+                log.warn("Access Denied (Update Item Status) - UserId: {}, GroupId: {}", userId, group.getId());
                 throw new CustomException(ErrorCode.ACCESS_DENIED);
             }
 
@@ -83,6 +90,7 @@ public class OptionItemService {
                 // 변경 후 최종 판매 중(AVAILABLE) 개수가 최소 조건보다 적어지면 예외 발생
                 long updatedAvailableCount = currentAvailableCount + netChange;
                 if (updatedAvailableCount < group.getMinSelect()) {
+                    log.warn("Option Group minSelect violation - GroupId: {}, MinSelect: {}, ResultAvailableCount: {}", group.getId(), group.getMinSelect(), updatedAvailableCount);
                     throw new CustomException(ErrorCode.OPTION_MIN_SELECT_VIOLATION);
                 }
             }
@@ -93,5 +101,7 @@ public class OptionItemService {
             OptionItemStatus newStatus = statusUpdateMap.get(item.getId());
             item.updateStatus(newStatus);
         }
+
+        log.info("Option Items status updated - StoreId: {}, UpdatedCount: {}", storeId, optionItems.size());
     }
 }

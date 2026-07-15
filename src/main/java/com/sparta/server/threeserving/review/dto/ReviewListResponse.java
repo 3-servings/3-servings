@@ -11,16 +11,18 @@ public record ReviewListResponse(
         String nickname,
         int star,
         String content,
-        Instant createdAt
+        Instant createdAt,
+        String thumbnailUrl   // 대표 이미지(첫 장), 없으면 null
 ) {
-    public ReviewListResponse(Review review){
+    public ReviewListResponse(Review review, String thumbnailUrl){
         this(
                 review.getId(),
                 review.getUser().getId(),
                 review.getUser().getNickname(),
                 review.getStar(),
                 review.getContent(),
-                review.getCreatedAt()
+                review.getCreatedAt(),
+                thumbnailUrl
         );
     }
 }

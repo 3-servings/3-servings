@@ -11,8 +11,7 @@ import java.util.UUID;
 public record OrderCreateRequestDto (
         @NotNull Long userId,
         @NotNull UUID storeId,
-        Cart cart,
-        @NotNull OrderStatusEnum orderStatus,
+        OrderStatusEnum orderStatus,
         @NotNull @Min(value = 0L) Integer totalPrice,
         @NotNull String deliveryAddress,
         String requestMessage,

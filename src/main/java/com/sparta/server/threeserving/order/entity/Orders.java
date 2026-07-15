@@ -1,19 +1,21 @@
 package com.sparta.server.threeserving.order.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
+import com.sparta.server.threeserving.global.common.exception.ErrorCode;
+import com.sparta.server.threeserving.global.exception.CustomException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 import java.util.UUID;
 
-@Setter
 @Getter
 @Entity
 @Table(name = "p_order")
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Orders extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -27,7 +29,8 @@ public class Orders extends BaseEntity {
 
     @OneToOne
     @JoinColumn(name="cart_id", unique = true)
-    private Cart cart;
+    @Builder.Default
+    private Cart cart = null;
 
     @Column(name="order_status", nullable = false)
     @Enumerated(value=EnumType.STRING)
@@ -39,13 +42,16 @@ public class Orders extends BaseEntity {
 
     @Column(name="total_price", nullable = false)
     @Min(value = 0)
-    private Integer totalPrice;
+    @Builder.Default
+    private Integer totalPrice = 0;
 
     @Column(name="delivery_address", nullable = false)
+    @NotBlank
     private String deliveryAddress;
 
     @Column(name="request_message")
-    private String requestMessage;
+    @Builder.Default
+    private String requestMessage = "";
 
     public Orders(
             Long userId,
@@ -66,9 +72,9 @@ public class Orders extends BaseEntity {
         this.requestMessage = requestMessage;
     }
   
-    public void changeStatus(OrderStatusEnum currentStatus) {
-
-        this.orderStatus = currentStatus;
+    public void changeStatus(OrderStatusEnum nextStatus) {
+        validateStatusTransition(nextStatus);
+        this.orderStatus = nextStatus;
     }
 
     public void modifyInfo(String reqMsg, String address) {
@@ -78,7 +84,9 @@ public class Orders extends BaseEntity {
             this.deliveryAddress = address;
     }
 
-    public void cancel() {
-        this.orderStatus = OrderStatusEnum.CANCELED;
+    private void validateStatusTransition(OrderStatusEnum status) {
+        if (!this.orderStatus.canTransitionTo(status)) {
+            throw new CustomException(ErrorCode.ORDER_STATUS_TRANSITION_INVALID);
+        }
     }
 }

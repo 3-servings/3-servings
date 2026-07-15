@@ -52,8 +52,8 @@ class PaymentServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
-    @Mock
-    private OrderManagementService orderManagementService;
+//    @Mock
+//    private OrderManagementService orderManagementService;
 
     private Long userId;
     private UUID orderId;
@@ -65,10 +65,11 @@ class PaymentServiceTest {
         userId = 1L;
         orderId = UUID.randomUUID();
 
-        order = new Orders();
-        order.setId(orderId);
-        order.setUserId(userId);
-        order.setTotalPrice(10000);
+        order = Orders.builder()
+                .id(orderId)
+                .userId(userId)
+                .totalPrice(10000)
+                .build();
 
         payment = Payment.builder()
                 .order(order)
@@ -95,8 +96,8 @@ class PaymentServiceTest {
         when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(orderManagementService.create(any(OrderManagementCreateRequest.class)))
-                .thenReturn(mock(OrderManagement.class));
+//        when(orderManagementService.create(any(OrderManagementCreateRequest.class)))
+//                .thenReturn(mock(OrderManagement.class));
 
         PaymentResponse response = paymentService.createPayment(userId, orderId, request);
 
@@ -106,7 +107,7 @@ class PaymentServiceTest {
 
         verify(paymentRepository).save(any(Payment.class));
         verify(paymentLogRepository).save(any(PaymentLog.class));
-        verify(orderManagementService).create(any(OrderManagementCreateRequest.class));
+//        verify(orderManagementService).create(any(OrderManagementCreateRequest.class));
     }
 
     @Test
@@ -140,10 +141,14 @@ class PaymentServiceTest {
     void createPaymentAccessDenied(){
         PaymentRequest request = new PaymentRequest(PaymentMethod.CARD);
 
-        order.setUserId(2L);
+        Orders anotherOrder = Orders.builder()
+                .id(orderId)
+                .userId(2L)
+                .totalPrice(10000)
+                .build();
 
         when(orderRepository.findById(orderId))
-                .thenReturn(Optional.of(order));
+                .thenReturn(Optional.of(anotherOrder));
 
         CustomException exception = assertThrows(
                 CustomException.class,
