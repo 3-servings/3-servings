@@ -3,7 +3,6 @@ package com.sparta.server.threeserving.order_management.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
@@ -16,8 +15,8 @@ public class DailySalesStatResponse {
     private Long rejectedCount;
     private Long canceledCount;
     private Long totalSalesAmount;
-    private BigDecimal avgCookTime;
-    private BigDecimal completedRate;
+    private Double avgCookTime;
+    private Double completedRate;
 
 
 }

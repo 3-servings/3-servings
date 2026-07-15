@@ -12,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,10 +29,14 @@ public class DailySalesStatService {
     @Transactional
     public void createDailySalesStat(LocalDate yesterday) {
 
-        OffsetDateTime start = yesterday.atStartOfDay().atOffset(ZoneOffset.of("+09:00"));
+        ZoneId zone = ZoneId.of("Asia/Seoul");
 
-        OffsetDateTime end = yesterday.plusDays(1).atStartOfDay().atOffset(ZoneOffset.of("+09:00"));
+        Instant start = yesterday.atStartOfDay(zone)
+                .toInstant();
 
+        Instant end = yesterday.plusDays(1)
+                .atStartOfDay(zone)
+                .toInstant();
         List<DailySalesStatResponse> results = orderManagementRepository.findDailySalesStats(start, end);
 
 
@@ -107,14 +109,7 @@ public class DailySalesStatService {
         if (role == UserRoleEnum.OWNER) {
             storeAccessValidator.validateStoreAccess(userId, storeId);
         }
-        List<RejectReasonStatResponse.RejectReasonStatItem> items = orderManagementRepository.findRejectReasonStatistics(storeId)
-                .stream()
-                .map(row -> RejectReasonStatResponse.RejectReasonStatItem.builder()
-                        .rejectReasonCode(row.getRejectReasonCode())
-                        .description(row.getDescription())
-                        .count(row.getCount())
-                        .build())
-                .toList();
+        List<RejectReasonStatResponse.RejectReasonStatItem> items = orderManagementRepository.findRejectReasonStatistics(storeId);
 
         return RejectReasonStatResponse.builder()
                 .storeId(storeId)
