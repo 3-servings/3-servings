@@ -13,6 +13,8 @@ import java.util.UUID;
 
 public interface StoreRepository extends JpaRepository<Store, UUID> {
     @Query("SELECT DISTINCT s FROM Store s " +
+            "JOIN FETCH s.owner " +
+            "JOIN FETCH s.region " +
             "LEFT JOIN s.categoryList sc " +
             "LEFT JOIN Menu m ON m.store = s " +
             "WHERE (:name = '' OR s.name LIKE CONCAT('%', :name, '%') OR m.name LIKE CONCAT('%', :name, '%'))  " +
