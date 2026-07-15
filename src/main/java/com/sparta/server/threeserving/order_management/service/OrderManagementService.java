@@ -44,20 +44,6 @@ public class OrderManagementService {
     private final StoreRepository storeRepository;
     private final StoreAccessValidator storeAccessValidator;
 
-// Payment 성공 시 호출
-    @Transactional
-    public OrderManagement create(OrderManagementCreateRequest request) {
-        Orders order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new IllegalArgumentException("주문 없음"));
-        Store store = entityManager.getReference(
-                Store.class,
-                order.getStoreId()
-        );
-        OrderManagement orderManagement =
-                new OrderManagement(order,store,OrderStatusEnum.PENDING);
-
-        return orderManagementRepository.save(orderManagement);
-    }
 
 // Cart에서 체크아웃, 혹은 MASTER 강제 생성 시 호출
     @Transactional
@@ -114,9 +100,13 @@ public class OrderManagementService {
 
     }
     @Transactional
-    public void acceptOrder(UUID orderManagementId,Integer estimatedCookTime) {
+    public void acceptOrder(UUID orderManagementId,Integer estimatedCookTime, Long userId, UserRoleEnum role) {
 
         OrderManagement orderManagement = getOrderManagement(orderManagementId);
+        UUID storeId = orderManagement.getStore().getId();
+        if (role == UserRoleEnum.OWNER) {
+            storeAccessValidator.validateStoreAccess(userId, storeId);
+        }
         OrderStatusEnum previousStatus = orderManagement.getOrderStatus();
 
         // 1. 주문 관리 상태 변경
@@ -129,9 +119,13 @@ public class OrderManagementService {
 
 
     @Transactional
-    public void rejectOrder(UUID orderManagementId,UUID rejectReasonCodeId, String memo) {
+    public void rejectOrder(UUID orderManagementId,UUID rejectReasonCodeId, String memo, Long userId, UserRoleEnum role) {
 
         OrderManagement orderManagement = getOrderManagement(orderManagementId);
+        UUID storeId = orderManagement.getStore().getId();
+        if (role == UserRoleEnum.OWNER) {
+            storeAccessValidator.validateStoreAccess(userId, storeId);
+        }
         RejectReasonCode rejectReasonCode = rejectReasonCodeRepository.findById(rejectReasonCodeId)
                 .orElseThrow(() ->
                         new CustomException(
@@ -149,9 +143,13 @@ public class OrderManagementService {
     }
 
     @Transactional
-    public void updateStatus(UUID orderManagementId, @NotNull OrderStatusEnum status) {
+    public void updateStatus(UUID orderManagementId, OrderStatusEnum status,  Long userId, UserRoleEnum role) {
 
         OrderManagement orderManagement = getOrderManagement(orderManagementId);
+        UUID storeId = orderManagement.getStore().getId();
+        if (role == UserRoleEnum.OWNER) {
+            storeAccessValidator.validateStoreAccess(userId, storeId);
+        }
         OrderStatusEnum previousStatus = orderManagement.getOrderStatus();
 
         // 1. 주문 관리 상태 변경
@@ -167,9 +165,13 @@ public class OrderManagementService {
     }
 
     @Transactional
-    public void updateCookingTime(UUID orderManagementId, Integer estimatedCookTime) {
+    public void updateCookingTime(UUID orderManagementId, Integer estimatedCookTime, Long userId, UserRoleEnum role) {
 
         OrderManagement orderManagement = getOrderManagement(orderManagementId);
+        UUID storeId = orderManagement.getStore().getId();
+        if (role == UserRoleEnum.OWNER) {
+            storeAccessValidator.validateStoreAccess(userId, storeId);
+        }
         OrderStatusEnum status = orderManagement.getOrderStatus();
         if (status != OrderStatusEnum.ACCEPTED &&
                 status != OrderStatusEnum.COOKING) {
