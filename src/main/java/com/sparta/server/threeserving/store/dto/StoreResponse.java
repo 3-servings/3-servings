@@ -15,6 +15,7 @@ import java.util.UUID;
 
 @Getter
 public class StoreResponse {
+    UUID id;
     String name;
     StoreOwnerResponse owner;
     String phone;
@@ -27,6 +28,7 @@ public class StoreResponse {
     int delivery_radius_m;
 
     public StoreResponse(Store store){
+        this.id = store.getId();
         this.name = store.getName();
         this.owner = new StoreOwnerResponse(store.getOwner());
         this.phone = store.getPhone();
