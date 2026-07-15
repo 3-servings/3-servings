@@ -1,7 +1,7 @@
 package com.sparta.server.threeserving.image.service;
 
 import com.sparta.server.threeserving.image.dto.request.ImageRequest;
-import com.sparta.server.threeserving.image.entity.DomainType;
+import com.sparta.server.threeserving.image.enums.DomainType;
 import com.sparta.server.threeserving.image.entity.Image;
 import com.sparta.server.threeserving.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;

@@ -18,6 +18,10 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    set('springAiVersion', "1.1.0")
+}
+
 dependencies {
 
 
@@ -38,7 +42,8 @@ dependencies {
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
 
-
+    // Spring AI Google GenAI 스타터
+    implementation 'org.springframework.ai:spring-ai-starter-model-google-genai'
 
     // json
     implementation 'org.json:json:20230227'
@@ -58,10 +63,11 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
 }
-// Querydsl 설정
+
+// QueryDSL QClass 생성 위치 설정
 def generated = layout.buildDirectory.dir("generated/sources/annotationProcessor/java/main")
 
-// Java 소스에 Querydsl이 생성한 디렉토리를 추가
+// 생성된 QClass를 Java 소스 경로에 포함하여 QueryDSL 사용 가능하도록 설정
 sourceSets {
     main {
         java {
@@ -70,9 +76,15 @@ sourceSets {
     }
 }
 
-// gradle clean 시 생성된 QClass 디렉토리 삭제
+// Entity 변경 시 기존 QClass와 불일치 방지를 위해 clean 시 생성된 QClass 삭제
 clean {
     delete file(generated)
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 tasks.named('test') {

@@ -18,7 +18,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     @Query("SELECT c from  Category  c " +
             "WHERE c.isActive = :isActive " +
-            "AND (:name IS NULL OR c.name LIKE CONCAT('%', :name , '%') )")
+            "AND (:name = '' OR c.name LIKE CONCAT('%', :name , '%') )")
     Page<Category> searchCategories(
             @Param("isActive") Boolean isActive,
             @Param("name") String name,

@@ -9,6 +9,7 @@ import com.sparta.server.threeserving.store.dto.request.StoreSearchCondition;
 import com.sparta.server.threeserving.store.dto.request.UpdateStoreRequest;
 import com.sparta.server.threeserving.store.service.StoreService;
 import com.sparta.server.threeserving.user.entity.User;
+import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,9 +39,13 @@ public class StoreController {
     @GetMapping("/")
     public ApiResponse<Page<StoreResponse>> getStores(
             StoreSearchCondition condition,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        return storeService.getStores(condition, pageable);
+        boolean isAdmin = userDetails != null
+                && (userDetails.getUser().getRole() == UserRoleEnum.MANAGER
+                    || userDetails.getUser().getRole() == UserRoleEnum.MASTER);
+        return storeService.getStores(condition, pageable, isAdmin);
     }
 
     @GetMapping("/{storeId}")

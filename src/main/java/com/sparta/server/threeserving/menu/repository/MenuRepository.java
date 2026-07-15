@@ -1,7 +1,7 @@
 package com.sparta.server.threeserving.menu.repository;
 
 import com.sparta.server.threeserving.menu.entity.Menu;
-import com.sparta.server.threeserving.menu.entity.MenuStatus;
+import com.sparta.server.threeserving.menu.enums.MenuStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

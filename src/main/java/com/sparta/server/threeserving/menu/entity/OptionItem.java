@@ -1,6 +1,7 @@
 package com.sparta.server.threeserving.menu.entity;
 
 import com.sparta.server.threeserving.global.common.BaseEntity;
+import com.sparta.server.threeserving.menu.enums.OptionItemStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
