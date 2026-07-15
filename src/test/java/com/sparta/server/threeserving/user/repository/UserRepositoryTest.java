@@ -1,6 +1,7 @@
 package com.sparta.server.threeserving.user.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sparta.server.threeserving.global.config.QueryDslConfig;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import jakarta.persistence.EntityManager;
@@ -25,24 +26,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("ci")
-@Import(UserRepositoryTest.TestAuditingConfig.class)
+@Import({QueryDslConfig.class, UserRepositoryTest.TestAuditingConfig.class})//QueryDslConfig 같이 import
 public class UserRepositoryTest {
 
     // @DataJpaTest 슬라이스는 @Component(AuditorAwareImpl)를 제외하므로,
     // 앱의 JpaAuditingConfig(auditorAwareRef="auditorAwareImpl") 대신
     // 이름 참조가 없는 기본 감사 설정을 테스트용으로 제공한다. (createdAt만 필요)
 
-    // 이 내부 설정 클래스에 QueryDSL 설정을 함께 넣어줍니다.
+
     @TestConfiguration
     @EnableJpaAuditing
     static class TestAuditingConfig {
-        @PersistenceContext
-        private EntityManager entityManager;
 
-        @Bean
-        public JPAQueryFactory jpaQueryFactory() {
-            return new JPAQueryFactory(entityManager);
-        }
     }
 
 
