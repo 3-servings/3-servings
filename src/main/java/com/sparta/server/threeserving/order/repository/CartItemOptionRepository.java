@@ -10,5 +10,9 @@ import java.util.UUID;
 
 @Repository
 public interface CartItemOptionRepository extends JpaRepository<CartItemOption, UUID> {
+    List<CartItemOption> findAllByCartItemInAndDeletedAtIsNull(List<CartItem> cartItems);
+
+    List<CartItemOption> findAllByCartItem(CartItem cartItem);
+
     List<CartItemOption> findAllByCartItemIn(List<CartItem> cartItems);
 }
