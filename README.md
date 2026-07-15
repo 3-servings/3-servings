@@ -6,22 +6,34 @@ Spring Boot 기반 음식 주문 관리 플랫폼
 
 ## 📌 Project Overview
 
-- **프로젝트 기간** : 2026.07.02~07.16
+### 🎯 프로젝트 목적
+
+전화 주문 중심의 음식점 운영 방식을 온라인 서비스로 구현하여 고객의 주문부터 점주의 주문 관리와 결제까지 하나의 플랫폼에서 처리할 수 있는 음식 주문 관리 시스템을 개발하는 것을 목표
+
+### 📝 프로젝트 상세
+
+- Spring Boot 기반의 모놀리식 아키텍처를 적용하여 음식 주문 관리 플랫폼을 구현했습니다.
+- 고객(CUSTOMER)은 가게와 메뉴를 조회하고 장바구니를 통해 주문 및 결제를 진행할 수 있습니다.
+- 점주(OWNER)는 가게와 메뉴를 관리하고 주문을 수락·거절하며 주문 상태를 변경하고 조리 과정을 관리할 수 있습니다.
+- AI 기반 메뉴 설명 생성 기능과 Toss Payments 결제 연동을 통해 실제 서비스와 유사한 기능을 구현했습니다.
+- Docker, AWS EC2, Nginx, GitHub Actions를 활용하여 컨테이너 기반 배포 및 CI/CD 환경을 구축했습니다.
+
+### 📋 프로젝트 정보
+
+- **프로젝트 기간** : 2026.07.02 ~ 2026.07.16
 - **개발 인원** : 6명
 - **아키텍처** : Spring Boot Monolithic
 - **배포 환경** : AWS EC2 + Docker + Nginx
 
 ## ✨ 주요 기능
 
-## ✨ 주요 기능
-
-| 👤 회원(Auth) | 🏪 가게 | 🍽️ 메뉴 | 🛒 주문 |
+| 👤 회원(Auth) | 🏪 가게 | 🍽️ 메뉴 | 🛒 장바구니 |
 |:---:|:---:|:---:|:---:|
-| ✅ 회원가입 / 로그인<br>✅ 소셜 로그인<br>✅ JWT 인증<br>✅ Access Token 재발급<br>✅ 로그아웃 / 회원탈퇴 | ✅ 가게 CRUD<br>✅ 카테고리 관리<br>✅ 지역 관리<br>✅ 서비스 가능 지역 설정 | ✅ 메뉴 CRUD<br>✅ 메뉴 카테고리 관리<br>✅ 옵션 그룹 관리<br>✅ Presigned URL 발급 | ✅ 장바구니 관리<br>✅ 체크아웃(주문 생성)<br>✅ 주문 조회<br>✅ 주문 수정 / 취소 |
+| ✅ 회원가입 / 로그인<br>✅ 소셜 로그인<br>✅ JWT 인증<br>✅ Access Token 재발급<br>✅ 로그아웃 / 회원탈퇴 | ✅ 가게 CRUD<br>✅ 카테고리 관리<br>✅ 지역 관리<br>✅ 서비스 가능 지역 설정 | ✅ 메뉴 CRUD<br>✅ 메뉴 카테고리 관리<br>✅ 옵션 그룹 관리<br>✅ Presigned URL 발급<br>✅ AI 상품 설명 생성 | ✅ 장바구니 생성 및 조회<br>✅ 메뉴 담기<br>✅ 수량 변경<br>✅ 항목 삭제 |
 
-| 👨‍🍳 주문 관리 | 💳 결제 | ⭐ 리뷰 | 🤖 AI |
+| 📦 주문 | 👨‍🍳 주문 관리 | 💳 결제 | ⭐ 리뷰 |
 |:---:|:---:|:---:|:---:|
-| ✅ 주문 수락 / 거절<br>✅ 주문 상태 변경<br>✅ 예상 조리시간 수정<br>✅ 주문 통계 조회 | ✅ Toss Payments 연동<br>✅ 결제 요청 / 환불<br>✅ 결제 내역 조회<br>✅ 결제 로그 조회 | ✅ 리뷰 CRUD<br>✅ 가게 리뷰 조회<br>✅ 사장 답글 작성 / 수정 | ✅ AI 상품 설명 생성<br>✅ AI 메뉴 추천 |
+| ✅ 체크아웃(주문 생성)<br>✅ 주문 조회<br>✅ 주문 수정 / 취소 | ✅ 주문 수락 / 거절<br>✅ 주문 상태 변경<br>✅ 예상 조리시간 수정<br>✅ 주문 통계 조회 | ✅ Toss Payments 연동<br>✅ 결제 요청 / 환불<br>✅ 결제 내역 조회<br>✅ 결제 로그 조회 | ✅ 리뷰 CRUD<br>✅ 가게 리뷰 조회<br>✅ 사장 답글 작성 / 수정 |
 
 ## 👨‍💻 Team Members
 
@@ -38,7 +50,7 @@ Spring Boot 기반 음식 주문 관리 플랫폼
 
 ### Backend
 
-![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=white) ![Spring Data JPA](https://img.shields.io/badge/JPA-59666C?logo=hibernate&logoColor=white)
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=white) ![Spring Data JPA](https://img.shields.io/badge/JPA-59666C?logo=hibernate&logoColor=white) ![Spring AI](https://img.shields.io/badge/Spring_AI-6DB33F?logo=spring&logoColor=white)
 
 ### Database
 
