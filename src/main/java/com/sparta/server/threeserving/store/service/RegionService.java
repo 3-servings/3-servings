@@ -97,7 +97,7 @@ public class RegionService {
 
     public ApiResponse<Page<RegionResponse>> getRegions(Pageable pageable) {
         Pageable newPageable = PageRequest.of(pageable.getPageNumber(),PageService.resolvePageSize(pageable.getPageSize()),  pageable.getSort());
-        Page<RegionResponse> regions = regionRepository.findByIsServiceArea(true, newPageable).map(RegionResponse::new);
+        Page<RegionResponse> regions = regionRepository.findByIsServiceArea(false, newPageable).map(RegionResponse::new);
 
         return ApiResponse.success(SuccessCode.SUCCESS, regions);
     }
