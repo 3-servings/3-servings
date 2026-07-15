@@ -30,10 +30,7 @@ spring:
             temperature: 0.4
             max-tokens: 300
     retry:
-      max-attempts: 2 # 원래 요청 1번 + 실패 시 재시도 1번 = 총 2번
-      backoff:
-        initial-interval: 500 # 실패 후 0.5초 대기 후 즉시 재시도
-        multiplier: 1.5 # 재시도 대기 시간 1.5베 증가
+      max-attempts: 1 # 원래 요청 1번 + 실패 시 재시도 0번 = 총 1번
 
 cloud:
   aws:
