@@ -3,6 +3,7 @@ package com.sparta.server.threeserving.auth.jwt;
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
 import com.sparta.server.threeserving.global.exception.CustomException;
+import com.sparta.server.threeserving.global.logging.MdcUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
