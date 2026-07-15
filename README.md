@@ -8,7 +8,7 @@ Spring Boot 기반 음식 주문 관리 플랫폼
 
 ### 🎯 프로젝트 목적
 
-전화 주문 중심의 음식점 운영 방식을 온라인 서비스로 구현하여 고객의 주문부터 점주의 주문 관리와 결제까지 하나의 플랫폼에서 처리할 수 있는 음식 주문 관리 시스템을 개발하는 것을 목표
+전화 주문 중심의 음식점 운영 방식을 온라인 서비스로 구현하여 고객의 주문부터 점주의 주문 관리와 결제까지 하나의 플랫폼에서 처리할 수 있는 음식 주문 관리 시스템을 개발하는 것을 목표로 합니다.
 
 ### 📝 프로젝트 상세
 
@@ -104,15 +104,26 @@ DB_PASSWORD=
 REDIS_HOST=
 REDIS_PORT=
 
-# AWS S3
+# S3
 AWS_REGION=
 S3_BUCKET_NAME=
+AWS_ACCESS_KEY_ID= 
+AWS_SECRET_ACCESS_KEY= 
+CLOUD_FRONT_DOMAIN=
 
 # JWT
 JWT_SECRET=
 
-# Toss Payments
+# TOSS
 TOSS_SECRET_KEY=
+
+# Kakao
+KAKAO_CLIENT_ID=
+KAKAO_REST_API_KEY=
+KAKAO_REDIRECT_URI=
+
+# Gemini
+GEMINI_API_KEY=
 ```
 
 ### 3. Run
