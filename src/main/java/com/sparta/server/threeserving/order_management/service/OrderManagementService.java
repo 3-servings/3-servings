@@ -34,7 +34,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderManagementService {
 
-// TODO: Role(MASTER/OWNER)에 따른 Store 접근 권한 체크 추가
 
     private final OrderManagementRepository orderManagementRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
@@ -44,20 +43,6 @@ public class OrderManagementService {
     private final StoreRepository storeRepository;
     private final StoreAccessValidator storeAccessValidator;
 
-// Payment 성공 시 호출
-    @Transactional
-    public OrderManagement create(OrderManagementCreateRequest request) {
-        Orders order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new IllegalArgumentException("주문 없음"));
-        Store store = entityManager.getReference(
-                Store.class,
-                order.getStoreId()
-        );
-        OrderManagement orderManagement =
-                new OrderManagement(order,store,OrderStatusEnum.PENDING);
-
-        return orderManagementRepository.save(orderManagement);
-    }
 
 // Cart에서 체크아웃, 혹은 MASTER 강제 생성 시 호출
     @Transactional

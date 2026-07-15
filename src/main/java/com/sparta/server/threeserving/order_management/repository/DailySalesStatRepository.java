@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface DailySalesStatRepository extends JpaRepository<DailySalesStat, UUID> {
 
     List<DailySalesStat> findByStoreIdAndStatDateBetweenOrderByStatDate(UUID storeId, LocalDate startDate, LocalDate endDate);
+
 }

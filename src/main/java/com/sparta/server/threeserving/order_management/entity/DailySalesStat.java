@@ -5,7 +5,6 @@ import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -39,33 +38,14 @@ public class DailySalesStat extends BaseEntity {
     private Long totalSalesAmount;
 
     @Column(name = "avg_cook_time")
-    private BigDecimal avgCookTime;
+    private Double avgCookTime;
 
     @Column(name = "completed_rate")
-    private BigDecimal completedRate;
+    private Double completedRate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
-
-
-//    public DailySalesStat(
-//            Store store,
-//            LocalDate statDate,
-//            Integer totalOrderCount,
-//            Integer completedCount,
-//            Integer rejectedCount,
-//            Integer canceledCount,
-//            Long totalSalesAmount
-//    ) {
-//        this.store = store;
-//        this.statDate = statDate;
-//        this.totalOrderCount = totalOrderCount;
-//        this.completedCount = completedCount;
-//        this.rejectedCount = rejectedCount;
-//        this.canceledCount = canceledCount;
-//        this.totalSalesAmount = totalSalesAmount;
-//    }
 
 
 
