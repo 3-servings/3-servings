@@ -5,7 +5,6 @@ import com.sparta.server.threeserving.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
