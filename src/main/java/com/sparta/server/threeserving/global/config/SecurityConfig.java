@@ -108,9 +108,34 @@ public class SecurityConfig {
                     // .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
                     // .requestMatchers(HttpMethod.POST, "/api/stores/**").hasRole("OWNER")
 
-
                     // Menu
+                    .requestMatchers(HttpMethod.POST, "/api/stores/{storeId}/menu-categories").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.GET, "/api/stores/{storeId}/menu-categories").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/api/menu-categories/{menuCategoryId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/menu-categories/display-order").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/menu-categories/{menuCategoryId}").hasAnyRole("OWNER", "MASTER")
 
+                    .requestMatchers(HttpMethod.POST, "/api/stores/{storeId}/option-groups").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.GET, "/api/stores/{storeId}/option-groups").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/api/option-groups/{optionGroupId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/option-groups/{optionGroupId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PUT, "/api/menus/{menuId}/option-groups").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/option-items/status").hasAnyRole("OWNER", "MASTER")
+
+                    .requestMatchers(HttpMethod.POST, "/api/stores/{storeId}/menus").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.GET, "/api/stores/{storeId}/menus").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/stores/{storeId}/menu-board").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/menus/{menuId}").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/api/menus/{menuId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/menus/{menuId}").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/menus/status").hasAnyRole("OWNER", "MASTER")
+                    .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/menus/display-order").hasAnyRole("OWNER", "MASTER")
+
+                    // Image
+                    .requestMatchers("/api/images/presigned-url").hasAnyRole("OWNER", "MASTER")
+
+                    // Ai
+                    .requestMatchers(HttpMethod.POST, "/api/menus/ai/description").hasAnyRole("OWNER", "MASTER")
 
                     // OrderManagement
                     .requestMatchers(HttpMethod.GET, "/api/order-management/**").hasAnyRole("OWNER", "MASTER")
