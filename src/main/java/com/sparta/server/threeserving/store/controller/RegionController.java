@@ -27,12 +27,12 @@ public class RegionController {
     private final RegionService regionService;
 
 
-    @PostMapping("/")
+    @PostMapping
     public ApiResponse<RegionResponse> createRegion(@Valid @RequestBody CreateRegionRequest request){
         return regionService.createRegion(request);
     }
 
-    @GetMapping("/")
+    @GetMapping
     public ApiResponse<Page<RegionResponse>> getRegions(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable
             ){

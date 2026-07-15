@@ -30,13 +30,13 @@ public class StoreController {
 
 
 
-    @PostMapping("/")
+    @PostMapping
     public ApiResponse<StoreResponse> registerStore(@Valid @RequestBody RegisterStore request, @AuthenticationPrincipal UserDetailsImpl userDetails){
         User user = userDetails.getUser();
         return storeService.registerStore(request, user);
     }
 
-    @GetMapping("/")
+    @GetMapping
     public ApiResponse<Page<StoreResponse>> getStores(
             StoreSearchCondition condition,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
