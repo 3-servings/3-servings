@@ -1,9 +1,8 @@
 package com.sparta.server.threeserving.global.config;
 
 import com.sparta.server.threeserving.auth.UserDetailsServiceImpl;
-import com.sparta.server.threeserving.auth.jwt.JwtAuthenticationFilter;
-import com.sparta.server.threeserving.auth.jwt.JwtAuthorizationFilter;
-import com.sparta.server.threeserving.auth.jwt.JwtUtil;
+import com.sparta.server.threeserving.auth.jwt.*;
+import com.sparta.server.threeserving.auth.jwt.*;
 import com.sparta.server.threeserving.auth.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +32,8 @@ public class SecurityConfig {
     private final RedisService redisService;
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception{
@@ -65,6 +66,9 @@ public class SecurityConfig {
             .formLogin(form -> form.disable())   //Spring Security 기본 로그인 페이지 비활성화
             .httpBasic(basic -> basic.disable()) // Basic 인증 비활성화
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(handler -> handler
+                    .authenticationEntryPoint(customAuthenticationEntryPoint)
+                    .accessDeniedHandler(customAccessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
                     // ===== 인가 규칙 템플릿 =====
                     // 규칙은 위에서부터 순서대로 평가되어 먼저 매칭되는 규칙이 적용됩니다.
