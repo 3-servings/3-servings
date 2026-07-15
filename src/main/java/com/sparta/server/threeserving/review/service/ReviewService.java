@@ -14,8 +14,10 @@ import com.sparta.server.threeserving.review.repository.ReviewRepository;
 import com.sparta.server.threeserving.store.entity.Store;
 import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
+import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -47,11 +49,12 @@ public class ReviewService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
         if (!order.getUserId().equals(loginUser.getId())) {
-            throw new CustomException(ErrorCode.NOT_ORDER_OWNER);
+            throw new CustomException(ErrorCode.NOT_ORDER_OWNER_OF_REVIEW);
         }
         if (order.getOrderStatus() != OrderStatusEnum.COMPLETED) {
             throw new CustomException(ErrorCode.ORDER_NOT_COMPLETED);
         }
+        // 선제 검사: 어떤 이유로 막혔는지 정확히 알려주기 위함(친절한 에러)
         if (reviewRepository.existsByOrder_IdAndDeletedAtIsNull(order.getId())) {
             throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
@@ -60,7 +63,15 @@ public class ReviewService {
                 .orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
         Review review = Review.create(order, loginUser, store, request.star(), request.content());
-        reviewRepository.save(review);
+        try {
+            reviewRepository.saveAndFlush(review);
+        } catch (DataIntegrityViolationException e) {
+            // 최후 방어: exists 검사와 save 사이의 경합으로 동시 요청이 둘 다 통과하면
+            // 주문당 리뷰가 2건 생겨 평점이 조작된다. DB 유니크 인덱스 위반을 409로 변환한다.
+            // 인덱스: CREATE UNIQUE INDEX uk_review_order_active ON p_review(order_id) WHERE deleted_at IS NULL;
+            log.warn("리뷰 중복 작성 경합 감지 : orderId={}, userId={}", order.getId(), loginUser.getId());
+            throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
+        }
 
         List<String> imageUrls = imageService.saveImages(DomainType.REVIEW, review.getId(), request.images());
         recalculateStoreRating(store);
@@ -74,8 +85,7 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public ReviewResponse getReview(UUID reviewId) {
         Review review = findActiveReview(reviewId);
-        String imageUrl = imageService.getImageUrl(DomainType.REVIEW, reviewId);   // 대표 이미지
-        List<String> imageUrls = imageUrl == null ? List.of() : List.of(imageUrl);
+        List<String> imageUrls = imageService.getImageUrls(DomainType.REVIEW, reviewId);   // 첨부 이미지 전체
         ReviewCommentResponse ownerReply = reviewCommentRepository
                 .findByReview_IdAndDeletedAtIsNull(reviewId)
                 .map(ReviewCommentResponse::new)
@@ -100,15 +110,17 @@ public class ReviewService {
         if (!review.isOwner(loginUser.getId())) {
             throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
         }
-        review.update(request.star(), request.content());
+        // 이미지와 동일하게 "안 보냄 = 변경 없음"으로 통일한다.
+        // content 만 null 로 덮어쓰면 별점만 고치려던 요청에 리뷰 내용이 지워진다.
+        String newContent = request.content() != null ? request.content() : review.getContent();
+        review.update(request.star(), newContent);
 
         List<String> imageUrls;
         if (request.images() != null && !request.images().isEmpty()) {
             // 기존 soft-delete 후 재저장
             imageUrls = imageService.replaceImages(DomainType.REVIEW, reviewId, request.images(), loginUser.getId());
         } else {
-            String url = imageService.getImageUrl(DomainType.REVIEW, reviewId);
-            imageUrls = url == null ? List.of() : List.of(url);
+            imageUrls = imageService.getImageUrls(DomainType.REVIEW, reviewId);
         }
 
         recalculateStoreRating(review.getStore());
@@ -116,11 +128,11 @@ public class ReviewService {
         return new ReviewResponse(review, imageUrls);
     }
 
-    // 삭제: 본인만, soft-delete
+    // 삭제: 작성자 본인 또는 관리자, soft-delete
     @Transactional
     public void deleteReview(User loginUser, UUID reviewId) {
         Review review = findActiveReview(reviewId);
-        if (!review.isOwner(loginUser.getId())) {
+        if (!review.isOwner(loginUser.getId()) && !isAdmin(loginUser)) {
             throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
         }
         review.softDelete(loginUser.getId());
@@ -144,6 +156,14 @@ public class ReviewService {
     private Review findActiveReview(UUID reviewId){
         return reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
+    }
+
+    // 관리자는 신고된 악성 리뷰를 내릴 수 있어야 한다(운영 개입).
+    // 삭제만 허용하고 수정은 허용하지 않는다 — 남의 리뷰 내용을 고치는 것은 위조다.
+    // deletedBy 에 관리자 id 가 남으므로 누가 내렸는지 추적된다.
+    private boolean isAdmin(User user) {
+        UserRoleEnum role = user.getRole();
+        return role == UserRoleEnum.MASTER || role == UserRoleEnum.MANAGER;
     }
 
     private void recalculateStoreRating(Store store) {

@@ -87,27 +87,37 @@ public class ImageService {
         imageRepository.softDeleteAllByTargetId(domainType, targetId, userId);
     }
 
-    // 단건 이미지 조회
+    // 대표 이미지 1장 조회 (목록 썸네일용)
     @Transactional(readOnly = true)
     public String getImageUrl(DomainType domainType, UUID targetId) {
-        return imageRepository.findAllByDomainTypeAndTargetIdOrderBySequenceAsc(domainType, targetId)
+        return imageRepository.findAllByDomainTypeAndTargetIdAndDeletedAtIsNullOrderBySequenceAsc(domainType, targetId)
                 .stream()
                 .findFirst()
                 .map(Image::getImageUrl)
                 .orElse(null);
     }
 
-    // 이미지 다건 조회, N+1 고려
+    // 특정 targetId의 이미지 전체 조회 (상세 화면용)
+    // saveImages 로 여러 장 저장해놓고 getImageUrl 로 1장만 꺼내면 나머지가 사라진 것처럼 보인다.
+    @Transactional(readOnly = true)
+    public List<String> getImageUrls(DomainType domainType, UUID targetId) {
+        return imageRepository.findAllByDomainTypeAndTargetIdAndDeletedAtIsNullOrderBySequenceAsc(domainType, targetId)
+                .stream()
+                .map(Image::getImageUrl)
+                .toList();
+    }
+
+    // 이미지 다건 조회, N+1 고려. targetId 당 대표 이미지(sequence 최솟값) 1장.
     @Transactional(readOnly = true)
     public Map<UUID, String> getImageUrlMap(DomainType domainType, List<UUID> targetIds) {
         if (targetIds.isEmpty()) return Collections.emptyMap();
 
-        List<Image> images = imageRepository.findByDomainTypeAndTargetIdIn(domainType, targetIds);
+        List<Image> images = imageRepository.findByDomainTypeAndTargetIdInAndDeletedAtIsNullOrderBySequenceAsc(domainType, targetIds);
         return images.stream()
                 .collect(Collectors.toMap(
                         Image::getTargetId,
                         Image::getImageUrl,
-                        (img1, img2) -> img1
+                        (img1, img2) -> img1   // sequence 오름차순이므로 첫 장이 대표
                 ));
     }
 }
