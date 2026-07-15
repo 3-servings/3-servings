@@ -74,18 +74,20 @@ public class AiMenuDescriptionService {
             BeanOutputConverter<AiMenuDescriptionResponse> converter = new BeanOutputConverter<>(AiMenuDescriptionResponse.class);
             responseDto = converter.convert(rawAiResponse);
 
+            log.info("AI Description generated successfully - StoreId: {}, MenuId: {}", request.getStoreId(), request.getMenuId());
+
         } catch (CustomException e) {
-            log.error("AI 응답 검증 실패 - StoreId: {}", request.getStoreId(), e);
+            log.warn("AI validation failed - StoreId: {}, MenuId: {}, ErrorCode: {}", request.getStoreId(), request.getMenuId(), e.getErrorCode());
             status = AiGenerationStatus.FAIL_SYSTEM;
             throw e;
 
         } catch (JsonProcessingException e) {
-            log.error("AI 응답 JSON 파싱 실패 - StoreId: {}", request.getStoreId(), e);
+            log.error("AI response parsing failed - StoreId: {}, MenuId: {}", request.getStoreId(), request.getMenuId(), e);
             status = AiGenerationStatus.FAIL_PARSING;
             throw new CustomException(ErrorCode.AI_RESPONSE_PARSE_ERROR);
 
         } catch (Exception e) {
-            log.error("Gemini API 호출 에러 또는 Timeout 발생 - StoreId: {}", request.getStoreId(), e);
+            log.error("Gemini API call error or timeout - StoreId: {}, MenuId: {}", request.getStoreId(), request.getMenuId(), e);
             status = AiGenerationStatus.FAIL_SYSTEM;
             throw new CustomException(ErrorCode.AI_GENERATION_FAILED);
 

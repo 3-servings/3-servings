@@ -3,8 +3,13 @@ package com.sparta.server.threeserving.menu.repository;
 import com.sparta.server.threeserving.menu.entity.OptionGroup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface OptionGroupRepository extends JpaRepository<OptionGroup, UUID> {
@@ -18,4 +23,12 @@ public interface OptionGroupRepository extends JpaRepository<OptionGroup, UUID> 
     Page<OptionGroup> findAllByStoreId(UUID storeId, Pageable pageable);
 
     boolean existsByStoreIdAndNameAndIdNot(UUID storeId, String name, UUID optionGroupId);
+
+    @EntityGraph(attributePaths = {"store", "store.owner"})
+    @Query("SELECT o FROM OptionGroup o WHERE o.id = :id")
+    Optional<OptionGroup> findByIdWithStoreAndOwner(@Param("id") UUID id);
+
+    @EntityGraph(attributePaths = {"store"})
+    @Query("SELECT o FROM OptionGroup o WHERE o.id IN :ids")
+    List<OptionGroup> findAllByIdInWithStore(@Param("ids") Iterable<UUID> ids);
 }

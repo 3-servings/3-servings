@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/ai")
 @RequiredArgsConstructor
 public class AiMenuDescriptionController {
 
     private final AiMenuDescriptionService aiMenuDescriptionService;
 
-    @PostMapping("/ai/description")
+    @PostMapping("/description")
     public ResponseEntity<ApiResponse<AiMenuDescriptionResponse>> generateAiDescription(
             @Valid @RequestBody AiMenuDescriptionRequest request
     ) {
