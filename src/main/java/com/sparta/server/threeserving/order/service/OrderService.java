@@ -20,7 +20,7 @@ import com.sparta.server.threeserving.store.repository.StoreRepository;
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
 import com.sparta.server.threeserving.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -52,7 +53,7 @@ public class OrderService {
     private final UserRepository userRepository;
 
     @Transactional
-    public ApiResponse<OrderCreateResponseDto> createOrder(OrderCreateRequestDto requestDto) {
+    public OrderCreateResponseDto createOrder(OrderCreateRequestDto requestDto) {
         // validation
         userRepository.findById(requestDto.userId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         storeRepository.findById(requestDto.storeId()).orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
@@ -91,11 +92,10 @@ public class OrderService {
         orderItemOptionRepository.saveAll(orderItemOptionList);
 
         orderManagementService.create(savedOrder, status);
-
-        return ApiResponse.success(SuccessCode.CREATED, new OrderCreateResponseDto(savedOrder));
+        return new OrderCreateResponseDto(savedOrder);
     }
 
-    public ApiResponse<OrderDetailResponseDto> getOrderDetail(Long userId, UserRoleEnum userRole, UUID orderId) {
+    public OrderDetailResponseDto getOrderDetail(Long userId, UserRoleEnum userRole, UUID orderId) {
         // userId - orderId 접근 확인
         Orders order = switch (userRole) {
             case CUSTOMER -> validateOrderOwner(userId, orderId);
@@ -129,20 +129,18 @@ public class OrderService {
                                 )).toList()
                 )).toList();
 
-        return ApiResponse.success(SuccessCode.SUCCESS, new OrderDetailResponseDto(order, items));
+        return new OrderDetailResponseDto(order, items);
     }
 
-    // TODO: 언젠가 QueryDSL로 변경해도 될듯.
-    public ApiResponse<Page<OrderListResponseDto>> getOrderList(User user, UUID storeId, Long userId, OrderStatusEnum orderStatusEnum, int size, int page, String sortBy, boolean isAsc) {
+    public Page<OrderListResponseDto> getOrderList(User user, UUID storeId, Long targetUserID, OrderStatusEnum orderStatusEnum, int size, int page, String sortBy, boolean isAsc) {
         Pageable pageable = toPageable(size, page, sortBy, isAsc);
         Page<Orders> orderPage = switch (user.getRole()) {
             case CUSTOMER -> getForCustomer(user.getId(), storeId, orderStatusEnum, pageable);
             case OWNER -> getForOwner(user.getId(), storeId, orderStatusEnum, pageable);
-            case MANAGER, MASTER -> getForAdmin(userId, storeId, orderStatusEnum, pageable);
+            case MANAGER, MASTER -> getForAdmin(targetUserID, storeId, orderStatusEnum, pageable);
         };
 
-        Page<OrderListResponseDto> responsePage = orderPage.map(OrderListResponseDto::new);
-        return ApiResponse.success(SuccessCode.SUCCESS, responsePage);
+        return orderPage.map(OrderListResponseDto::new);
     }
 
     private Page<Orders> getForAdmin(Long userId, UUID storeId, OrderStatusEnum status, Pageable pageable) {
@@ -164,7 +162,6 @@ public class OrderService {
 
         if(storeId != null) {
             if(!ownedStoreIdList.contains(storeId)) {
-                // TODO: Store에러코드 더 생기면 바꾸기
                 throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
             }
             return (status != null)
@@ -195,7 +192,7 @@ public class OrderService {
     }
 
     @Transactional
-    public ApiResponse<OrderModifyResponseDto> modifyOrderInfo(Long userId, UUID orderId, OrderModifyRequestDto orderModifyRequestDto) {
+    public OrderModifyResponseDto modifyOrderInfo(Long userId, UUID orderId, OrderModifyRequestDto orderModifyRequestDto) {
         Orders order = validateOrderOwner(userId, orderId);
 
         if (order.getOrderStatus() != OrderStatusEnum.PENDING) {
@@ -207,12 +204,11 @@ public class OrderService {
                 orderModifyRequestDto.deliveryAddress()
         );
 
-        OrderModifyResponseDto responseDto = new OrderModifyResponseDto(order);
-        return ApiResponse.success(SuccessCode.SUCCESS, responseDto);
+        return new OrderModifyResponseDto(order);
     }
 
     @Transactional
-    public ApiResponse<OrderCancelResponseDto> cancelOrder(Long userId, UUID orderId) {
+    public OrderCancelResponseDto cancelOrder(Long userId, UUID orderId) {
         Orders order = validateOrderOwner(userId, orderId);
 
         if(order.getOrderStatus() != OrderStatusEnum.PENDING)
@@ -224,9 +220,9 @@ public class OrderService {
             throw new CustomException(ErrorCode.EXPIRED_CANCEL_TIME);
         }
 
-        order.changeStatus(OrderStatusEnum.CANCELED);
+        orderManagementService.cancelOrderAndHistory(order);
 
-        return ApiResponse.success(SuccessCode.SUCCESS, new OrderCancelResponseDto(order));
+        return new OrderCancelResponseDto(order);
     }
 
     @Transactional

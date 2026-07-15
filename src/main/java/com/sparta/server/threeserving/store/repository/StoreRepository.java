@@ -30,6 +30,8 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
             @Param("onlyServiceArea") boolean onlyServiceArea,
             Pageable pageable
     );
+
+    @Query("SELECT s.id FROM Store s WHERE s.owner.id = :ownerId")
     List<UUID> findStoreIdsByOwnerId(Long ownerId);
 
     boolean existsByIdAndOwnerId(UUID storeId, Long userId);

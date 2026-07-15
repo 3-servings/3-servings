@@ -3,17 +3,16 @@ package com.sparta.server.threeserving.order.entity;
 import com.sparta.server.threeserving.global.common.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
-@Setter
 @Getter
 @Entity
 @Table(name = "p_order_item")
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrderItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -31,10 +30,13 @@ public class OrderItem extends BaseEntity {
 
     @Column(name="price", nullable = false)
     @Min(value = 0)
-    private Integer price;
+    @Builder.Default
+    private Integer price = 0;
 
     @Column(name="quantity", nullable = false)
-    private Integer quantity;
+    @Min(value = 0)
+    @Builder.Default
+    private Integer quantity = 0;
 
     public OrderItem(Orders order, UUID menuId, String menuName, Integer price, Integer quantity) {
         this.order = order;
