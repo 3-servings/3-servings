@@ -5,7 +5,6 @@ import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.OrderRepository;
-import com.sparta.server.threeserving.order_management.dto.request.OrderManagementCreateRequest;
 import com.sparta.server.threeserving.order_management.dto.response.OrderManagementListResponse;
 import com.sparta.server.threeserving.order_management.dto.response.OrderManagementResponse;
 import com.sparta.server.threeserving.order_management.dto.response.OrderStatusHistoryResponse;
@@ -38,9 +37,7 @@ public class OrderManagementService {
     private final OrderManagementRepository orderManagementRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final RejectReasonCodeRepository rejectReasonCodeRepository;
-    private final OrderRepository orderRepository;
     private final EntityManager entityManager;
-    private final StoreRepository storeRepository;
     private final StoreAccessValidator storeAccessValidator;
 
 
