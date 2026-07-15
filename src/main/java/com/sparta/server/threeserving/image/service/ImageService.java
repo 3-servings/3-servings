@@ -83,10 +83,8 @@ public class ImageService {
     // 특정 targetId의 모든 이미지 일괄 삭제
     @Transactional
     public void softDeleteImages(DomainType domainType, UUID targetId, Long userId) {
-        List<Image> images = imageRepository.findAllByDomainTypeAndTargetIdOrderBySequenceAsc(domainType, targetId);
-        for (Image image : images) {
-            image.softDelete(userId);
-        }
+        // @Modifying 쿼리 사용 Bulk Update 로 N+1 개선
+        imageRepository.softDeleteAllByTargetId(domainType, targetId, userId);
     }
 
     // 단건 이미지 조회
