@@ -48,23 +48,7 @@ public class DailySalesStat extends BaseEntity {
     private Store store;
 
 
-//    public DailySalesStat(
-//            Store store,
-//            LocalDate statDate,
-//            Integer totalOrderCount,
-//            Integer completedCount,
-//            Integer rejectedCount,
-//            Integer canceledCount,
-//            Long totalSalesAmount
-//    ) {
-//        this.store = store;
-//        this.statDate = statDate;
-//        this.totalOrderCount = totalOrderCount;
-//        this.completedCount = completedCount;
-//        this.rejectedCount = rejectedCount;
-//        this.canceledCount = canceledCount;
-//        this.totalSalesAmount = totalSalesAmount;
-//    }
+
 
 
 

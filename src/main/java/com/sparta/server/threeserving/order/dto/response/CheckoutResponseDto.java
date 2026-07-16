@@ -10,9 +10,10 @@ public record CheckoutResponseDto(
         UUID cart_id,
         OrderStatusEnum orderStatus,
         String deliveryAddress,
-        String requestMessage
+        String requestMessage,
+        UUID orderManagementId
 ) {
-    public CheckoutResponseDto(Orders order, String deliveryAddress, String requestMessage) {
-        this(order.getId(), order.getCart().getId(), order.getOrderStatus(), deliveryAddress, requestMessage);
+    public CheckoutResponseDto(Orders order, UUID orderManagementId, String deliveryAddress, String requestMessage) {
+        this(order.getId(), order.getCart().getId(), order.getOrderStatus(), deliveryAddress, requestMessage, orderManagementId);
     }
 }
