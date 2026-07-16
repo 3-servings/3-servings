@@ -76,6 +76,7 @@ public class StoreService {
                 condition.getRegionId(),
                 condition.getCategoryId(),
                 !isAdmin,
+                condition.isOpen(),
                 newPageable
         ).map(StoreResponse::new);
 

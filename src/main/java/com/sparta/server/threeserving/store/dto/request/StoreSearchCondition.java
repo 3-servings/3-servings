@@ -11,4 +11,5 @@ public class StoreSearchCondition {
     private String name;
     private UUID regionId;
     private UUID categoryId;
+    private boolean isOpen;
 }
