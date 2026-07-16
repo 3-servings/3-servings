@@ -24,8 +24,9 @@ public class OrderManagement extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-//    @Column(name = "store_id", nullable = false)
-//    private UUID storeId;
+
+    @Version
+    private Long version;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
