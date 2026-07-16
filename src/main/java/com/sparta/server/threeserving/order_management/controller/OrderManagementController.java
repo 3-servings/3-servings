@@ -3,11 +3,8 @@ package com.sparta.server.threeserving.order_management.controller;
 import com.sparta.server.threeserving.auth.UserDetailsImpl;
 import com.sparta.server.threeserving.global.common.response.ApiResponse;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
+import com.sparta.server.threeserving.order_management.dto.request.*;
 import com.sparta.server.threeserving.order_management.dto.response.*;
-import com.sparta.server.threeserving.order_management.dto.request.OrderAcceptRequest;
-import com.sparta.server.threeserving.order_management.dto.request.OrderRejectRequest;
-import com.sparta.server.threeserving.order_management.dto.request.OrderStatusUpdateRequest;
-import com.sparta.server.threeserving.order_management.dto.request.UpdateCookingTimeRequest;
 import com.sparta.server.threeserving.order_management.service.DailySalesStatService;
 import com.sparta.server.threeserving.order_management.service.OrderManagementService;
 import jakarta.validation.Valid;
@@ -47,7 +44,8 @@ public class OrderManagementController {
     }
 
     @GetMapping("/orders/{orderManagementId}")
-    public ApiResponse<OrderManagementResponse> getOrderManagementDetail(@PathVariable UUID orderManagementId) {
+    public ApiResponse<OrderManagementResponse> getOrderManagementDetail(
+            @PathVariable UUID orderManagementId) {
         OrderManagementResponse response = orderManagementService.getOrderManagementDetail(orderManagementId);
 
         return ApiResponse.success(SUCCESS, response);
@@ -115,8 +113,19 @@ public class OrderManagementController {
         return ApiResponse.success(SUCCESS, null);
     }
 
+    @PostMapping("/orders/reject-reason-codes")
+    public ApiResponse<CreateRejectReasnCodeResponse> create(
+            @RequestBody CreateRejectReasonCodeRequest request
+    ) {
+
+        CreateRejectReasnCodeResponse response = orderManagementService.createRejectCode(request);
+
+        return ApiResponse.success(SUCCESS,response);
+    }
+
     @GetMapping("/orders/{orderManagementId}/history")
-    public ApiResponse<OrderStatusHistoryResponse> getOrderStatusHistory(@PathVariable UUID orderManagementId) {
+    public ApiResponse<OrderStatusHistoryResponse> getOrderStatusHistory(
+            @PathVariable UUID orderManagementId) {
         OrderStatusHistoryResponse response = orderManagementService.getOrderStatusHistory(orderManagementId);
 
         return ApiResponse.success(SUCCESS, response);

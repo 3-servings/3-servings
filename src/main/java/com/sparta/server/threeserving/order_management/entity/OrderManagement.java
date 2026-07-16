@@ -24,7 +24,6 @@ public class OrderManagement extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-
     @Version
     private Long version;
 
