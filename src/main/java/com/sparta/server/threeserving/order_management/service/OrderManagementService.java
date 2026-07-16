@@ -5,6 +5,8 @@ import com.sparta.server.threeserving.global.exception.CustomException;
 import com.sparta.server.threeserving.order.entity.OrderStatusEnum;
 import com.sparta.server.threeserving.order.entity.Orders;
 import com.sparta.server.threeserving.order.repository.OrderRepository;
+import com.sparta.server.threeserving.order_management.dto.request.CreateRejectReasonCodeRequest;
+import com.sparta.server.threeserving.order_management.dto.response.CreateRejectReasnCodeResponse;
 import com.sparta.server.threeserving.order_management.dto.response.OrderManagementListResponse;
 import com.sparta.server.threeserving.order_management.dto.response.OrderManagementResponse;
 import com.sparta.server.threeserving.order_management.dto.response.OrderStatusHistoryResponse;
@@ -203,6 +205,16 @@ public class OrderManagementService {
         return new OrderStatusHistoryResponse(orderManagementId, history);
     }
 
+    @Transactional
+    public CreateRejectReasnCodeResponse createRejectCode(CreateRejectReasonCodeRequest request) {
+
+        RejectReasonCode rejectReasonCode = new RejectReasonCode(request.getCode(),request.getDescription());
+
+        rejectReasonCodeRepository.save(rejectReasonCode);
+        System.out.println(rejectReasonCode.getId());
+
+        return new CreateRejectReasnCodeResponse(rejectReasonCode.getId());
+    }
 
     //공통 메서드
 
@@ -232,6 +244,7 @@ public class OrderManagementService {
                 )
         );
     }
+
 
 }
 
