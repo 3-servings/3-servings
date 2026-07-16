@@ -2,6 +2,7 @@ package com.sparta.server.threeserving.auth;
 
 import com.sparta.server.threeserving.user.entity.User;
 import com.sparta.server.threeserving.user.entity.UserRoleEnum;
+import com.sparta.server.threeserving.user.entity.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -60,6 +61,8 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        //return true;
+        //탈퇴 회원이 del_{id} 기존 비밀번호로 재로그인하는 경로를 여기서 차단한다.
+        return user.getStatus() == UserStatus.ACTIVE;
     }
 }

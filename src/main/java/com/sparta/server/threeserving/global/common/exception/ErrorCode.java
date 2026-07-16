@@ -32,6 +32,7 @@ public enum ErrorCode {
     KAKAO_AUTH_FAILED(HttpStatus.BAD_GATEWAY, "A004", "카카오 인증에 실패했습니다."),
     INVALID_ID_PASSWORD(HttpStatus.UNAUTHORIZED, "A005", "아이디 및 비번이 틀렸습니다."),
 
+
     // Common
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "잘못된 입력값입니다."),
     UNSUPPORTED_METHOD(HttpStatus.BAD_REQUEST, "C002", "지원하지 않는 방식입니다."),
