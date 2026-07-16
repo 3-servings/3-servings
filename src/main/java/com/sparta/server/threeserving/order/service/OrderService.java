@@ -91,8 +91,8 @@ public class OrderService {
         }
         orderItemOptionRepository.saveAll(orderItemOptionList);
 
-        orderManagementService.create(savedOrder, status);
-        return new OrderCreateResponseDto(savedOrder);
+        UUID orderManagementId = orderManagementService.create(savedOrder, status).getId();
+        return new OrderCreateResponseDto(savedOrder, orderManagementId);
     }
 
     public OrderDetailResponseDto getOrderDetail(Long userId, UserRoleEnum userRole, UUID orderId) {
