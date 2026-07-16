@@ -79,7 +79,7 @@ public class ReviewServiceTest {
         given(orderRepository.findById(order.getId())).willReturn(Optional.of(order));
         assertThatThrownBy(() -> reviewService.createReview(loginUser(1L), req))
                 .isInstanceOf(CustomException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.NOT_ORDER_OWNER);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.NOT_ORDER_OWNER_OF_REVIEW);
     }
 
 

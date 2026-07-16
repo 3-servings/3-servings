@@ -97,6 +97,15 @@ public class ImageService {
                 .orElse(null);
     }
 
+    // 이미지 전체 조회
+    @Transactional(readOnly = true)
+    public List<String> getImageUrls(DomainType domainType, UUID targetId) {
+        return imageRepository.findAllByDomainTypeAndTargetIdAndDeletedAtIsNullOrderBySequenceAsc(domainType, targetId)
+                .stream()
+                .map(Image::getImageUrl)
+                .toList();
+    }
+
     // 이미지 다건 조회, N+1 고려
     @Transactional(readOnly = true)
     public Map<UUID, String> getImageUrlMap(DomainType domainType, List<UUID> targetIds) {

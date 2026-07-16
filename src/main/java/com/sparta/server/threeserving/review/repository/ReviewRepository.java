@@ -30,6 +30,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     // 검색: storeId(선택) + 최소 별점(선택) + 내용 키워드(선택). 정렬/페이지는 Pageable로 주입.
     // 닉네임 N+1 방지를 위해 user 페치.
+    // CAST 제거 금지 : keyword 가 null 이면 PostgreSQL 이 타입을 추론 못 해 500
     @EntityGraph(attributePaths = "user")
     @Query("""
     SELECT r
@@ -37,7 +38,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     WHERE r.deletedAt IS NULL
       AND (:storeId IS NULL OR r.store.id = :storeId)
       AND (:minStar IS NULL OR r.star >= :minStar)
-      AND (:keyword IS NULL OR r.content LIKE CONCAT('%', :keyword, '%'))
+      AND (CAST(:keyword AS String) IS NULL OR r.content LIKE CONCAT('%', CAST(:keyword AS String), '%'))
 """)
     Page<Review> search(
             @Param("storeId") UUID storeId,
