@@ -136,7 +136,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.PATCH, "/api/stores/{storeId}/menus/display-order").hasAnyRole("OWNER", "MASTER")
 
                     // Image
-                    .requestMatchers("/api/images/presigned-url").hasAnyRole("OWNER", "MASTER")
+                    // CUSTOMER 추가 : 리뷰 사진 업로드에 프리사인 URL 이 필요하다
+                    .requestMatchers("/api/images/presigned-url").hasAnyRole("CUSTOMER", "OWNER", "MASTER")
 
                     // Ai
                     .requestMatchers(HttpMethod.POST, "/api/ai/description").hasAnyRole("OWNER", "MASTER")
