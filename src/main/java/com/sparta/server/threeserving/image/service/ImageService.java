@@ -90,7 +90,7 @@ public class ImageService {
     // 단건 이미지 조회
     @Transactional(readOnly = true)
     public String getImageUrl(DomainType domainType, UUID targetId) {
-        return imageRepository.findAllByDomainTypeAndTargetIdAndDeletedAtIsNullOrderBySequenceAsc(domainType, targetId)
+        return imageRepository.findAllByDomainTypeAndTargetIdOrderBySequenceAsc(domainType, targetId)
                 .stream()
                 .findFirst()
                 .map(Image::getImageUrl)
@@ -111,7 +111,7 @@ public class ImageService {
     public Map<UUID, String> getImageUrlMap(DomainType domainType, List<UUID> targetIds) {
         if (targetIds.isEmpty()) return Collections.emptyMap();
 
-        List<Image> images = imageRepository.findByDomainTypeAndTargetIdInAndDeletedAtIsNullOrderBySequenceAsc(domainType, targetIds);
+        List<Image> images = imageRepository.findByDomainTypeAndTargetIdIn(domainType, targetIds);
         return images.stream()
                 .collect(Collectors.toMap(
                         Image::getTargetId,

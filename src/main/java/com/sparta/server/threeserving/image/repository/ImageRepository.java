@@ -12,12 +12,12 @@ import java.util.UUID;
 
 public interface ImageRepository extends JpaRepository<Image, UUID> {
 
-    // 단건 대상 이미지 조회 (삭제분 제외)
+    List<Image> findAllByDomainTypeAndTargetIdOrderBySequenceAsc(DomainType domainType, UUID targetId);
+
+    List<Image> findByDomainTypeAndTargetIdIn(DomainType domainType, List<UUID> targetIds);
+
+    // 살아있는 이미지 전체 조회
     List<Image> findAllByDomainTypeAndTargetIdAndDeletedAtIsNullOrderBySequenceAsc(DomainType domainType, UUID targetId);
-
-    // 다건 대상 이미지 조회 (삭제분 제외)
-
-    List<Image> findByDomainTypeAndTargetIdInAndDeletedAtIsNullOrderBySequenceAsc(DomainType domainType, List<UUID> targetIds);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Image i SET i.deletedAt = CURRENT_TIMESTAMP, i.deletedBy = :userId WHERE i.domainType = :domainType AND i.targetId = :targetId AND i.deletedAt IS NULL")
