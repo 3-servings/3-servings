@@ -30,6 +30,11 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     // 검색: storeId(선택) + 최소 별점(선택) + 내용 키워드(선택). 정렬/페이지는 Pageable로 주입.
     // 닉네임 N+1 방지를 위해 user 페치.
+    //
+    // keyword 를 CAST 하는 이유:
+    // PostgreSQL 은 파싱 시점에 타입을 검증하므로, keyword 가 null 이면 CONCAT 안의 파라미터
+    // 타입을 추론하지 못해 bytea 로 바인딩한다 -> "operator does not exist: character varying ~~ bytea" 로 500.
+    // (:keyword IS NULL 이 참이라 LIKE 를 논리적으로 타지 않아도 SQL 자체가 유효해야 한다)
     @EntityGraph(attributePaths = "user")
     @Query("""
     SELECT r
@@ -37,7 +42,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     WHERE r.deletedAt IS NULL
       AND (:storeId IS NULL OR r.store.id = :storeId)
       AND (:minStar IS NULL OR r.star >= :minStar)
-      AND (:keyword IS NULL OR r.content LIKE CONCAT('%', :keyword, '%'))
+      AND (CAST(:keyword AS String) IS NULL OR r.content LIKE CONCAT('%', CAST(:keyword AS String), '%'))
 """)
     Page<Review> search(
             @Param("storeId") UUID storeId,

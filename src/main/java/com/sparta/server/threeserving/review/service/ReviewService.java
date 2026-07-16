@@ -110,22 +110,26 @@ public class ReviewService {
         if (!review.isOwner(loginUser.getId())) {
             throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
         }
+        // 이미지 교체를 먼저 수행한다.
+        // replaceImages 는 내부적으로 벌크 삭제(@Modifying(clearAutomatically = true))를 실행해
+        // 영속성 컨텍스트를 비운다. 리뷰를 먼저 수정하면 그 변경이 flush 되기 전에 폐기되어
+        // "200 인데 실제로는 안 바뀌는" 상태가 된다.
+        boolean imagesReplaced = request.images() != null && !request.images().isEmpty();
+        List<String> imageUrls = imagesReplaced
+                ? imageService.replaceImages(DomainType.REVIEW, reviewId, request.images(), loginUser.getId())
+                : imageService.getImageUrls(DomainType.REVIEW, reviewId);
+
+        // 컨텍스트가 비워졌으면 재조회해야 변경이 반영된다.
+        Review target = imagesReplaced ? findActiveReview(reviewId) : review;
+
         // 이미지와 동일하게 "안 보냄 = 변경 없음"으로 통일한다.
         // content 만 null 로 덮어쓰면 별점만 고치려던 요청에 리뷰 내용이 지워진다.
-        String newContent = request.content() != null ? request.content() : review.getContent();
-        review.update(request.star(), newContent);
+        String newContent = request.content() != null ? request.content() : target.getContent();
+        target.update(request.star(), newContent);
 
-        List<String> imageUrls;
-        if (request.images() != null && !request.images().isEmpty()) {
-            // 기존 soft-delete 후 재저장
-            imageUrls = imageService.replaceImages(DomainType.REVIEW, reviewId, request.images(), loginUser.getId());
-        } else {
-            imageUrls = imageService.getImageUrls(DomainType.REVIEW, reviewId);
-        }
-
-        recalculateStoreRating(review.getStore());
+        recalculateStoreRating(target.getStore());
         log.info("리뷰 수정 완료 : reviewId={}, userId={}", reviewId, loginUser.getId());
-        return new ReviewResponse(review, imageUrls);
+        return new ReviewResponse(target, imageUrls);
     }
 
     // 삭제: 작성자 본인 또는 관리자, soft-delete
@@ -135,9 +139,15 @@ public class ReviewService {
         if (!review.isOwner(loginUser.getId()) && !isAdmin(loginUser)) {
             throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
         }
-        review.softDelete(loginUser.getId());
+
+        // 이미지 벌크 삭제를 먼저 수행한다. (@Modifying(clearAutomatically = true) 가 컨텍스트를 비운다)
+        // 리뷰를 먼저 softDelete 하면 flush 전에 변경이 폐기되어 삭제가 되지 않은 채 200 이 나간다.
         imageService.softDeleteImages(DomainType.REVIEW, reviewId, loginUser.getId());
-        recalculateStoreRating(review.getStore());
+
+        Review target = findActiveReview(reviewId);   // 컨텍스트가 비워졌으므로 재조회
+        target.softDelete(loginUser.getId());
+
+        recalculateStoreRating(target.getStore());
         log.info("리뷰 삭제 완료 : reviewId={}, userId={}", reviewId, loginUser.getId());
     }
 
