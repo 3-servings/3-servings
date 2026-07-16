@@ -12,9 +12,10 @@ import java.util.UUID;
 
 public interface ImageRepository extends JpaRepository<Image, UUID> {
 
-    // 조회는 살아있는 이미지만. deletedAt 조건이 없으면 replaceImages(softDelete 후 재저장) 이후
-    // 삭제된 옛 이미지가 sequence 순서상 먼저 잡혀 대표 이미지로 노출된다.
+    // 단건 대상 이미지 조회 (삭제분 제외)
     List<Image> findAllByDomainTypeAndTargetIdAndDeletedAtIsNullOrderBySequenceAsc(DomainType domainType, UUID targetId);
+
+    // 다건 대상 이미지 조회 (삭제분 제외)
 
     List<Image> findByDomainTypeAndTargetIdInAndDeletedAtIsNullOrderBySequenceAsc(DomainType domainType, List<UUID> targetIds);
 

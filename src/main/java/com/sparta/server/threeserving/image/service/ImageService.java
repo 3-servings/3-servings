@@ -87,7 +87,7 @@ public class ImageService {
         imageRepository.softDeleteAllByTargetId(domainType, targetId, userId);
     }
 
-    // 대표 이미지 1장 조회 (목록 썸네일용)
+    // 단건 이미지 조회
     @Transactional(readOnly = true)
     public String getImageUrl(DomainType domainType, UUID targetId) {
         return imageRepository.findAllByDomainTypeAndTargetIdAndDeletedAtIsNullOrderBySequenceAsc(domainType, targetId)
@@ -97,8 +97,7 @@ public class ImageService {
                 .orElse(null);
     }
 
-    // 특정 targetId의 이미지 전체 조회 (상세 화면용)
-    // saveImages 로 여러 장 저장해놓고 getImageUrl 로 1장만 꺼내면 나머지가 사라진 것처럼 보인다.
+    // 이미지 전체 조회
     @Transactional(readOnly = true)
     public List<String> getImageUrls(DomainType domainType, UUID targetId) {
         return imageRepository.findAllByDomainTypeAndTargetIdAndDeletedAtIsNullOrderBySequenceAsc(domainType, targetId)
@@ -107,7 +106,7 @@ public class ImageService {
                 .toList();
     }
 
-    // 이미지 다건 조회, N+1 고려. targetId 당 대표 이미지(sequence 최솟값) 1장.
+    // 이미지 다건 조회, N+1 고려
     @Transactional(readOnly = true)
     public Map<UUID, String> getImageUrlMap(DomainType domainType, List<UUID> targetIds) {
         if (targetIds.isEmpty()) return Collections.emptyMap();
@@ -117,7 +116,7 @@ public class ImageService {
                 .collect(Collectors.toMap(
                         Image::getTargetId,
                         Image::getImageUrl,
-                        (img1, img2) -> img1   // sequence 오름차순이므로 첫 장이 대표
+                        (img1, img2) -> img1
                 ));
     }
 }

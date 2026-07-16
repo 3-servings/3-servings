@@ -54,7 +54,6 @@ public class ReviewService {
         if (order.getOrderStatus() != OrderStatusEnum.COMPLETED) {
             throw new CustomException(ErrorCode.ORDER_NOT_COMPLETED);
         }
-        // 선제 검사: 어떤 이유로 막혔는지 정확히 알려주기 위함(친절한 에러)
         if (reviewRepository.existsByOrder_IdAndDeletedAtIsNull(order.getId())) {
             throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
@@ -66,9 +65,7 @@ public class ReviewService {
         try {
             reviewRepository.saveAndFlush(review);
         } catch (DataIntegrityViolationException e) {
-            // 최후 방어: exists 검사와 save 사이의 경합으로 동시 요청이 둘 다 통과하면
-            // 주문당 리뷰가 2건 생겨 평점이 조작된다. DB 유니크 인덱스 위반을 409로 변환한다.
-            // 인덱스: CREATE UNIQUE INDEX uk_review_order_active ON p_review(order_id) WHERE deleted_at IS NULL;
+            // 동시 요청 방어 (uk_review_order_active 유니크 인덱스 필요)
             log.warn("리뷰 중복 작성 경합 감지 : orderId={}, userId={}", order.getId(), loginUser.getId());
             throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
@@ -85,7 +82,7 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public ReviewResponse getReview(UUID reviewId) {
         Review review = findActiveReview(reviewId);
-        List<String> imageUrls = imageService.getImageUrls(DomainType.REVIEW, reviewId);   // 첨부 이미지 전체
+        List<String> imageUrls = imageService.getImageUrls(DomainType.REVIEW, reviewId);
         ReviewCommentResponse ownerReply = reviewCommentRepository
                 .findByReview_IdAndDeletedAtIsNull(reviewId)
                 .map(ReviewCommentResponse::new)
@@ -110,20 +107,15 @@ public class ReviewService {
         if (!review.isOwner(loginUser.getId())) {
             throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
         }
-        // 이미지 교체를 먼저 수행한다.
-        // replaceImages 는 내부적으로 벌크 삭제(@Modifying(clearAutomatically = true))를 실행해
-        // 영속성 컨텍스트를 비운다. 리뷰를 먼저 수정하면 그 변경이 flush 되기 전에 폐기되어
-        // "200 인데 실제로는 안 바뀌는" 상태가 된다.
+        // 이미지 교체가 영속성 컨텍스트를 비우므로(@Modifying(clearAutomatically=true)) 먼저 수행한다
         boolean imagesReplaced = request.images() != null && !request.images().isEmpty();
         List<String> imageUrls = imagesReplaced
                 ? imageService.replaceImages(DomainType.REVIEW, reviewId, request.images(), loginUser.getId())
                 : imageService.getImageUrls(DomainType.REVIEW, reviewId);
 
-        // 컨텍스트가 비워졌으면 재조회해야 변경이 반영된다.
-        Review target = imagesReplaced ? findActiveReview(reviewId) : review;
+        Review target = imagesReplaced ? findActiveReview(reviewId) : review;   // 재조회
 
-        // 이미지와 동일하게 "안 보냄 = 변경 없음"으로 통일한다.
-        // content 만 null 로 덮어쓰면 별점만 고치려던 요청에 리뷰 내용이 지워진다.
+        // 안 보냄 = 변경 없음
         String newContent = request.content() != null ? request.content() : target.getContent();
         target.update(request.star(), newContent);
 
@@ -140,11 +132,10 @@ public class ReviewService {
             throw new CustomException(ErrorCode.REVIEW_NOT_OWNER);
         }
 
-        // 이미지 벌크 삭제를 먼저 수행한다. (@Modifying(clearAutomatically = true) 가 컨텍스트를 비운다)
-        // 리뷰를 먼저 softDelete 하면 flush 전에 변경이 폐기되어 삭제가 되지 않은 채 200 이 나간다.
+        // 이미지 벌크 삭제가 영속성 컨텍스트를 비우므로(@Modifying(clearAutomatically=true)) 먼저 수행한다
         imageService.softDeleteImages(DomainType.REVIEW, reviewId, loginUser.getId());
 
-        Review target = findActiveReview(reviewId);   // 컨텍스트가 비워졌으므로 재조회
+        Review target = findActiveReview(reviewId);   // 재조회
         target.softDelete(loginUser.getId());
 
         recalculateStoreRating(target.getStore());
@@ -168,9 +159,7 @@ public class ReviewService {
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
     }
 
-    // 관리자는 신고된 악성 리뷰를 내릴 수 있어야 한다(운영 개입).
-    // 삭제만 허용하고 수정은 허용하지 않는다 — 남의 리뷰 내용을 고치는 것은 위조다.
-    // deletedBy 에 관리자 id 가 남으므로 누가 내렸는지 추적된다.
+    // 관리자 여부 (운영 개입: 삭제만 허용)
     private boolean isAdmin(User user) {
         UserRoleEnum role = user.getRole();
         return role == UserRoleEnum.MASTER || role == UserRoleEnum.MANAGER;
